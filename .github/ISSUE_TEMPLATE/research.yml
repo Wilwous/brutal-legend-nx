@@ -1,0 +1,35 @@
+name: Research finding
+description: Report a reproducible, sanitized technical finding.
+title: "research: "
+body:
+  - type: markdown
+    attributes:
+      value: "Do not attach game files, game-derived code, shader payloads, keys, dumps, music, saves, or personal paths. Source inspection is not hardware verification."
+  - type: dropdown
+    id: evidence
+    attributes:
+      label: Evidence class
+      options:
+        - VERIFIED
+        - INFERRED
+        - UNKNOWN
+    validations:
+      required: true
+  - type: textarea
+    id: finding
+    attributes:
+      label: Finding and exact public source revision
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction method and sanitized result
+    validations:
+      required: true
+  - type: textarea
+    id: limits
+    attributes:
+      label: Limitations, blockers and proposed next experiment
+    validations:
+      required: true

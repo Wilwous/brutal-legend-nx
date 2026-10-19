@@ -1,0 +1,21 @@
+# Third-party research and reuse boundaries
+
+No external implementation, game code, or compiled dependency is included in this revision. The license file covers original project material only. The following are **candidates**, not integrated dependencies. Exact inspected revisions are in the [reference snapshots](docs/research/reference-snapshots.json).
+
+| Component | License evidence / constraints | Intended use |
+| --- | --- | --- |
+| ReXGlue SDK | Inspected LICENSE: BSD three-clause terms, including Xenia attribution; GitHub metadata reports NOASSERTION | First host analysis/codegen and runtime candidate |
+| project8-sw | Root GPL-3.0; native code includes GPL notices; SDK patches documented as BSD-3-Clause and Mesa patches as MIT | Primary Horizon/runtime and native-renderer architecture reference |
+| the-simpsons-game-nx | GPL-3.0 root; per-component SDK, Mesa and LGPL dependencies remain distinct | Second integration reference; not a compatible patch drop-in |
+| Mercenaries2-NX | GPL-3.0 root; native-renderer README states GPL-3.0-or-later; component notices differ | Independent integration and renderer diagnostics reference |
+| UnleashedRecomp-NX | GPL-3.0 project; XenonRecomp and XenosRecomp have separate MIT licenses | Alternative architecture and renderer design reference |
+| XenonRecomp / XenosRecomp | MIT in their inspected repository metadata and license files listed in trees | Fallback CPU/shader tools, not generic turnkey game support |
+| Mesa / mesa-switch | Mixed component licenses; inspect every imported file and preserve notices; root MIT shorthand is insufficient for the whole dependency closure | Candidate Horizon Vulkan driver (NVK/NAK) |
+| libnx | ISC in inspected metadata; source contains per-file notices | Homebrew platform APIs |
+| deko3d | Zlib in inspected metadata | Alternative GPU backend, would require a separate shader/renderer plan |
+| extract-xiso | Nonstandard/custom license in LICENSE.TXT, including advertising/attribution clauses; metadata NOASSERTION | Separately acquired local extraction tool; not bundled |
+| FFmpeg / libmspack / SDL / SIMDe | Configuration and version dependent; reference notices include LGPL-2.1, zlib and MIT components | Audit actual linked configuration before reuse or distribution |
+
+The detected license column in the wider comparison is a discovery aid. `UNKNOWN` or `NOASSERTION` gives no permission to reuse. Root GPL text alone may not establish an “only” versus “or later” choice for individual upstream files; retain their actual SPDX/copyright notices.
+
+Future static linkage to LGPL libraries needs a component-specific compliance and relinking plan. Generated C++ and translated shaders originate from the user's game and remain private even when emitted by an open-source tool. An NRO can contain game-derived machine code; the absence of assets does not by itself establish redistribution permission. This phase creates no release and makes no redistribution conclusion for a future game binary.

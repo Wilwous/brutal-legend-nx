@@ -1,0 +1,31 @@
+name: Binary analysis summary
+description: Share metadata and blockers without attaching the binary.
+title: "research: executable assessment "
+body:
+  - type: markdown
+    attributes:
+      value: "Metadata only. Never upload the ISO/XEX, proprietary bytes, full inventory, generated code, keys or unredacted logs. No game version is currently supported."
+  - type: input
+    id: xex_hash
+    attributes:
+      label: Original default.xex SHA-256
+    validations:
+      required: true
+  - type: textarea
+    id: identity
+    attributes:
+      label: Sanitized execution metadata and image format evidence
+    validations:
+      required: true
+  - type: textarea
+    id: method
+    attributes:
+      label: Exact tool revisions, operations and separate stage results
+    validations:
+      required: true
+  - type: textarea
+    id: blockers
+    attributes:
+      label: Verified blockers and unknowns
+    validations:
+      required: true

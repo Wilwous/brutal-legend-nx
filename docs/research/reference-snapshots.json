@@ -1,0 +1,424 @@
+{
+  "assessment_date": "2026-10-19",
+  "note": "Public coordinates only. No reference was built or executed. Detected licenses are not a component audit. File inspection depth is described in reference-projects.md.",
+  "repositories": [
+    {
+      "repository": "R-drg/the-simpsons-game-nx",
+      "resolved_repository": "R-drg/the-simpsons-game-nx",
+      "commit": "3cb2cdf7fa1665a1f2d653aa7502fe4baa03680f",
+      "default_branch": "main",
+      "github_detected_license": "GPL-3.0",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": [
+        "THIRD_PARTY_NOTICES.md",
+        "docs/building.md",
+        "patches/rexglue-sdk/README.md",
+        "src/game/CMakeLists.txt",
+        "src/game/src/native/native_system.cpp"
+      ]
+    },
+    {
+      "repository": "ChanseyIsTheBest/sa2-nx",
+      "resolved_repository": "ChanseyIsTheBest/sa2-nx",
+      "commit": "26a4213fd01414522927779c520d406c57ce0014",
+      "default_branch": "main",
+      "github_detected_license": "GPL-3.0",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": [
+        "THIRD_PARTY_NOTICES.md",
+        "app/CMakeLists.txt",
+        "docs/building.md",
+        "sdk/src/audio/switch/switch_audio_system.cpp",
+        "sdk/src/input/switch/switch_input_driver.cpp"
+      ]
+    },
+    {
+      "repository": "ChanseyIsTheBest/UnleashedRecomp-NX",
+      "resolved_repository": "ChanseyIsTheBest/UnleashedRecomp-NX",
+      "commit": "b346e37e02987229e57c7f8b6557dc9211257c21",
+      "default_branch": "main",
+      "github_detected_license": "GPL-3.0",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": [
+        ".gitmodules",
+        "CMakeLists.txt",
+        "UnleashedRecomp/CMakeLists.txt",
+        "UnleashedRecomp/apu/audio.cpp",
+        "UnleashedRecomp/kernel/memory.cpp",
+        "UnleashedRecomp/patches/input_patches.cpp",
+        "docs/SWITCH-MESA.md",
+        "docs/SWITCH-PERFORMANCE-AUDIT.md"
+      ]
+    },
+    {
+      "repository": "andrewnakas/skate3-switch",
+      "resolved_repository": "andrewnakas/skate3-switch",
+      "commit": "0e9b0255d1beac8a4c590e1312023d0e53a17e09",
+      "default_branch": "master",
+      "github_detected_license": null,
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": [
+        "THIRD_PARTY_NOTICES.md",
+        "scripts/build_native.sh"
+      ]
+    },
+    {
+      "repository": "R-drg/project8-sw",
+      "resolved_repository": "R-drg/project8-sw",
+      "commit": "3393f2615deb7e8ac11ce51d2cd0e9defded5669",
+      "default_branch": "main",
+      "github_detected_license": "GPL-3.0",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": [
+        "THIRD_PARTY_NOTICES.md",
+        "docs/SWITCH_MEMORY_REPROTECTION.md",
+        "docs/SWITCH_VULKAN_CAPABILITIES.md",
+        "docs/building.md",
+        "docs/native-renderer.md",
+        "patches/rexglue-sdk/0004-switch-horizon-runtime.patch",
+        "patches/rexglue-sdk/0006-switch-exception-fp-state.patch",
+        "patches/rexglue-sdk/README.md",
+        "src/game/CMakeLists.txt",
+        "src/game/src/native/thps_native_system.cpp"
+      ]
+    },
+    {
+      "repository": "penettrator/Mercenaries2-NX",
+      "resolved_repository": "penettrator/Mercenaries2-NX",
+      "commit": "65167852496f94b278a82ffea465c51703575f01",
+      "default_branch": "main",
+      "github_detected_license": "GPL-3.0",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": [
+        "THIRD_PARTY_NOTICES.md",
+        "app/CMakeLists.txt",
+        "app/src/native/README.md",
+        "app/src/native/mercs2_native_system.cpp",
+        "docs/building.md"
+      ]
+    },
+    {
+      "repository": "penettrator/prototype2-nx",
+      "resolved_repository": "penettrator/prototype2-nx",
+      "commit": "7371f849f1d49c2cccacbd0e5aef113335d2d9f1",
+      "default_branch": "main",
+      "github_detected_license": "GPL-3.0",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": [
+        "THIRD_PARTY_NOTICES.md",
+        "docs/BUILD.en.md",
+        "project/CMakeLists.txt"
+      ]
+    },
+    {
+      "repository": "ChanseyIsTheBest/MarathonRecomp-NX",
+      "resolved_repository": "ChanseyIsTheBest/MarathonRecomp-NX",
+      "commit": "cc1a8512724f2cf18545771e86df32af1c1f0aa5",
+      "default_branch": "main",
+      "github_detected_license": "GPL-3.0",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": [
+        ".gitmodules",
+        "CMakeLists.txt",
+        "docs/BUILDING-SWITCH.md"
+      ]
+    },
+    {
+      "repository": "antoxa2584x/nfsu1-sw",
+      "resolved_repository": "antoxa2584x/nfsu1-sw",
+      "commit": "d597e08f88e3f415eb44366b22e75054f2dfd15d",
+      "default_branch": "main",
+      "github_detected_license": null,
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "antoxa2584x/nfsu2-sw",
+      "resolved_repository": "antoxa2584x/nfsu2-sw",
+      "commit": "d3bbc3094f8e1ad3b34593eabd431f7d251b14cb",
+      "default_branch": "main",
+      "github_detected_license": null,
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "antoxa2584x/nfsc-sw",
+      "resolved_repository": "antoxa2584x/nfsc-sw",
+      "commit": "655ec76ccec0756a00ee017b099f89461f496f82",
+      "default_branch": "main",
+      "github_detected_license": null,
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "antoxa2584x/burnout3-sw",
+      "resolved_repository": "antoxa2584x/burnout3-sw",
+      "commit": "2b379b3885c83e5dae9f2b16218a0dcfce896265",
+      "default_branch": "switch",
+      "github_detected_license": "MIT",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "antoxa2584x/flatout2-sw",
+      "resolved_repository": "antoxa2584x/flatout2-sw",
+      "commit": "a89f73d64ab57c2c97ccbb4d31b5aa5b64bd7f21",
+      "default_branch": "main",
+      "github_detected_license": "MIT",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "R-drg/defjam-sw",
+      "resolved_repository": "R-drg/defjam-sw",
+      "commit": "5381916d7075c285491e87d30bca1d5e72d2bd82",
+      "default_branch": "main",
+      "github_detected_license": "NOASSERTION",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "thelinkin3000/halo-ce-universal",
+      "resolved_repository": "thelinkin3000/halo-ce-universal",
+      "commit": "c69b144634e2feee3b4561dca9ca7362ffc01e26",
+      "default_branch": "main",
+      "github_detected_license": "CC0-1.0",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "fildicio/jak-project-switch",
+      "resolved_repository": "fildicio/jak-project-switch",
+      "commit": "fea3f4577c3f112c47204482f8c75e753ec930ec",
+      "default_branch": "main",
+      "github_detected_license": "ISC",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "NaGaa95/ProjectCane",
+      "resolved_repository": "NaGaa95/ProjectCane",
+      "commit": "13dcb79ad6f80dc72e330cf18f31f69594419864",
+      "default_branch": "master",
+      "github_detected_license": null,
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "artslay/NearChuckle_nx",
+      "resolved_repository": "artslay/NearChuckle_nx",
+      "commit": "4c6df5b2e19f354ae2a7dba899ef0573bf184eb4",
+      "default_branch": "main",
+      "github_detected_license": null,
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "cutarev/sh2-nx",
+      "resolved_repository": "cutarev/sh2-nx",
+      "commit": "c3c9c0afba8c76b0ff2645ac3c1d00f985a9479e",
+      "default_branch": "main",
+      "github_detected_license": null,
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "cutarev/sh3-nx",
+      "resolved_repository": "cutarev/sh3-nx",
+      "commit": "a1f99dc97a81c62f224f1ee7eca71c0392789c8c",
+      "default_branch": "main",
+      "github_detected_license": null,
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "72ak/sh4-nx",
+      "resolved_repository": "72ak/sh4-nx",
+      "commit": "f58c3f9e64612ab193920c1d12c85305ef231d9e",
+      "default_branch": "master",
+      "github_detected_license": null,
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "r4dius/outrun2-decomp",
+      "resolved_repository": "r4dius/outrun2-decomp",
+      "commit": "e1e1c592b802a6f3f7020a676abd3ba1be479e62",
+      "default_branch": "main",
+      "github_detected_license": null,
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "hazevauks/openPREYswitch",
+      "resolved_repository": "hazevauks/openPREYswitch",
+      "commit": "d4e942490f7bf516f55a256fb09894fc922a10ec",
+      "default_branch": "main",
+      "github_detected_license": "GPL-3.0",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "centollOS/SwitchWaker",
+      "resolved_repository": "centollOS/SwitchWaker",
+      "commit": "9e71996e948d88b01523ea591c61f6131e9d7c51",
+      "default_branch": "main",
+      "github_detected_license": "MIT",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "givethesourceplox/dusklight-NX",
+      "resolved_repository": "givethesourceplox/dusklight-NX",
+      "commit": "111682f21eea5378594fa34d58e399f0a25eec26",
+      "default_branch": "main",
+      "github_detected_license": "CC0-1.0",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "chasem-dev/sms-switch",
+      "resolved_repository": "chasem-dev/sms-switch",
+      "commit": "b16ef264ce19cc0a9db29dc0a83a011ce3b4fb76",
+      "default_branch": "main",
+      "github_detected_license": "MIT",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "centollOS/SwitchWakerHD",
+      "resolved_repository": "centollOS/SwitchWakerHD",
+      "commit": "093c96cf590d23b07472e3cf2aa66f9a7a32cd4e",
+      "default_branch": "main",
+      "github_detected_license": "MPL-2.0",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "fsalamancar/VCSNX",
+      "resolved_repository": "fsalamancar/VCSNX",
+      "commit": "694cd0a2d18529879fda96f9a0639b75d4db5b8a",
+      "default_branch": "main",
+      "github_detected_license": "NOASSERTION",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "rexglue/rexglue-sdk",
+      "resolved_repository": "rexglue/rexglue-sdk",
+      "commit": "c94f5ebdcb3c9d1a460ca48e04f9758448f8d518",
+      "default_branch": "main",
+      "github_detected_license": "NOASSERTION",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": [
+        "CMakeLists.txt",
+        "LICENSE",
+        "include/rex/codegen/analyze.h",
+        "include/rex/codegen/config.h",
+        "include/rex/codegen/manifest.h",
+        "include/rex/ppc/context.h",
+        "include/rex/ppc/intrinsics.h",
+        "include/rex/system/util/xex2_info.h",
+        "src/audio/xma_decoder.cpp",
+        "src/codegen/binary_view.cpp",
+        "src/codegen/decoded_binary.cpp",
+        "src/codegen/phase_validate.cpp",
+        "src/rexglue/commands/codegen_command.cpp",
+        "src/rexglue/commands/project_scan.cpp",
+        "src/rexglue/main.cpp",
+        "src/system/xex_module.cpp"
+      ]
+    },
+    {
+      "repository": "XboxDev/extract-xiso",
+      "resolved_repository": "XboxDev/extract-xiso",
+      "commit": "3f5b62cfe68f000b0e3c8a30104973f3a297948e",
+      "default_branch": "master",
+      "github_detected_license": "NOASSERTION",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": [
+        "LICENSE.TXT",
+        "README.md",
+        "extract-xiso.c"
+      ]
+    },
+    {
+      "repository": "hedge-dev/XenonRecomp",
+      "resolved_repository": "hedge-dev/XenonRecomp",
+      "commit": "ddd128bcca99fe8bfbb99bea583c972351fa6ace",
+      "default_branch": "main",
+      "github_detected_license": "MIT",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": [
+        "XenonUtils/xex.cpp"
+      ]
+    },
+    {
+      "repository": "hedge-dev/XenosRecomp",
+      "resolved_repository": "hedge-dev/XenosRecomp",
+      "commit": "990d03b28a27b50277ee5d8d942e1c5f873869d1",
+      "default_branch": "main",
+      "github_detected_license": "MIT",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    },
+    {
+      "repository": "switchbrew/libnx",
+      "resolved_repository": "switchbrew/libnx",
+      "commit": "20cbcfd90567f7bf84df7725f27e345e2164fa6b",
+      "default_branch": "master",
+      "github_detected_license": "ISC",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": [
+        "nx/include/switch/kernel/svc.h",
+        "nx/include/switch/runtime/devices/fs_dev.h",
+        "nx/include/switch/runtime/env.h",
+        "nx/include/switch/services/audout.h",
+        "nx/include/switch/services/hid.h"
+      ]
+    },
+    {
+      "repository": "devkitPro/deko3d",
+      "resolved_repository": "devkitPro/deko3d",
+      "commit": "373bfd43d8b2d805fa2eb7d406dbb823032df958",
+      "default_branch": "master",
+      "github_detected_license": "Zlib",
+      "tree_truncated": false,
+      "readme_inspected": true,
+      "source_or_document_files_retrieved_for_research": []
+    }
+  ]
+}
