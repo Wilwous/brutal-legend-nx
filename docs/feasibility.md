@@ -1,49 +1,50 @@
-# Feasibility and technical blockers
+# Feasibility — Phase 2
 
-Assessment date: **2026-10-19**. Verdict: **CONDITIONAL GO for binary intake and bounded experiments only**. There is insufficient evidence to start a complete port. There is also insufficient evidence for a categorical NO-GO.
+Assessment: **2026-10-19 · v0.0.2-binary-analysis**. Verdict: **CONDITIONAL GO for bounded host analysis; full port implementation remains premature**.
 
-GREEN means an existing solution is likely reusable, not proven for this game. YELLOW means substantial engineering. RED means an unresolved critical gate. UNKNOWN means missing evidence. Colors describe the present evidence, not a completion percentage.
+Extraction and XEX loading are now verified. Complete recompilation, execution and Nintendo Switch compatibility are not. [Primary binary evidence](research/xbox360-analysis.md) and [commands/limits](research/phase2-commands.md) define the scope of each result.
 
-| Subsystem | Status | Evidence and remaining gate |
+| Subsystem | Evidence state | Engineering assessment |
 | --- | --- | --- |
-| Executable recompilation | UNKNOWN | No XEX; cannot validate loader, instruction coverage, function boundaries, jump tables or modules |
-| Runtime/API compatibility | YELLOW | ReXGlue supplies a foundation; actual imports, TLS, exceptions and thread behavior unknown |
-| Graphics | RED | No Brütal Legend shader/resource/command evidence or validated native-renderer integration |
-| Audio | UNKNOWN | SDK has XMA support and Horizon reference adapters; game codecs, mixer and movies unidentified |
-| Input | GREEN | libnx/controller adapters exist in references; game's API use and mapping remain untested |
-| Filesystem | YELLOW | Local filesystem adapters exist; archive layout, path semantics and streaming unknown |
-| Saves | UNKNOWN | Guest save behavior, format and platform services not inspected |
-| Memory | RED | Required aliases, protection/fault behavior, coherence, real resident size and GPU budget not established |
-| Performance | UNKNOWN | No game measurement; no FPS, resolution or playable prediction is justified |
-| Game assets/middleware | UNKNOWN | No inventory, codec or middleware identification possible |
-| Build pipeline | YELLOW | Reference host/cross separation exists; no selected, reproduced Brütal Legend build |
-| Hardware deployment | UNKNOWN | NRO/full application mode is a candidate; no console test or deployment performed |
+| Input/extraction | VERIFIED | GOD/SVOD and DLC/TU readable; hash-verified extraction and source preservation passed |
+| Executable parsing | VERIFIED | Main XEX fingerprinted; encrypted/LZX image loaded natively with ReXGlue 0.10.0 |
+| Recompilation | BLOCKED within test budget | 45-second run reached GapFill; validation/emission not reached; full instruction coverage UNKNOWN |
+| Runtime symbols | VERIFIED | All 274 import ordinals recognized; all 261 function shims present; not semantic validation |
+| Runtime semantics | BLOCKED / UNKNOWN | Imported unwind/exception and STFS APIs have explicit stubs; actual call paths untested |
+| Graphics | UNKNOWN / major unresolved gate | D3D9/Xenos path and shader archive names identified; no translated shader or correct frame |
+| Audio/middleware | UNKNOWN / substantial work | FMOD/Havok/Bink/Lua evidence, XMA imports; 157 banks lack standard initial FSB magic; codecs/active paths unproven |
+| Input | INFERRED reusable foundation | XamInput and libnx reference adapters exist; no game input test |
+| Filesystem/saves | UNKNOWN | File/content imports and archives identified; streaming/persistence behavior not tested |
+| Memory | UNKNOWN / major unresolved gate | Header image/stack/TLS known; heap/GPU/streaming peaks, alias/protection and faults not tested on Switch |
+| Performance | UNKNOWN | Tool RSS/timing is not game performance; no stock-clock FPS/resolution prediction |
+| Host toolchain | VERIFIED for analysis | macOS ARM64 prebuilt SDK CLI and small metadata helper ran; no heavy dependency build |
+| Target build/deployment | UNKNOWN | No game C++, host game binary, ARM64 Horizon build, NRO or hardware test |
 
-## Critical blocker register — before implementation
+## Current blocker register
 
-| ID | Blocker | Evidence required to clear or narrow it |
+| ID | Status | Blocker and required evidence |
 | --- | --- | --- |
-| B01 | Original input absent | Local path to owner's ISO, or complete extracted disc with original XEX and provenance |
-| B02 | Disc format and integrity unknown | Format signatures, game partition offset, directory bounds, complete successful extraction, unchanged source hash |
-| B03 | Executable identity unknown | XEX SHA-256, execution version/base version, title/media IDs, entry/base, sections, compression, imports and dependent modules |
-| B04 | ReXGlue acceptance unknown | Pinned loader result, function analysis and validation diagnostics, indirect-call/jump-table coverage, instruction gap report |
-| B05 | Horizon guest memory/exception contract unproven | Required alias coherence, protection/invalidation behavior, controlled fault handling and register-state preservation on hardware |
-| B06 | GPU/shader translation unproven | Game-specific render/shader census and one correct bounded rendering milestone, including relevant resolves/readbacks |
-| B07 | Runtime, middleware and media dependencies unknown | Import inventory and traces; identification of audio/video/physics/other libraries only where evidenced |
-| B08 | Memory and stock-clock performance unmeasured | Resident/heap/GPU/cache peaks and measured frame/CPU/GPU times in representative scenarios |
-| B09 | Build/dependency configuration unvalidated | Reproducible host and target toolchain plus individually audited patch/license closure |
-| B10 | Deployment and persistence untested | On-device launch/exit, controller/audio, SD reads, isolated saves and dock/handheld tests |
+| B01 input | Cleared for supplied data | GOD rather than original ISO; 38 source game files hash-preserved |
+| B02 extraction | Cleared for supplied data | Internal hash checks/bounds/extraction passed; authenticity/signature provenance remains UNKNOWN |
+| B03 identity/modules/update | Partly cleared | Main XEX metadata known; `live.dll` has changed headers with identical stored payload; source authenticity not established; TU not applied |
+| B04 function/instruction analysis | BLOCKED in bounded run | GapFill still running at 45 seconds; profile progress with a fixed budget, then validate coverage and unresolved targets |
+| B05 memory/exceptions | Unresolved | Guest unwind/SEH imports include stubs; prove active requirements and Horizon host fault/register/alias semantics |
+| B06 graphics | Unresolved | Inventory actual `.fxo` shaders and render features; validate PM4, formats/resolves, readbacks and invalidation before adapting a renderer |
+| B07 runtime/media/assets | Unresolved | Audit execution paths through STFS/other stubs, bank encoding, FMOD/XMA/Bink timing, archive semantics, middleware and saves |
+| B08 memory/performance | UNKNOWN | Measure guest/game/renderer memory and representative stock-clock hardware workloads after correctness milestones |
+| B09 build/dependencies | Partly cleared | Native analysis executable works; complete codegen, source linking and Horizon SDK/Mesa/patch closure remain unvalidated |
+| B10 deployment | UNKNOWN | NRO/application-mode permissions, launch/exit, controller/audio, persistence and dock transitions untested |
 
-B05/B06 are critical unresolved engineering gates, not proof that Switch support is impossible. Resolving B01–B04 alone does not clear them.
+The PE declares 14 sections and SizeOfImage 15,750,656 bytes; the loaded XEX allocation is 14,090,240 bytes and the SDK's analysis view excludes the out-of-range discardable `.reloc` section. These differing header/allocation values require preserving their meanings, not using either as total game RAM or declaring the input corrupt without further evidence.
 
-## Evidence limits
+## Platform and resource constraints
 
-Source/build inspection establishes that the reference architecture exists. No reference was built or executed in this investigation. README claims about playability and clocks are author reports, not independently verified results, and cannot be transferred to Brütal Legend. Some reference documentation describes earlier states that conflict with newer README claims; these conflicts are recorded in the comparison.
+The development host is macOS ARM64 with 8 GiB physical RAM and about 28 GiB free disk space at discovery. Python, Apple Clang and Docker were available; host CMake/Ninja, Rust/.NET and a Switch toolchain were not found on the checked PATH. No global packages/configuration were changed.
 
-The current development host has GitHub CLI, Python, Apple Clang and an operational Docker engine. CMake, Ninja, ReXGlue, extract-xiso, xdvdfs and devkitA64 were not found on the checked PATH; the conventional devkitPro installation directory was absent. These observations do not rule out other installations or container toolchains. No dependencies were installed, no SDK was compiled and no hardware was connected.
+Linux was **not required for the completed analysis**. A later Horizon baseline should use an isolated, pinned devkitPro/devkitA64 container with fixed SDK/Mesa commits and explicit resource limits. Select the image digest/tool versions when that experiment is scheduled; no reproducible target build is claimed now. The 8 GiB host and current free space must be rechecked before attempting large generated-code builds.
 
-## Decision policy
+## Decision boundaries
 
-Continue intake and static inspection when the ISO becomes available. Review the exact binary and blocker report before code generation. Any later codegen runs in private, and successful analysis, generated C++, host linking, ARM64 linking, boot, rendering, audio, gameplay, saving and sustained performance are separate milestones.
+No compiler redesign is justified. Prefer investigating the existing ReXGlue analysis stage first; do not interpret its timeout as definitive failure or switch toolchains without comparing a concrete failing feature. XenonRecomp remains an alternative with its own runtime/exception obligations, not a proven fix.
 
-A limited prototype becomes justified only when its specific binary/runtime prerequisites are supported by evidence. Stop or redirect if a required instruction, dynamic-code mechanism, mapping behavior or GPU feature lacks a correct, testable path. Evaluate existing tools before considering any new compiler.
+No silent force flags, automatic `live.dll` inclusion, title-update application, API stubbing or renderer optimization is justified by loader success. A complete generated C++ set would still require compile/link checks, behavioral tests and separate Switch hardware verification. There is no playable build and no Release.

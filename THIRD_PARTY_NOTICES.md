@@ -1,6 +1,6 @@
 # Third-party research and reuse boundaries
 
-No external implementation, game code, or compiled dependency is included in this revision. The license file covers original project material only. The following are **candidates**, not integrated dependencies. Exact inspected revisions are in the [reference snapshots](docs/research/reference-snapshots.json).
+No external implementation, game code, or compiled dependency is included in this revision. The license file covers original project material only. The following are **research tools or candidates**, not integrated game dependencies. Phase 2 used a local prebuilt ReXGlue SDK and a separately cloned xverter; neither is vendored in this repository. Phase 1 coordinates are in the [reference snapshots](docs/research/reference-snapshots.json); [Phase 2 commands](docs/research/phase2-commands.md) record the newly used tools and release fingerprints.
 
 | Component | License evidence / constraints | Intended use |
 | --- | --- | --- |
@@ -13,6 +13,7 @@ No external implementation, game code, or compiled dependency is included in thi
 | Mesa / mesa-switch | Mixed component licenses; inspect every imported file and preserve notices; root MIT shorthand is insufficient for the whole dependency closure | Candidate Horizon Vulkan driver (NVK/NAK) |
 | libnx | ISC in inspected metadata; source contains per-file notices | Homebrew platform APIs |
 | deko3d | Zlib in inspected metadata | Alternative GPU backend, would require a separate shader/renderer plan |
+| xverter | MIT at commit `75c196aefe28692bd02dbdf8fb552485759733cd`; used locally for read-only GOD/SVOD and STFS verification/extraction, no code bundled | Actual Phase 2 extraction tool |
 | extract-xiso | Nonstandard/custom license in LICENSE.TXT, including advertising/attribution clauses; metadata NOASSERTION | Separately acquired local extraction tool; not bundled |
 | FFmpeg / libmspack / SDL / SIMDe | Configuration and version dependent; reference notices include LGPL-2.1, zlib and MIT components | Audit actual linked configuration before reuse or distribution |
 

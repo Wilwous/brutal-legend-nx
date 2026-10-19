@@ -1,6 +1,6 @@
 # Private game-file preparation
 
-This is the planned procedure. **No image has been supplied or processed.** Run it only for the owner's own original Xbox 360 dump. The ISO is always an input and is never rewritten, optimized, patched, repaired, or replaced.
+This is the general ISO-intake procedure. **Phase 2 supplied a GOD/SVOD directory rather than an ISO; it was verified and extracted privately without conversion.** See [the actual binary report](xbox360-analysis.md) and [executed commands](phase2-commands.md). Use the procedure below for a future owner-supplied original ISO; it must never be rewritten, optimized, patched, repaired, or replaced.
 
 ## 1. Intake and isolation
 
@@ -53,7 +53,7 @@ Inspect archive headers/indexes read-only and establish whether they are bounded
 
 ## 7. Determine ReXGlue processability
 
-Before generation, report input/loader blockers and select an exact SDK revision. First inspect its actual `--help` and available commands. The inspected upstream couples analysis with codegen, so do not invent a standalone analysis CLI or run it under the label “metadata inspection.” In this initial phase, stop at the report. A later approved bounded run must set all manifest, generated-glue and output paths inside the private workspace; ReXGlue may update manifests and write generated support files relative to project roots.
+Before generation, report input/loader blockers and select an exact SDK revision. First inspect its actual `--help` and available commands. The inspected upstream couples analysis with codegen, so do not invent a standalone analysis CLI or run it under the label “metadata inspection.” The Phase 2 bounded run is recorded separately; it did not complete analysis or emit game C++. Any further bounded run must set all manifest, generated-glue and output paths inside the private workspace; ReXGlue may update manifests and write generated support files relative to project roots.
 
 Record loader status, compression handling, section/import resolution, function discovery, jump tables, computed calls, unsupported instructions, exception requirements and additional modules. Preserve all warnings; do not force generation past errors and call it success. Report each stage separately: **readable ISO → extraction → XEX metadata → loader → analysis → codegen → compilation → runtime**. None implies the next.
 

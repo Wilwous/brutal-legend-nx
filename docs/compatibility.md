@@ -1,22 +1,23 @@
-# Compatibility
+# Compatibility — v0.0.2-binary-analysis
 
-Version: **v0.0.1-research**. No supported editions or playable builds.
+No supported playable editions or game builds. The following are **analysis fingerprints**, not a compatibility allowlist.
 
-| Item | State |
+| Item | VERIFIED result / remaining status |
 | --- | --- |
-| Xbox 360 title/media IDs | UNKNOWN — not read from an input executable |
-| Disc region, language, revision, update level | UNKNOWN |
-| Original `default.xex` SHA-256 | UNKNOWN — no file supplied |
-| ISO format/readability/extraction | NOT TESTED |
-| XEX loader / ReXGlue analysis | NOT TESTED |
-| Generated game code | NOT GENERATED |
-| Host executable / ARM64 cross build | NOT BUILT |
-| NRO / full application launch | NOT BUILT / NOT TESTED |
-| Applet mode | Not a planned baseline; no test performed |
-| Boot, menus, gameplay, graphics, sound, movies | NOT TESTED |
+| Input | LIVE GOD/SVOD, 33 fragments; three DLC packages and separate title update |
+| Base title/media IDs | `454108C5` / `7DD5E14B` |
+| Base XEX version | Execution/base raw `0x2` (`0.0.0.2`), not a marketing label |
+| Main XEX SHA-256 | `636a8036b630ae64acb582de4ac7303b8435de808f67e5343f1ddebc74d29456` |
+| Header variant | `live.dll`: different headers/hash, identical stored payload; not loaded as a module |
+| Title update | Extracted separately; source/target version fields read; not applied |
+| Integrity/extraction | Internal GOD/package checks and extraction passed; all source hashes unchanged |
+| ReXGlue host | Official 0.10.0 macOS ARM64 binary runs; selected XEX loads |
+| Imports | 274 recognized; 261 function shims present; required stubs remain |
+| Function analysis | Reached GapFill; stopped at 45-second bound; validation incomplete |
+| Game C++ / host game binary | NOT GENERATED / NOT BUILT |
+| Horizon NRO / launch | NOT BUILT / NOT TESTED |
+| Graphics, sound, movies, gameplay | NOT TESTED |
 | Input, saves, suspend/resume, dock/undock | NOT TESTED |
-| Stock clocks, thermals, resident memory | NOT MEASURED |
+| Game memory, stock-clock performance, thermals | NOT MEASURED |
 
-Future entries require the original XEX hash, all relevant update/module hashes, toolchain and patch revisions, console/firmware/Atmosphère/loader configuration, launch mode, clocks, reproducible scenario and observed failures. Record handheld and docked runs separately. Do not use another game's performance as a compatibility result.
-
-A filename, disc label, region claim, successful extraction, codegen exit status or linked binary does not prove compatibility. Do not populate a supported hash table until the exact executable has been inspected and the relevant milestone tested.
+[Binary report](research/xbox360-analysis.md) includes the full variant/update hashes, metadata, resources and limitations. Header/internal-hash consistency does not authenticate a retail dump or establish every edition's compatibility. Future hardware results require exact game/update/module hashes, compiler/SDK/driver/patch revisions, console/firmware/Atmosphère, launch mode, clocks and a reproducible scenario.
