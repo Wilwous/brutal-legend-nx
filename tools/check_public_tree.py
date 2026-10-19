@@ -3,7 +3,7 @@
 # Copyright (c) 2026 Wilwous
 """Check the staged research tree without reading any private game directory.
 
-This allowlist is deliberately limited to the documentation phase. It cannot
+This allowlist permits research documentation and the explicit original VMX test sources. It cannot
 determine copyright ownership or guarantee that text contains no sensitive data.
 """
 
@@ -22,6 +22,7 @@ EXACT = {
     ".github/workflows/research.yml", ".github/ISSUE_TEMPLATE/research.yml",
     ".github/ISSUE_TEMPLATE/binary-analysis.yml", ".github/ISSUE_TEMPLATE/config.yml",
     "docs/research/reference-snapshots.json",
+    "tests/vmx128/run.py", "tests/vmx128/emit_fixture.cpp", "tests/vmx128/README.md",
 }
 PRIVATE_PATH = re.compile(r"/(?:Users|home)/[^\s/]+/|[A-Za-z]:\\Users\\[^\s\\]+\\")
 SECRET = re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")

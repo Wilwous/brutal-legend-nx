@@ -1,4 +1,4 @@
-# Proposed architecture — Phase 3
+# Proposed architecture — Phase 4
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -9,7 +9,8 @@ flowchart TD
   C --> D[Pinned macOS ARM64 ReXGlue tool-mode loader: passed]
   D --> E[Function analysis: passed with five metadata hints]
   E --> F[Private generated C++: emitted; two sample objects compile]
-  F --> G[Private semantic checks and host link: future]
+  F --> T[Original isolated VMX fixtures: executed; gaps identified]
+  T --> G[Private runtime contracts and host link: future]
   G --> H[Independent Switch runtime and graphics tests: future]
   H --> I[Sanitized public findings]
 ```
@@ -27,6 +28,12 @@ Do not infer modules from extensions: `live.dll` is an XEX executable/header var
 **VERIFIED:** configured analysis and private C++ emission complete; two sample partitions compile to Mac objects. [Phase 3 findings and measurement limitations](research/rexglue-analysis.md).
 
 **Not yet validated:** complete CPU semantics, host game link/runtime and Horizon cross build. Keep all local manifests, generated glue, code, decoded images and outputs outside the public checkout. Host codegen tools and target runtime libraries are separate build inputs.
+
+## Phase 4 validation boundary
+
+The [isolated VMX tests](research/vmx128-validation.md) compile the actual pinned SDK emitter case using original operands and compare its output to a separate numerical oracle. They do not consume game code or reproduce the full FPSCR/runtime environment. Finite in-range results and mask 2/3 equivalence pass; same-register aliasing is defective relative to snapshot semantics, and overflow/infinity become NaNs. Xbox hardware equivalence remains UNKNOWN. None of the 237 static game float16_4 sites aliases its source/destination registers.
+
+The [runtime audit](research/runtime-audit.md) maps every imported function to source behavior: 7 IMPLEMENTED, 184 PARTIAL, 61 STUB, 9 UNKNOWN. Preserve the distinction between symbol binding, a host implementation, a Horizon adapter and observed guest behavior. Host exception recovery/FP state patches do not supply guest unwinding. STFS container parsing does not supply guest I/O-manager STFS device operations.
 
 ## CPU and runtime contract
 

@@ -1,6 +1,6 @@
 # Brütal Legend NX
 
-**Wilwous · v0.0.3-rexglue-analysis · Xbox 360 → Nintendo Switch / Atmosphère**
+**Wilwous · v0.0.4-runtime-audit · Xbox 360 → Nintendo Switch / Atmosphère**
 
 Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Legend using static PowerPC recompilation and a homebrew runtime.
 
@@ -8,7 +8,7 @@ Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Le
 
 ## Current status
 
-Phase 3 snapshot: **2026-10-19**, following `v0.0.2-binary-analysis` (`7afb1d3`).
+Phase 4 snapshot: **2026-10-20**, following `v0.0.3-rexglue-analysis` (`ce44276`).
 
 - **VERIFIED:** the supplied directory contains a LIVE Games on Demand/SVOD package with 33 data fragments, three DLC packages and one title-update package. It contains no standalone ISO.
 - **VERIFIED:** full GOD hash-tree verification and private extraction succeeded. The base has 284 files totaling 5,544,498,100 bytes. All 38 source game files retained their SHA-256, size and modification time.
@@ -17,9 +17,11 @@ Phase 3 snapshot: **2026-10-19**, following `v0.0.2-binary-analysis` (`7afb1d3`)
 - **VERIFIED:** GapFill completes. Default analysis fails on five branch targets; five privately checked function hints allow Validate and C++ emission to finish with exit 0. There are 48,371 emitted bodies and 261 imported functions.
 - **VERIFIED:** two selected generated partitions compile to macOS ARM64 objects. There are 109 float16_4 warnings requiring semantic checks; no generic unimplemented-instruction markers were found. No full game link or Switch build was attempted.
 - **MEASUREMENT LIMIT:** the second run recorded 1,096.56 seconds calendar time versus 77.033 supervisor monotonic seconds. The intended 300-second calendar limit was not enforced; the cause of the clock discrepancy is UNKNOWN. Peak tool RSS was 639.78 MiB.
-- **UNKNOWN:** complete instruction/function coverage, runtime correctness, shaders, decoded audio-bank format, memory budget and stock-clock performance.
+- **VERIFIED:** isolated original VMX fixtures ran at O0/O2 and with sanitizers: finite in-range conversion agrees with an independent truncate oracle; same-register corruption and overflow/infinity differences were reproduced. Xbox hardware equivalence remains UNKNOWN.
+- **VERIFIED:** all 261 runtime functions audited by source: 7 IMPLEMENTED, 184 PARTIAL, 61 STUB, 9 UNKNOWN. STFS false-success outputs and exception stubs remain concrete risks.
+- **UNKNOWN:** runtime correctness, shaders, decoded audio-bank format, game memory budget and stock-clock performance.
 
-**Verdict: PASS for configuration-assisted analysis and minimal generation; broader port feasibility remains PARTIAL / unproven.** [Phase 3 results, commands and timing caveat](docs/research/rexglue-analysis.md) · [Binary findings](docs/research/xbox360-analysis.md) · [Feasibility and blockers](docs/feasibility.md)
+**Verdict: PARTIAL; runtime-correct execution remains BLOCKED by semantic/runtime prerequisites.** The Phase 3 mechanical analysis/generation pass stands. [VMX validation](docs/research/vmx128-validation.md) · [Complete runtime audit](docs/research/runtime-audit.md). [Phase 3 results, commands and timing caveat](docs/research/rexglue-analysis.md) · [Binary findings](docs/research/xbox360-analysis.md) · [Feasibility and blockers](docs/feasibility.md)
 
 ## Technical approach
 
@@ -36,10 +38,11 @@ The first architecture candidate is ReXGlue plus reviewed Horizon adaptations an
 | XEX metadata and loader | Completed for the supplied `default.xex` |
 | Function analysis / generation | Passed with five metadata hints; generated code remains private |
 | Minimal compiler check | Two generated partitions compiled on Mac; complete link and execution untested |
-| Runtime, shaders, audio and hardware | Not validated |
+| VMX / runtime source audit | Isolated tests executed and gaps characterized; all 261 imports classified |
+| Runtime execution, shaders, audio and hardware | Not validated |
 | Game build or distribution | Not started |
 
-Next: verify the observed VMX128 float16_4 combination with small original fixtures, then audit required exception/runtime paths before a game execution experiment. [Roadmap](docs/roadmap.md).
+Next: obtain independently justified Xbox special-value semantics and define the smallest required memory/TLS/exception contracts before a game execution experiment. [Roadmap](docs/roadmap.md).
 
 ## Game files and compatibility
 
@@ -49,7 +52,7 @@ Users must supply their own legally obtained game files. The supplied `live.dll`
 
 ## Build and installation
 
-No game build command or installation package exists. The repository contains research documentation and an original publication check:
+No game build command or installation package exists. The repository contains research documentation, [original isolated VMX tests](tests/vmx128/README.md) and a publication check:
 
 ```sh
 python3 tools/check_public_tree.py

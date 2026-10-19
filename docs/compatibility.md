@@ -1,4 +1,4 @@
-# Compatibility — v0.0.3-rexglue-analysis
+# Compatibility — v0.0.4-runtime-audit
 
 No supported playable editions or game builds. The following are **analysis fingerprints**, not a compatibility allowlist.
 
@@ -15,10 +15,11 @@ No supported playable editions or game builds. The following are **analysis fing
 | Imports | 274 recognized; 261 function shims present; required stubs remain |
 | Function analysis | Validate passes with five explicit function hints; default configuration fails on five branch targets |
 | Game C++ / host game binary | GENERATED PRIVATELY / NOT BUILT OR LINKED; two selected partitions compile to Mac objects |
-| Instruction semantics | 109 float16_4 warnings; zero generic unimplemented markers; correctness not established |
+| Instruction semantics | Isolated fixtures reproduce alias and special-value concerns; mask warnings are diagnostically restrictive; hardware equivalence UNKNOWN |
+| Runtime audit | 261 source classifications: 7 IMPLEMENTED / 184 PARTIAL / 61 STUB / 9 UNKNOWN; no game execution |
 | Horizon NRO / launch | NOT BUILT / NOT TESTED |
 | Graphics, sound, movies, gameplay | NOT TESTED |
 | Input, saves, suspend/resume, dock/undock | NOT TESTED |
 | Game memory, stock-clock performance, thermals | NOT MEASURED |
 
-[Phase 3 report](research/rexglue-analysis.md) records coverage, warnings, commands and a calendar-budget measurement defect. [Binary report](research/xbox360-analysis.md) includes the full variant/update hashes, metadata, resources and limitations. Header/internal-hash consistency does not authenticate a retail dump or establish every edition's compatibility. Future hardware results require exact game/update/module hashes, compiler/SDK/driver/patch revisions, console/firmware/Atmosphère, launch mode, clocks and a reproducible scenario.
+[Phase 4 tests](research/vmx128-validation.md) and [runtime matrix](research/runtime-audit.md) record current semantic/runtime gates. [Phase 3 report](research/rexglue-analysis.md) records coverage, warnings, commands and a calendar-budget measurement defect. [Binary report](research/xbox360-analysis.md) includes the full variant/update hashes, metadata, resources and limitations. Header/internal-hash consistency does not authenticate a retail dump or establish every edition's compatibility. Future hardware results require exact game/update/module hashes, compiler/SDK/driver/patch revisions, console/firmware/Atmosphère, launch mode, clocks and a reproducible scenario.

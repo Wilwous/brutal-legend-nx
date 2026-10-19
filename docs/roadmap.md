@@ -1,4 +1,4 @@
-# Research roadmap — Phase 3
+# Research roadmap — Phase 4
 
 ## Completed
 
@@ -10,19 +10,19 @@
 
 **R2b — Deep analysis / minimal generation:** completed with five checked function hints on the unmodified base. GapFill completed, configured Validate passed and private code generation exited 0. Generated output has 48,371 bodies plus 261 imported functions. Two selected partitions compile to Mac objects; no complete link or execution was attempted. The initial run's five branch-target failures and all 109 float16_4 warnings are recorded. The second run exceeded its intended calendar bound because monotonic supervision disagreed with the system timer; no third analyzer run was made. [Commands, coverage and timing caveat](research/rexglue-analysis.md).
 
-## Next exact task: R2c — VMX semantics and runtime prerequisites
+**R2c — Isolated VMX tests:** completed with an independent numeric oracle and the actual pinned emitter case. Each O0/O2/sanitized build executed 212,068 synthetic invocations. Finite in-range, distinct-lane and mask 2/3 checks passed. Overflow/infinity differ from IEEE round-toward-zero; same-register conversion corrupts source data. These are characterized gaps, not a hardware-equivalence PASS. No alias appears among the 237 prior game sites. [Methodology/results](research/vmx128-validation.md).
 
-Keep `default.xex` SHA-256 `636a8036b630ae64acb582de4ac7303b8435de808f67e5343f1ddebc74d29456` as the unpatched baseline. No title update or extra module is authorized by the analysis result.
+**R2d — Runtime source audit:** all 261 imported functions mapped/classified: 7 IMPLEMENTED, 184 PARTIAL, 61 STUB, 9 UNKNOWN. Exception/STFS behavior, a conservative static early-call closure, reference approaches and license boundaries recorded. No runtime API was implemented or game-specific patch copied. [Complete matrix](research/runtime-audit.md).
 
-Create small original fixtures for float16_4 mask 2/3, shift 0: conversion boundaries, subnormals, NaNs/infinities, signs, source/destination aliasing and unchanged lanes. All 109 warning sites use mask 3 / shift 0; Xenia's source treats this permutation like mask 2. That supports testing an overly restrictive warning guard, not assuming a broken instruction or blindly suppressing diagnostics. Compare to an independent semantic reference; emulator agreement alone is not hardware proof. Do not compile the full game to test this operation.
+## Next exact task: R2e — resolve VMX evidence and early runtime contracts
 
-**Acceptance:** reproducible, game-independent expected/results cases and a documented decision to retain the warning or propose a focused SDK change. Do not migrate toolchains without a demonstrated fix for a concrete deficiency. Before any separately budgeted analysis run, correct supervision to handle sleep-inclusive and calendar deadlines. The Phase 3 allowance of two analyzer runs is consumed.
+Keep the exact unpatched base, existing configuration/five function corrections and generated output. Obtain an independently justified Xbox half-float special-value/conversion corpus; do not adopt ordinary IEEE behavior as hardware truth. Propose alias-safe emission only as a separate small SDK change with the existing isolated regressions, and assess whether game sites can receive problematic values. Do not merely suppress the 109 warnings.
 
-## R2d — exception, runtime and variant/update decision
+Next prioritize the observed static entry candidates: memory allocation/protection, TLS, module/header lookup, critical sections/events/waits and deterministic diagnostic/termination behavior. Separate the debugger naming exception from C++/SEH unwind requirements. Absence of direct STFS calls does not prove absence of indirect/later content use; observe actual base-file/content paths before implementing device operations. Never treat unchanged output plus success as a completed STFS operation.
 
-Privately inspect the 106 analyzer-noted SEH-related functions and audit required imported stubs, especially `RtlUnwind`, `__C_specific_handler`, `StfsCreateDevice` and `StfsControlDevice`. Identify relevant exception/function chunks and actual content/save/module paths; shim existence is not correctness. Freeze the base fingerprint. Separately validate `live.dll`'s changed headers and the update's source digest/patch relationship before selecting an updated baseline.
+**Acceptance:** documented hardware-evidence limits, independently justified expected conversion behavior, a focused upstream change proposal if supported, and explicit contracts/tests for the smallest required initialization APIs. This is preparation for a separately bounded private entry trace; no full game build or Switch deployment yet. Fix sleep-inclusive/calendar supervision before another analyzer run; the Phase 3 two-run allowance remains consumed.
 
-Inventory actual shader binaries from the known startup/archive family and classify the nonstandard sound-bank encoding without unpacking every asset. No replacement runtime, compiler or renderer should be written merely from filename/string evidence.
+Separately validate alternate `live.dll` headers and the title-update patch relationship before changing the baseline. Inventory actual shaders and classify nonstandard sound-bank encoding only when those work items are scheduled.
 
 ## R3 — independent Horizon probes (not started)
 
