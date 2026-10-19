@@ -1,4 +1,4 @@
-# Proposed architecture — Phase 4
+# Proposed architecture — Phase 5
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -29,11 +29,19 @@ Do not infer modules from extensions: `live.dll` is an XEX executable/header var
 
 **Not yet validated:** complete CPU semantics, host game link/runtime and Horizon cross build. Keep all local manifests, generated glue, code, decoded images and outputs outside the public checkout. Host codegen tools and target runtime libraries are separate build inputs.
 
+## Phase 5 component foundation
+
+[Runtime foundation](research/runtime-foundation.md) now provides original checked memory, host-thread TLS and explicit diagnostic failure handling, plus a narrowly scoped BSD SDK safety patch. These components execute synthetic commands independently; an SDK/PPC-context import bridge remains future work. Checked memory uses allocation-sized logical permissions and quarantined guest addresses; it does not insert bounds checks into existing generated memory operations or replace Horizon mappings.
+
+The actual prebuilt SDK memory subsystem passed valid-range allocation/mapping/lifecycle probes. A deliberate read-only write child timed out after 45 seconds; native fault delivery/recovery is UNKNOWN and must be investigated before an execution bridge. Guest unwinding remains unsupported. The SDK patch fixes vector aliasing and TLS bounds, and replaces STFS false success with NOT_IMPLEMENTED; it is tested as source/isolated functions, not integrated into the installed runtime.
+
 ## Phase 4 validation boundary
 
 The [isolated VMX tests](research/vmx128-validation.md) compile the actual pinned SDK emitter case using original operands and compare its output to a separate numerical oracle. They do not consume game code or reproduce the full FPSCR/runtime environment. Finite in-range results and mask 2/3 equivalence pass; same-register aliasing is defective relative to snapshot semantics, and overflow/infinity become NaNs. Xbox hardware equivalence remains UNKNOWN. None of the 237 static game float16_4 sites aliases its source/destination registers.
 
 The [runtime audit](research/runtime-audit.md) maps every imported function to source behavior: 7 IMPLEMENTED, 184 PARTIAL, 61 STUB, 9 UNKNOWN. Preserve the distinction between symbol binding, a host implementation, a Horizon adapter and observed guest behavior. Host exception recovery/FP state patches do not supply guest unwinding. STFS container parsing does not supply guest I/O-manager STFS device operations.
+
+The half-float numeric gate remains open: pinned Canary and Xenia/ReXGlue software paths disagree, and public DirectXMath notes warn of an Xbox-specific variant. Only the alias dependency fix is applied in the separate SDK patch; no numeric change or game regeneration is made.
 
 ## CPU and runtime contract
 

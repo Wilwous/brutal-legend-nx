@@ -20,6 +20,7 @@ struct Context {
 int main() {
   std::cout << "#include <cstdint>\n#include <iostream>\n#include <bit>\n"
     "union Vec { uint8_t u8[16]; uint32_t u32[4]; uint16_t u16[8]; float f32[4]; };\n"
+    "using PPCVRegister = Vec;\n"
     "union Reg { uint32_t u32; uint16_t u16; float f32; };\n";
   for (unsigned mask : {2u, 3u}) for (unsigned shift : {0u, 1u, 2u})
     for (unsigned alias : {0u, 1u}) {

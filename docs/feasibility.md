@@ -1,22 +1,23 @@
-# Feasibility — Phase 4
+# Feasibility — Phase 5
 
-Assessment: **2026-10-20 · v0.0.4-runtime-audit**. Verdict: **PARTIAL; runtime-correct game execution remains BLOCKED pending semantic and runtime contracts**. The Phase 3 configuration-assisted analysis/generation PASS stands.
+Assessment: **2026-10-20 · v0.0.5-runtime-foundation**. Verdict: **PARTIAL; runtime-correct game execution remains BLOCKED pending semantic and runtime contracts**. The Phase 3 configuration-assisted analysis/generation PASS stands.
 
-Extraction, XEX loading, configured analysis and private C++ emission are verified. Two selected game partitions previously compiled on Mac. Phase 4 executed original isolated VMX fixtures at O0/O2 and with sanitizers, and classified all 261 imported functions by source behavior. Full linking, runtime correctness, execution and Nintendo Switch compatibility are not established. [Phase 3 results and exact limitations](research/rexglue-analysis.md) supersede the historical [Phase 2 timeout](research/xbox360-analysis.md).
+Extraction, XEX loading, configured analysis and private C++ emission are verified. Two selected game partitions previously compiled on Mac. Phase 4 executed isolated VMX fixtures and classified all 261 imports. Phase 5 implemented original checked memory/TLS components and an SDK alias/TLS/STFS patch, with deterministic O0/O2/sanitized regressions. The actual host SDK allocator passed valid-range probes; native protection-fault behavior remains UNKNOWN after a bounded timeout. Full linking, runtime correctness, execution and Nintendo Switch compatibility are not established. [Phase 3 results and exact limitations](research/rexglue-analysis.md) supersede the historical [Phase 2 timeout](research/xbox360-analysis.md).
 
 | Subsystem | Evidence state | Engineering assessment |
 | --- | --- | --- |
 | Input/extraction | VERIFIED | GOD/SVOD and DLC/TU readable; hash-verified extraction and source preservation passed |
 | Executable parsing | VERIFIED | Main XEX fingerprinted; encrypted/LZX image loaded natively with ReXGlue 0.10.0 |
 | Analysis / generation | VERIFIED with configuration | GapFill completes; five checked function hints clear default validation failures; 48,371 bodies emitted |
-| CPU semantics | PARTIAL / BLOCKED | Mask 2/3 diagnostic equivalence tested; finite in-range conversion agrees with independent truncate oracle. Overflow/infinity differ; aliased emission corrupts inputs. Hardware equivalence UNKNOWN |
+| CPU semantics | PARTIAL / BLOCKED | Alias-only SDK patch removes reproduced corruption; numeric behavior unchanged. Canary, Xenia/ReXGlue and library documentation do not establish one verified hardware oracle |
 | Runtime imports | VERIFIED source audit / untested conformance | All 261 mapped: 7 IMPLEMENTED, 184 PARTIAL, 61 STUB, 9 UNKNOWN; all 274 ordinals recognized including variables |
 | Runtime semantics | BLOCKED / UNKNOWN | Context/unwind/handler stubs and STFS false-success outputs confirmed; RtlRaiseException has a possible static entry path, actual execution/boot necessity UNKNOWN |
 | Graphics | UNKNOWN / major unresolved gate | D3D9/Xenos path and shader archive names identified; no translated shader or correct frame |
 | Audio/middleware | UNKNOWN / substantial work | FMOD/Havok/Bink/Lua evidence, XMA imports; 157 banks lack standard initial FSB magic; codecs/active paths unproven |
 | Input | INFERRED reusable foundation | XamInput and libnx reference adapters exist; no game input test |
 | Filesystem/saves | UNKNOWN | File/content imports and archives identified; streaming/persistence behavior not tested |
-| Memory | UNKNOWN / major unresolved gate | Header image/stack/TLS known; heap/GPU/streaming peaks, alias/protection and faults not tested on Switch |
+| Memory | VERIFIED limited components / UNKNOWN integration | Checked bounded arena passes bounds/ownership/epoch/protection/endian tests. Native SDK valid-range probes pass; read-only fault child times out. Guest aliases, raw generated accesses and Horizon behavior remain open |
+| TLS | PARTIAL | Original host-thread/guest-address component and SDK bounds patch pass; PCR/r13, XThread lifecycle, fibers/APCs and actual guest export binding untested |
 | Performance | UNKNOWN | Tool RSS/timing is not game performance; no stock-clock FPS/resolution prediction |
 | Host toolchain | VERIFIED for limited checks | Pinned macOS ARM64 CLI completed emission; two partitions compile to objects; full compiler/link closure UNKNOWN |
 | Target build/deployment | UNKNOWN | Private game C++ exists; no complete host game binary, ARM64 Horizon build, NRO or hardware test |
@@ -29,18 +30,20 @@ Extraction, XEX loading, configured analysis and private C++ emission are verifi
 | B02 extraction | Cleared for supplied data | Internal hash checks/bounds/extraction passed; authenticity/signature provenance remains UNKNOWN |
 | B03 identity/modules/update | Partly cleared | Main XEX metadata known; `live.dll` has changed headers with identical stored payload; source authenticity not established; TU not applied |
 | B04 function analysis | Cleared with five metadata hints | Default Validate fails on five branch targets; explicit bounded spans permit Validate and emission. Exhaustive control-flow coverage remains unproved |
-| B05 memory/exceptions | Unresolved | CaptureContext/Unwind/handler only warn; static early RaiseException path exists. Separate debugger naming from guest unwinding and host fault recovery |
+| B05 memory/exceptions | Unresolved | Diagnostic boundary rejects unsupported exception operations; installed SDK void stubs remain. Native read-only write child timed out at 45 s. Guest unwind and deterministic host fail-stop/recovery require separate evidence |
 | B06 graphics | Unresolved | Inventory actual `.fxo` shaders and render features; validate PM4, formats/resolves, readbacks and invalidation before adapting a renderer |
-| B07 runtime/media/assets | Source audit complete, execution unresolved | 61 stubs include STFS success with unwritten output, fabricated session/device results and missing I/O-manager operations. Required paths, banks, codecs and saves remain UNKNOWN |
+| B07 runtime/media/assets | Source correction / integration unresolved | Source patch changes STFS to NOT_IMPLEMENTED without pointer access; installed SDK remains unchanged. Other false-success stubs, required paths, banks, codecs and saves remain UNKNOWN |
 | B08 memory/performance | UNKNOWN | Measure guest/game/renderer memory and representative stock-clock hardware workloads after correctness milestones |
 | B09 build/dependencies | Partly cleared | Native analysis/codegen and two sample object compiles pass; complete linking and Horizon SDK/Mesa/patch closure remain unvalidated |
 | B10 deployment | UNKNOWN | NRO/application-mode permissions, launch/exit, controller/audio, persistence and dock transitions untested |
-| B11 VMX128 semantics | Confirmed SDK differences / hardware UNKNOWN | 212,068 synthetic invocations per build; finite in-range/mask/lane checks pass. Overflow/infinity become NaNs; same-register conversion corrupts source. No aliases among 237 static game sites; dynamic inputs unknown |
+| B11 VMX128 semantics | Alias source fix tested / numeric hardware UNKNOWN | 212,068 invocations per patched build: zero alias differences. Numeric comparison results retained; Canary uses different rounding/denormal/range behavior. No verified special-value hardware corpus |
 | B12 measurement supervision | Confirmed process defect | Second run reports 1,096.56 calendar seconds vs 77.033 monotonic seconds. The intended 300-second calendar bound was not enforced; fix sleep-inclusive and calendar deadlines before further analysis |
 
 The PE declares 14 sections and SizeOfImage 15,750,656 bytes; the loaded XEX allocation is 14,090,240 bytes and the SDK's analysis view excludes the out-of-range discardable `.reloc` section. These differing header/allocation values require preserving their meanings, not using either as total game RAM or declaring the input corrupt without further evidence.
 
 The complete [VMX methodology/results](research/vmx128-validation.md) and [261-function matrix, exception/STFS findings and reference comparison](research/runtime-audit.md) define what is confirmed. No SDK/runtime fix was applied; no title-specific patch or reference implementation was copied.
+
+The [Phase 5 report](research/runtime-foundation.md) separates original standalone contracts, source-only SDK corrections and the unchanged native SDK probe. No full game or Switch execution result follows from these checks.
 
 ## Platform and resource constraints
 
@@ -52,6 +55,6 @@ Linux was **not required for the completed analysis**. A later Horizon baseline 
 
 ## Decision boundaries
 
-No compiler redesign or migration is justified. The default discovery failures have a demonstrated configuration remedy. XenonRecomp has the same unexpected float16_4 guard and no demonstrated advantage for this case. Original fixtures now demonstrate specific numeric and alias concerns. Obtain independent Xbox special-value evidence and propose any narrowly scoped emitter change separately; retain exception/STFS, graphics/media and hardware gates.
+No compiler redesign or migration is justified. The default discovery failures have a demonstrated configuration remedy. XenonRecomp has the same unexpected float16_4 guard and no demonstrated advantage for this case. Original fixtures now validate an alias-only source correction; numeric changes remain unjustified by conflicting software evidence. Diagnose the native protection-fault timeout, then validate a tiny original PPC-context/export bridge before any private entry trace; retain guest exception, STFS functionality, graphics/media and hardware gates.
 
 No silent force flags, automatic `live.dll` inclusion, title-update application, API stubbing or renderer optimization is justified by loader success. A complete generated C++ set would still require compile/link checks, behavioral tests and separate Switch hardware verification. There is no playable build and no Release.

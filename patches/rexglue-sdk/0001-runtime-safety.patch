@@ -1,0 +1,108 @@
+--- a/src/codegen/builders/vector.cpp
++++ b/src/codegen/builders/vector.cpp
+@@ -1330,25 +1330,28 @@
+       if (ctx.insn.operands[3] != 2 || ctx.insn.operands[4] > 2)
+         REXCODEGEN_WARN("Unexpected float16_4 pack instruction at {:X}", ctx.base);
+ 
++      ctx.println("\t{{");
++      ctx.println("\tconst PPCVRegister vpkSource = {};", ctx.v(ctx.insn.operands[1]));
+       for (size_t i = 0; i < 4; i++) {
+         size_t srcIdx = 3 - i;  // Guest element i is at host array index 3-i
+         size_t dstIdx = (3 - i) + (2 * ctx.insn.operands[4]);  // Output also reversed
+-        ctx.println("\t{}.u32 = ({}.u32[{}]&0x7FFFFFFF);", ctx.temp(), ctx.v(ctx.insn.operands[1]),
++        ctx.println("\t{}.u32 = ({}.u32[{}]&0x7FFFFFFF);", ctx.temp(), "vpkSource",
+                     srcIdx);
+         ctx.println(
+             "\t{0}.u8[0] = ({1}.f32 != {1}.f32) || ({1}.f32 > 65504.0f) ? 0xFF : "
+             "(({2}.u32[{3}]&0x7f800000)>>23);",
+-            ctx.v_temp(), ctx.temp(), ctx.v(ctx.insn.operands[1]), srcIdx);
++            ctx.v_temp(), ctx.temp(), "vpkSource", srcIdx);
+         ctx.println("\t{}.u16 = {}.u8[0] != 0xFF ? (({}.u32[{}]&0x7FE000)>>13) : 0x0;", ctx.temp(),
+-                    ctx.v_temp(), ctx.v(ctx.insn.operands[1]), srcIdx);
++                    ctx.v_temp(), "vpkSource", srcIdx);
+         ctx.println(
+             "\t{0}.u16[{1}] = {2}.u8[0] != 0xFF ? ({2}.u8[0] > 0x70 ? "
+             "((({2}.u8[0]-0x70)<<10)+{3}.u16) : (0x71-{2}.u8[0] > 31 ? 0x0 : "
+             "((0x400+{3}.u16)>>(0x71-{2}.u8[0])))) : 0x7FFF;",
+             ctx.v(ctx.insn.operands[0]), dstIdx, ctx.v_temp(), ctx.temp());
+         ctx.println("\t{}.u16[{}] |= (({}.u32[{}]&0x80000000)>>16);", ctx.v(ctx.insn.operands[0]),
+-                    dstIdx, ctx.v(ctx.insn.operands[1]), srcIdx);
++                    dstIdx, "vpkSource", srcIdx);
+       }
++      ctx.println("\t}}");
+       break;
+     }
+ 
+--- a/src/system/xthread.cpp
++++ b/src/system/xthread.cpp
+@@ -904,21 +904,41 @@
+ }
+ 
+ bool XThread::GetTLSValue(uint32_t slot, uint32_t* value_out) {
+-  if (slot * 4 > tls_total_size_) {
++  // The static template precedes the dynamic slots in this allocation.
++  // Divide before multiplying: an untrusted slot must not wrap into slot zero.
++  if (!value_out || !tls_static_address_ || tls_dynamic_address_ < tls_static_address_) {
+     return false;
+   }
+-
+-  auto mem = memory()->TranslateVirtual(tls_dynamic_address_ + slot * 4);
++  const uint32_t static_size = tls_dynamic_address_ - tls_static_address_;
++  if (static_size > tls_total_size_ || slot >= (tls_total_size_ - static_size) / 4) {
++    return false;
++  }
++  const uint64_t address = uint64_t(tls_dynamic_address_) + uint64_t(slot) * 4;
++  if (address + 4 > (uint64_t(1) << 32)) {
++    return false;
++  }
++
++  auto mem = memory()->TranslateVirtual(static_cast<uint32_t>(address));
+   *value_out = memory::load_and_swap<uint32_t>(mem);
+   return true;
+ }
+ 
+ bool XThread::SetTLSValue(uint32_t slot, uint32_t value) {
+-  if (slot * 4 >= tls_total_size_) {
++  // The static template precedes the dynamic slots in this allocation.
++  // Divide before multiplying: an untrusted slot must not wrap into slot zero.
++  if (!tls_static_address_ || tls_dynamic_address_ < tls_static_address_) {
+     return false;
+   }
+-
+-  auto mem = memory()->TranslateVirtual(tls_dynamic_address_ + slot * 4);
++  const uint32_t static_size = tls_dynamic_address_ - tls_static_address_;
++  if (static_size > tls_total_size_ || slot >= (tls_total_size_ - static_size) / 4) {
++    return false;
++  }
++  const uint64_t address = uint64_t(tls_dynamic_address_) + uint64_t(slot) * 4;
++  if (address + 4 > (uint64_t(1) << 32)) {
++    return false;
++  }
++
++  auto mem = memory()->TranslateVirtual(static_cast<uint32_t>(address));
+   memory::store_and_swap<uint32_t>(mem, value);
+   return true;
+ }
+--- a/src/kernel/xboxkrnl/xboxkrnl_io.cpp
++++ b/src/kernel/xboxkrnl/xboxkrnl_io.cpp
+@@ -747,15 +747,15 @@
+ }
+ 
+ u32 StfsCreateDevice_entry(mapped_void device_object, u32 flags, mapped_u32 out_device) {
+-  REXKRNL_WARN("StfsCreateDevice - stub");
+-  // if (out_device) *out_device = 0;
+-  return X_STATUS_SUCCESS;
++  REXKRNL_WARN("StfsCreateDevice - unsupported; rejecting operation");
++  // Do not dereference unvalidated output pointers on an unsupported operation.
++  return X_STATUS_NOT_IMPLEMENTED;
+ }
+ 
+ u32 StfsControlDevice_entry(mapped_void device_object, u32 ioctl, mapped_void input_buffer,
+                             u32 input_length, mapped_void output_buffer, u32 output_length) {
+-  REXKRNL_WARN("StfsControlDevice({:#x}) - stub", (uint32_t)ioctl);
+-  return X_STATUS_SUCCESS;
++  REXKRNL_WARN("StfsControlDevice({:#x}) - unsupported; rejecting operation", (uint32_t)ioctl);
++  return X_STATUS_NOT_IMPLEMENTED;
+ }
+ 
+ }  // namespace rex::kernel::xboxkrnl

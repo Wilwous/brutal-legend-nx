@@ -1,6 +1,6 @@
 # Brütal Legend NX
 
-**Wilwous · v0.0.4-runtime-audit · Xbox 360 → Nintendo Switch / Atmosphère**
+**Wilwous · v0.0.5-runtime-foundation · Xbox 360 → Nintendo Switch / Atmosphère**
 
 Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Legend using static PowerPC recompilation and a homebrew runtime.
 
@@ -8,7 +8,7 @@ Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Le
 
 ## Current status
 
-Phase 4 snapshot: **2026-10-20**, following `v0.0.3-rexglue-analysis` (`ce44276`).
+Phase 5 snapshot: **2026-10-20**, following `v0.0.4-runtime-audit` (`7eab299`).
 
 - **VERIFIED:** the supplied directory contains a LIVE Games on Demand/SVOD package with 33 data fragments, three DLC packages and one title-update package. It contains no standalone ISO.
 - **VERIFIED:** full GOD hash-tree verification and private extraction succeeded. The base has 284 files totaling 5,544,498,100 bytes. All 38 source game files retained their SHA-256, size and modification time.
@@ -18,10 +18,12 @@ Phase 4 snapshot: **2026-10-20**, following `v0.0.3-rexglue-analysis` (`ce44276`
 - **VERIFIED:** two selected generated partitions compile to macOS ARM64 objects. There are 109 float16_4 warnings requiring semantic checks; no generic unimplemented-instruction markers were found. No full game link or Switch build was attempted.
 - **MEASUREMENT LIMIT:** the second run recorded 1,096.56 seconds calendar time versus 77.033 supervisor monotonic seconds. The intended 300-second calendar limit was not enforced; the cause of the clock discrepancy is UNKNOWN. Peak tool RSS was 639.78 MiB.
 - **VERIFIED:** isolated original VMX fixtures ran at O0/O2 and with sanitizers: finite in-range conversion agrees with an independent truncate oracle; same-register corruption and overflow/infinity differences were reproduced. Xbox hardware equivalence remains UNKNOWN.
-- **VERIFIED:** all 261 runtime functions audited by source: 7 IMPLEMENTED, 184 PARTIAL, 61 STUB, 9 UNKNOWN. STFS false-success outputs and exception stubs remain concrete risks.
+- **VERIFIED:** original checked memory/TLS components and diagnostic boundary pass standalone tests. A focused SDK patch fixes aliasing/TLS bounds and rejects unsupported STFS calls. Installed SDK and game output remain unchanged.
+- **UNKNOWN:** native protection-fault handling: one deliberate read-only write child timed out after 45 seconds; no retry.
+- **VERIFIED:** all 261 baseline runtime functions audited by source: 7 IMPLEMENTED, 184 PARTIAL, 61 STUB, 9 UNKNOWN. STFS false-success outputs and exception stubs remain concrete risks.
 - **UNKNOWN:** runtime correctness, shaders, decoded audio-bank format, game memory budget and stock-clock performance.
 
-**Verdict: PARTIAL; runtime-correct execution remains BLOCKED by semantic/runtime prerequisites.** The Phase 3 mechanical analysis/generation pass stands. [VMX validation](docs/research/vmx128-validation.md) · [Complete runtime audit](docs/research/runtime-audit.md). [Phase 3 results, commands and timing caveat](docs/research/rexglue-analysis.md) · [Binary findings](docs/research/xbox360-analysis.md) · [Feasibility and blockers](docs/feasibility.md)
+**Verdict: PARTIAL; runtime-correct execution remains BLOCKED by semantic/runtime prerequisites.** The Phase 3 mechanical pass stands; [Phase 5 contracts and tested corrections](docs/research/runtime-foundation.md) do not establish game execution. [VMX validation](docs/research/vmx128-validation.md) · [Complete runtime audit](docs/research/runtime-audit.md). [Phase 3 results, commands and timing caveat](docs/research/rexglue-analysis.md) · [Binary findings](docs/research/xbox360-analysis.md) · [Feasibility and blockers](docs/feasibility.md)
 
 ## Technical approach
 
@@ -38,11 +40,12 @@ The first architecture candidate is ReXGlue plus reviewed Horizon adaptations an
 | XEX metadata and loader | Completed for the supplied `default.xex` |
 | Function analysis / generation | Passed with five metadata hints; generated code remains private |
 | Minimal compiler check | Two generated partitions compiled on Mac; complete link and execution untested |
-| VMX / runtime source audit | Isolated tests executed and gaps characterized; all 261 imports classified |
+| VMX / runtime source audit | Baseline imports classified; source alias/TLS/STFS corrections tested |
+| Standalone memory/TLS foundation | Implemented/tested; SDK/PPC-context bridge and guest ABI integration still future |
 | Runtime execution, shaders, audio and hardware | Not validated |
 | Game build or distribution | Not started |
 
-Next: obtain independently justified Xbox special-value semantics and define the smallest required memory/TLS/exception contracts before a game execution experiment. [Roadmap](docs/roadmap.md).
+Next: diagnose native protection-fault behavior, then validate a tiny original PPC-context/export bridge; continue independent Xbox numeric research. [Roadmap](docs/roadmap.md).
 
 ## Game files and compatibility
 
@@ -58,12 +61,12 @@ No game build command or installation package exists. The repository contains re
 python3 tools/check_public_tree.py
 ```
 
-CI checks public contents and local documentation links only. It never fetches game data, invokes codegen, builds the game or publishes releases. Overclocking is not a baseline requirement; no FPS or resolution is predicted.
+CI checks public contents/links and builds/runs the original dependency-free memory/TLS components at O0/O2 and with sanitizers. It never fetches game data or the SDK, invokes codegen, builds the game or publishes releases. Overclocking is not a baseline requirement; no FPS or resolution is predicted.
 
 ## Contributing, credits and licensing
 
 Research and project direction: **Wilwous**. See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [reference comparison](docs/research/reference-projects.md) and [third-party boundaries](THIRD_PARTY_NOTICES.md). Local analysis used ReXGlue and xverter; their implementations and downloaded binaries are not vendored here.
 
-Original project material is **GPL-3.0-only**; see [LICENSE](LICENSE). Referenced components retain their own licenses. This license grants no rights to the game's code, assets, music or trademarks.
+Original foundation/tests/documentation are **GPL-3.0-only**; see [LICENSE](LICENSE). Focused SDK patch contributions follow **BSD-3-Clause** with [retained notices](patches/rexglue-sdk/README.md). Referenced components retain their own licenses. This license grants no rights to the game's code, assets, music or trademarks.
 
 Unofficial research project with no affiliation with or endorsement by the game's rights holders, Microsoft, Nintendo or reference-port authors. No proprietary Nintendo SDK components are used or required by this repository.

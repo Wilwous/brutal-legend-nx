@@ -1,4 +1,4 @@
-name: Research documentation
+name: Research and component tests
 
 on:
   push:
@@ -18,3 +18,21 @@ jobs:
           persist-credentials: false
       - name: Check public research contents and local links
         run: python3 tools/check_public_tree.py
+
+  runtime-foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        profile: [O0, O2, sanitized]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Build and execute original runtime components
+        shell: bash
+        run: |
+          flags=()
+          if [[ "${{ matrix.profile }}" == "O2" ]]; then flags+=(--optimization 2); fi
+          if [[ "${{ matrix.profile }}" == "sanitized" ]]; then flags+=(--sanitize); fi
+          python3 tests/runtime/run.py --workdir "${{ runner.temp }}/brutal-foundation-${{ matrix.profile }}" "${flags[@]}"

@@ -19,6 +19,7 @@ import struct
 import subprocess
 
 PIN = 'b3528ed4a7e0642e2f390cf3d745e18d6e496f14d1707afef6f7049bb84fb39d'
+ALIAS_PIN = 'ad512025255671a98c7501d3881ab95923659d0eca1ca3ebacc45d97c407e890'
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 
@@ -76,13 +77,14 @@ def main():
     ap.add_argument('--compiler', default='clang++')
     ap.add_argument('--optimization', choices=['0', '2'], default='0')
     ap.add_argument('--sanitize', action='store_true')
+    ap.add_argument('--alias-safe', action='store_true', help='Test the exact Phase 5 alias-only SDK patch')
     args = ap.parse_args()
     work = args.workdir.resolve()
     if work == ROOT or ROOT in work.parents:
         ap.error('Output must stay outside the public checkout')
     work.mkdir(parents=True, exist_ok=True)
     raw = args.sdk_source.read_bytes()
-    if hashlib.sha256(raw).hexdigest() != PIN:
+    if hashlib.sha256(raw).hexdigest() != (ALIAS_PIN if args.alias_safe else PIN):
         ap.error('SDK source hash mismatch: do not silently test another version')
     source = raw.decode()
     start = source.index('    case 5:  // float16_4', source.index('bool build_vpkd3d128'))
@@ -154,14 +156,18 @@ def main():
     assert scalar['finite_overflow_differences'] == scalar['finite_overflow_cases']
     for shift in range(3):
         assert vector['distinct_shift'+str(shift)+'_differences'] == 0, examples
-    assert vector['alias_shift0_differences'] > 0, 'Known alias defect unexpectedly changed'
+    if args.alias_safe:
+        for shift in range(3):
+            assert vector['alias_shift'+str(shift)+'_differences'] == 0, examples
+    else:
+        assert vector['alias_shift0_differences'] > 0, 'Known alias defect unexpectedly changed'
     # All scalar mask-2/mask-3 pairs must match exactly, including unverified cases.
     for i in range(0, 2*len(bits), 2):
         assert outputs[i] == outputs[i+1], 'Unexpected mask 2/3 divergence'
     result = {'status':'PASS characterization; hardware equivalence UNKNOWN',
               'compiler':run([args.compiler,'--version']).stdout.splitlines()[0],
               'optimization':args.optimization,'sanitizers':args.sanitize,
-              'sdk_builder_sha256':PIN,'scalar_input_count':len(bits),
+              'sdk_builder_sha256':ALIAS_PIN if args.alias_safe else PIN, 'alias_safe':args.alias_safe,'scalar_input_count':len(bits),
               'random_seed':'0x42524c4e58','random_bit_patterns':10000,
               'scalar':dict(scalar),'vectors':dict(vector),'examples':examples,
               'compiler_diagnostics':build.stderr+build_subject.stderr,

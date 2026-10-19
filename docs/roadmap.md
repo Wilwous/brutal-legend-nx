@@ -1,4 +1,4 @@
-# Research roadmap — Phase 4
+# Research roadmap — Phase 5
 
 ## Completed
 
@@ -14,15 +14,19 @@
 
 **R2d — Runtime source audit:** all 261 imported functions mapped/classified: 7 IMPLEMENTED, 184 PARTIAL, 61 STUB, 9 UNKNOWN. Exception/STFS behavior, a conservative static early-call closure, reference approaches and license boundaries recorded. No runtime API was implemented or game-specific patch copied. [Complete matrix](research/runtime-audit.md).
 
-## Next exact task: R2e — resolve VMX evidence and early runtime contracts
+**R2e — Runtime component foundation:** original checked bounded memory, host-thread TLS and a diagnostic failure boundary implemented. Six original groups (including 4,000 seeded memory operations) and three SDK leaf groups pass at O0/O2 and with ASan/UBSan. A separate SDK patch fixes source aliasing and TLS bounds/wrap, and returns explicit STFS failure. Patched VMX regressions have zero alias differences; numeric semantics stay unchanged. Installed SDK/game output remain untouched. [Phase 5 contracts/results](research/runtime-foundation.md).
 
-Keep the exact unpatched base, existing configuration/five function corrections and generated output. Obtain an independently justified Xbox half-float special-value/conversion corpus; do not adopt ordinary IEEE behavior as hardware truth. Propose alias-safe emission only as a separate small SDK change with the existing isolated regressions, and assess whether game sites can receive problematic values. Do not merely suppress the 109 warnings.
+**Independent numeric evidence:** pinned Canary differs from Xenia/ReXGlue in rounding, denormals and upper range; a primary DirectXMath note distinguishes an Xbox variant. No hardware-verified special-value corpus exists here, so no numeric correction is applied.
 
-Next prioritize the observed static entry candidates: memory allocation/protection, TLS, module/header lookup, critical sections/events/waits and deterministic diagnostic/termination behavior. Separate the debugger naming exception from C++/SEH unwind requirements. Absence of direct STFS calls does not prove absence of indirect/later content use; observe actual base-file/content paths before implementing device operations. Never treat unchanged output plus success as a completed STFS operation.
+## Next exact task: R2f — native fault contract and original PPC-context bridge
 
-**Acceptance:** documented hardware-evidence limits, independently justified expected conversion behavior, a focused upstream change proposal if supported, and explicit contracts/tests for the smallest required initialization APIs. This is preparation for a separately bounded private entry trace; no full game build or Switch deployment yet. Fix sleep-inclusive/calendar supervision before another analyzer run; the Phase 3 two-run allowance remains consumed.
+Investigate the single 45-second native read-only write timeout with a further explicitly bounded, instrumented host-only probe: collect compact stacks/CPU and distinguish enforcement, unclaimed-signal retry, handler failure and diagnostic environment issues. The normal SDK memory allocation/mapping/protection-query lifecycle passed, but actual fault delivery/recovery must not be inferred from that result.
 
-Separately validate alternate `live.dll` headers and the title-update patch relationship before changing the baseline. Inventory actual shaders and classify nonstandard sound-bank encoding only when those work items are scheduled.
+Then connect a tiny original PPC-context fixture to a reviewed subset of actual SDK memory/TLS exports. Keep ownership/bounds, zero/init/cleanup and error outcomes explicit; whitelist supported imports and reject unsupported guest exception behavior. The standalone TLS class is not a PCR/r13 or XThread implementation. Do not silently bypass exception/STFS failures or change RtlCompareMemoryUlong based solely on Windows documentation.
+
+**Acceptance:** deterministic native fail-stop/recovery evidence, an original no-game PPC/export fixture with reproducible sanitizer checks, exact source/binary fingerprints and documented unsupported contracts. Resolve the numeric evidence and required guest exception behavior independently before any separately authorized private early-call trace. Do not boot or compile the full game, add graphics/audio, deploy to Switch or re-run the game analyzer in this work item.
+
+Preserve the exact unpatched XEX, manifest/corrections and prior output. Alternate headers and title updates remain separate future decisions. Fix sleep-inclusive/calendar supervision before any new analyzer budget; Phase 3's two-run allowance remains consumed.
 
 ## R3 — independent Horizon probes (not started)
 
