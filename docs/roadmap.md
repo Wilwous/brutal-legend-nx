@@ -1,4 +1,4 @@
-# Research roadmap — Phase 2
+# Research roadmap — Phase 3
 
 ## Completed
 
@@ -8,17 +8,19 @@
 
 **R2a — Loader and host tooling:** official ReXGlue 0.10.0 runs natively on macOS ARM64; selected main XEX decrypts/decompresses and loads. All 274 imports recognized; all 261 function shims present. A small tool-mode helper inspected sections/imports without running guest code.
 
-## Next exact task: R2b — investigate incomplete function analysis
+**R2b — Deep analysis / minimal generation:** completed with five checked function hints on the unmodified base. GapFill completed, configured Validate passed and private code generation exited 0. Generated output has 48,371 bodies plus 261 imported functions. Two selected partitions compile to Mac objects; no complete link or execution was attempted. The initial run's five branch-target failures and all 109 float16_4 warnings are recorded. The second run exceeded its intended calendar bound because monotonic supervision disagreed with the system timer; no third analyzer run was made. [Commands, coverage and timing caveat](research/rexglue-analysis.md).
 
-Use only `default.xex` SHA-256 `636a8036b630ae64acb582de4ac7303b8435de808f67e5343f1ddebc74d29456`, unpatched and without `live.dll`. The first 45-second run reached GapFill, then was terminated at the bound. No game C++ was emitted.
+## Next exact task: R2c — VMX semantics and runtime prerequisites
 
-Profile the pinned SDK's GapFill progress with compact diagnostics and a fixed further budget (for example, no more than 120 seconds wall time and 2 GiB resident memory, checked before starting). Determine whether the stage is progressing or repeatedly examining the same regions. Do not infer an infinite loop from the first timeout. Avoid full debug-volume logging, force flags, broad function guesses or speculative patches.
+Keep `default.xex` SHA-256 `636a8036b630ae64acb582de4ac7303b8435de808f67e5343f1ddebc74d29456` as the unpatched baseline. No title update or extra module is authorized by the analysis result.
 
-**Acceptance:** either complete Merge/Validate and record function/jump-table/indirect-call/instruction diagnostics, or produce a reproducible, bounded stage-specific blocker with enough sanitized evidence to investigate the analyzer. Preserve all raw/code-derived output privately. End the task before full game compilation or port work. If analysis requires a new SDK revision/patch, compare the same input and record the exact difference.
+Create small original fixtures for float16_4 mask 2/3, shift 0: conversion boundaries, subnormals, NaNs/infinities, signs, source/destination aliasing and unchanged lanes. All 109 warning sites use mask 3 / shift 0; Xenia's source treats this permutation like mask 2. That supports testing an overly restrictive warning guard, not assuming a broken instruction or blindly suppressing diagnostics. Compare to an independent semantic reference; emulator agreement alone is not hardware proof. Do not compile the full game to test this operation.
 
-## R2c — semantic prerequisites and variant/update decision
+**Acceptance:** reproducible, game-independent expected/results cases and a documented decision to retain the warning or propose a focused SDK change. Do not migrate toolchains without a demonstrated fix for a concrete deficiency. Before any separately budgeted analysis run, correct supervision to handle sleep-inclusive and calendar deadlines. The Phase 3 allowance of two analyzer runs is consumed.
 
-Audit required imported stubs, especially `RtlUnwind`, `__C_specific_handler`, `StfsCreateDevice` and `StfsControlDevice`. Identify relevant exception/function chunks and actual content/save/module paths; shim existence is not correctness. Freeze the base fingerprint. Separately validate `live.dll`'s changed headers and the update's source digest/patch relationship before selecting an updated baseline.
+## R2d — exception, runtime and variant/update decision
+
+Privately inspect the 106 analyzer-noted SEH-related functions and audit required imported stubs, especially `RtlUnwind`, `__C_specific_handler`, `StfsCreateDevice` and `StfsControlDevice`. Identify relevant exception/function chunks and actual content/save/module paths; shim existence is not correctness. Freeze the base fingerprint. Separately validate `live.dll`'s changed headers and the update's source digest/patch relationship before selecting an updated baseline.
 
 Inventory actual shader binaries from the known startup/archive family and classify the nonstandard sound-bank encoding without unpacking every asset. No replacement runtime, compiler or renderer should be written merely from filename/string evidence.
 
@@ -28,7 +30,7 @@ Use original minimal fixtures or appropriately licensed probes: guest address al
 
 ## R4 — conditional smallest game milestone (not started)
 
-Only after binary/runtime prerequisites are reviewed, choose one private observable milestone based on actual findings, such as entry plus a trace of early platform calls. Boot, rendering, movies/audio, gameplay, saves and sustained performance remain separate milestones. No game compilation or executable build exists now.
+Only after binary/runtime prerequisites are reviewed, choose one private observable milestone based on actual findings, such as entry plus a trace of early platform calls. Boot, rendering, movies/audio, gameplay, saves and sustained performance remain separate milestones. Only two selected generated partitions have been compiled as Mac objects. There is no complete linked game executable or execution result.
 
 ## R5 — broader port decision and distribution (not started)
 

@@ -1,5 +1,7 @@
 # Private game-file preparation
 
+**Current follow-up:** [Phase 3](rexglue-analysis.md) reused the existing extraction and emitted C++ privately with explicit analysis hints. Earlier no-emission observations in this document describe Phase 2.
+
 This is the general ISO-intake procedure. **Phase 2 supplied a GOD/SVOD directory rather than an ISO; it was verified and extracted privately without conversion.** See [the actual binary report](xbox360-analysis.md) and [executed commands](phase2-commands.md). Use the procedure below for a future owner-supplied original ISO; it must never be rewritten, optimized, patched, repaired, or replaced.
 
 ## 1. Intake and isolation

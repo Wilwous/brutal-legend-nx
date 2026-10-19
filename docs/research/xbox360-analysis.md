@@ -1,5 +1,7 @@
 # Xbox 360 binary analysis — Phase 2
 
+**Historical Phase 2 report.** Phase 3 subsequently completed GapFill, validation and private code generation with five explicit function hints. See [current coverage, warnings and timing caveat](rexglue-analysis.md). The 45-second result below remains the original Phase 2 observation.
+
 Assessment: **2026-10-19 · v0.0.2-binary-analysis**. This supersedes Phase 1's missing-input status. Facts below apply only to the supplied bytes, not every retail/digital edition.
 
 **VERIFIED** = direct file/tool/source observation. **INFERRED** = interpretation requiring further testing. **UNKNOWN** = not established. **BLOCKED** = a specific current obstacle or bounded operation that did not complete. Source/header hashes are metadata, not an authenticity certificate.
@@ -138,10 +140,12 @@ Limits: **45 seconds wall time, 60 seconds CPU, 2 GiB sampled RSS, 32 MiB logs, 
 
 A separate original metadata-only helper linked to the same prebuilt runtime in seconds, using `tool_mode=true` and no entry-point call. It returned zero and produced the section/import/header observations above. Initial compilation needed the SDK's external-fmt define; the successful compile retained one SDK FPCR inline-assembly operand-width warning. That helper is not a port, compiler or proof of FP instruction semantics.
 
-## Outcome and next task
+## Phase 2 outcome and subsequent work
 
 **VERIFIED:** supplied GOD is readable and extractable, the selected encrypted XEX can be processed through ReXGlue's loader, and expected kernel symbols exist. **UNKNOWN:** complete function/instruction coverage, exception correctness, image/update provenance, active stub paths, bank transforms, shader features and Switch memory/performance. **BLOCKED:** function analysis did not complete within the deliberately limited run; known required API stubs remain unaudited in execution.
 
 **CONDITIONAL GO:** continue bounded host analysis. Do not implement the full port or speculate a playable build. The next task is to profile the GapFill stage on the same `default.xex` hash with a fixed further budget and compact diagnostics, establish whether it progresses, and produce a validated function/unresolved-target/instruction report before any full code generation. Keep `live.dll` and the update out of that baseline until their header/update relationship is separately validated.
 
 [Commands and reproducibility limits](phase2-commands.md) · [Blocker register](../feasibility.md) · [Architecture](../architecture.md)
+
+**Phase 3 update:** the exact base SHA-256 was verified before and after further work. GapFill completed; default validation exposed five unresolved branch targets. Explicit checked spans cleared those errors, producing 48,371 translated bodies plus 261 imported function declarations. Two selected partitions compile as Mac objects. The 109 float16_4 warnings, limited validator scope, runtime stubs and anomalous calendar timing remain documented limitations. The current next task is original VMX semantic fixtures and required exception/runtime-path auditing; no full port has started. [Full Phase 3 report](rexglue-analysis.md).

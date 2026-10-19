@@ -1,6 +1,6 @@
 # Brütal Legend NX
 
-**Wilwous · v0.0.2-binary-analysis · Xbox 360 → Nintendo Switch / Atmosphère**
+**Wilwous · v0.0.3-rexglue-analysis · Xbox 360 → Nintendo Switch / Atmosphère**
 
 Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Legend using static PowerPC recompilation and a homebrew runtime.
 
@@ -8,20 +8,22 @@ Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Le
 
 ## Current status
 
-Phase 2 snapshot: **2026-10-19**, following `v0.0.1-research` (`ef2b882`).
+Phase 3 snapshot: **2026-10-19**, following `v0.0.2-binary-analysis` (`7afb1d3`).
 
 - **VERIFIED:** the supplied directory contains a LIVE Games on Demand/SVOD package with 33 data fragments, three DLC packages and one title-update package. It contains no standalone ISO.
 - **VERIFIED:** full GOD hash-tree verification and private extraction succeeded. The base has 284 files totaling 5,544,498,100 bytes. All 38 source game files retained their SHA-256, size and modification time.
 - **VERIFIED:** `default.xex` is an encrypted, LZX-compressed Xbox 360 PowerPC executable, Title ID `454108C5`, Media ID `7DD5E14B`. Its SHA-256 is `636a8036b630ae64acb582de4ac7303b8435de808f67e5343f1ddebc74d29456`.
 - **VERIFIED:** ReXGlue 0.10.0 runs natively on macOS ARM64, decrypts/decompresses and loads this XEX, and resolves all 274 imports to registry entries. Its library exports shims for all 261 imported functions. Some required APIs are stubs.
-- **BLOCKED:** the bounded 45-second analysis stopped during `GapFill`. Analysis validation and game C++ generation were not reached. No host game or Switch build was attempted.
+- **VERIFIED:** GapFill completes. Default analysis fails on five branch targets; five privately checked function hints allow Validate and C++ emission to finish with exit 0. There are 48,371 emitted bodies and 261 imported functions.
+- **VERIFIED:** two selected generated partitions compile to macOS ARM64 objects. There are 109 float16_4 warnings requiring semantic checks; no generic unimplemented-instruction markers were found. No full game link or Switch build was attempted.
+- **MEASUREMENT LIMIT:** the second run recorded 1,096.56 seconds calendar time versus 77.033 supervisor monotonic seconds. The intended 300-second calendar limit was not enforced; the cause of the clock discrepancy is UNKNOWN. Peak tool RSS was 639.78 MiB.
 - **UNKNOWN:** complete instruction/function coverage, runtime correctness, shaders, decoded audio-bank format, memory budget and stock-clock performance.
 
-**Verdict: CONDITIONAL GO for further bounded analysis; full implementation remains premature.** [Binary findings](docs/research/xbox360-analysis.md) · [Feasibility and blockers](docs/feasibility.md) · [Commands and exact limits](docs/research/phase2-commands.md)
+**Verdict: PASS for configuration-assisted analysis and minimal generation; broader port feasibility remains PARTIAL / unproven.** [Phase 3 results, commands and timing caveat](docs/research/rexglue-analysis.md) · [Binary findings](docs/research/xbox360-analysis.md) · [Feasibility and blockers](docs/feasibility.md)
 
 ## Technical approach
 
-Proposed: privately validate and extract the owner's input, fingerprint the chosen XEX/update combination, complete pinned ReXGlue analysis, then prove the required Horizon runtime and graphics behavior independently before integrating game code. Static CPU translation still requires guest memory/API compatibility and a correct graphics path.
+Proposed: privately validate and extract the owner's input, fingerprint the chosen XEX/update combination, validate pinned ReXGlue analysis and CPU semantics, then prove the required Horizon runtime and graphics behavior independently before integrating game code. Static CPU translation still requires guest memory/API compatibility and a correct graphics path.
 
 The first architecture candidate is ReXGlue plus reviewed Horizon adaptations and a native Vulkan renderer through Mesa/NVK. Reference patches are not a universal drop-in. [Architecture](docs/architecture.md) · [Switch runtime](docs/research/switch-runtime.md)
 
@@ -32,11 +34,12 @@ The first architecture candidate is ReXGlue plus reviewed Horizon adaptations an
 | Reference survey | All 28 supplied repositories accessible; initial source/build comparison recorded |
 | Private intake and extraction | Completed for the supplied GOD/base, DLC and title update; no update applied |
 | XEX metadata and loader | Completed for the supplied `default.xex` |
-| Function analysis / generation | Incomplete: 45-second bound reached in GapFill; no game C++ emitted |
+| Function analysis / generation | Passed with five metadata hints; generated code remains private |
+| Minimal compiler check | Two generated partitions compiled on Mac; complete link and execution untested |
 | Runtime, shaders, audio and hardware | Not validated |
 | Game build or distribution | Not started |
 
-Next: investigate the incomplete function-analysis stage on the exact fingerprinted base executable, without forcing errors or starting a port. [Roadmap](docs/roadmap.md).
+Next: verify the observed VMX128 float16_4 combination with small original fixtures, then audit required exception/runtime paths before a game execution experiment. [Roadmap](docs/roadmap.md).
 
 ## Game files and compatibility
 

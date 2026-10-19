@@ -1,15 +1,15 @@
-# Proposed architecture — Phase 2
+# Proposed architecture — Phase 3
 
-The architecture remains a **proposal**, with its intake and host-loader stages now tested on the actual supplied game. Full port implementation has not started.
+The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
 ```mermaid
 flowchart TD
   A[Owner's GOD/SVOD + separate DLC/TU: read only] --> B[Private hash verification and extraction: completed]
   B --> C[Fingerprint default.xex and inventory: completed]
   C --> D[Pinned macOS ARM64 ReXGlue tool-mode loader: passed]
-  D --> E[Function analysis: stopped in GapFill at 45 seconds]
-  E --> F[Private generated C++: future, none emitted]
-  F --> G[Private host validation and Horizon build: future]
+  D --> E[Function analysis: passed with five metadata hints]
+  E --> F[Private generated C++: emitted; two sample objects compile]
+  F --> G[Private semantic checks and host link: future]
   G --> H[Independent Switch runtime and graphics tests: future]
   H --> I[Sanitized public findings]
 ```
@@ -24,7 +24,9 @@ Do not infer modules from extensions: `live.dll` is an XEX executable/header var
 
 **VERIFIED host path:** official ReXGlue 0.10.0 macOS ARM64 release at tag commit `f5337cdc947ff6d4c4196737e2c807a48f2a1fc2`. The CLI and a small original tool-mode metadata helper run on the existing Mac; no SDK/dependency build or Linux environment was needed. [Exact commands and artifact fingerprints](research/phase2-commands.md).
 
-**Not yet validated:** completed analysis, emitted game C++, host game link/runtime and Horizon cross build. Keep all local manifests, generated glue, code, decoded images and outputs outside the public checkout. Host codegen tools and target runtime libraries are separate build inputs.
+**VERIFIED:** configured analysis and private C++ emission complete; two sample partitions compile to Mac objects. [Phase 3 findings and measurement limitations](research/rexglue-analysis.md).
+
+**Not yet validated:** complete CPU semantics, host game link/runtime and Horizon cross build. Keep all local manifests, generated glue, code, decoded images and outputs outside the public checkout. Host codegen tools and target runtime libraries are separate build inputs.
 
 ## CPU and runtime contract
 

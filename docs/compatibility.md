@@ -1,4 +1,4 @@
-# Compatibility — v0.0.2-binary-analysis
+# Compatibility — v0.0.3-rexglue-analysis
 
 No supported playable editions or game builds. The following are **analysis fingerprints**, not a compatibility allowlist.
 
@@ -13,11 +13,12 @@ No supported playable editions or game builds. The following are **analysis fing
 | Integrity/extraction | Internal GOD/package checks and extraction passed; all source hashes unchanged |
 | ReXGlue host | Official 0.10.0 macOS ARM64 binary runs; selected XEX loads |
 | Imports | 274 recognized; 261 function shims present; required stubs remain |
-| Function analysis | Reached GapFill; stopped at 45-second bound; validation incomplete |
-| Game C++ / host game binary | NOT GENERATED / NOT BUILT |
+| Function analysis | Validate passes with five explicit function hints; default configuration fails on five branch targets |
+| Game C++ / host game binary | GENERATED PRIVATELY / NOT BUILT OR LINKED; two selected partitions compile to Mac objects |
+| Instruction semantics | 109 float16_4 warnings; zero generic unimplemented markers; correctness not established |
 | Horizon NRO / launch | NOT BUILT / NOT TESTED |
 | Graphics, sound, movies, gameplay | NOT TESTED |
 | Input, saves, suspend/resume, dock/undock | NOT TESTED |
 | Game memory, stock-clock performance, thermals | NOT MEASURED |
 
-[Binary report](research/xbox360-analysis.md) includes the full variant/update hashes, metadata, resources and limitations. Header/internal-hash consistency does not authenticate a retail dump or establish every edition's compatibility. Future hardware results require exact game/update/module hashes, compiler/SDK/driver/patch revisions, console/firmware/Atmosphère, launch mode, clocks and a reproducible scenario.
+[Phase 3 report](research/rexglue-analysis.md) records coverage, warnings, commands and a calendar-budget measurement defect. [Binary report](research/xbox360-analysis.md) includes the full variant/update hashes, metadata, resources and limitations. Header/internal-hash consistency does not authenticate a retail dump or establish every edition's compatibility. Future hardware results require exact game/update/module hashes, compiler/SDK/driver/patch revisions, console/firmware/Atmosphère, launch mode, clocks and a reproducible scenario.
