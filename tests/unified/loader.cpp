@@ -17,7 +17,14 @@ int main(int argc,char** argv){
  if(r.LoadXexImage("game:\\default.xex"))return 4;
  auto module=r.kernel_state()->GetExecutableModule();if(!module||!module->xex_module())return 5;
  auto* xex=module->xex_module();unsigned imports=0,unresolved=0;
+
  for(auto& library:*xex->import_libraries())for(auto& imported:library.imports){++imports;if(!r.export_resolver()->GetExportByOrdinal(library.name,imported.ordinal))++unresolved;}
+#if defined(REX_PRE_ENTRY)
+ auto db=r.kernel_state()->title_xdbf();bool valid=!unresolved&&db.is_valid();
+ std::printf("{\"group\":\"private_loader_only\",\"result\":\"%s\",\"imports\":%u,\"unresolved\":%u,\"image_size\":%u,\"entry_prepared\":false,\"guest_started\":false,\"xdbf_valid\":%s,\"xdbf_status\":%u}\n",valid?"PASS":"FAIL",imports,unresolved,xex->image_size(),db.is_valid()?"true":"false",unsigned(db.status()));
+ return valid?0:8;
+#else
  std::printf("{\"group\":\"private_loader_only\",\"result\":\"%s\",\"imports\":%u,\"unresolved\":%u,\"image_size\":%u,\"entry_prepared\":false,\"guest_started\":false}\n",unresolved?"FAIL":"PASS",imports,unresolved,xex->image_size());
  return unresolved?6:0;
+#endif
 }

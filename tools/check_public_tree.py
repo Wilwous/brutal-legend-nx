@@ -9,6 +9,7 @@ determine copyright ownership or guarantee that text contains no sensitive data.
 
 from pathlib import Path, PurePosixPath
 import json
+import hashlib
 import re
 import subprocess
 import sys
@@ -40,6 +41,14 @@ EXACT = {
     "tests/unified/README.md", "tests/unified/abi.cpp", "tests/unified/errors.cpp",
     "tests/unified/faults.cpp", "tests/unified/emitter.cpp", "tests/unified/run.py",
     "tests/unified/vector-negative.cpp", "tests/unified/loader.cpp", "tests/unified/loader.py",
+    "patches/rexglue-sdk/0008-xdbf-byte-parser.patch",
+    "patches/rexglue-sdk/0009-guest-memory-ownership.patch",
+    "patches/rexglue-sdk/0010-allocation-and-exception-failures.patch",
+    "patches/rexglue-sdk/0011-checked-allocation-ownership.patch",
+    "tools/sdk/pre-entry-lock.json", "tests/pre-entry/README.md", "tests/pre-entry/run.py",
+    "tests/pre-entry/xdbf.cpp", "tests/pre-entry/contracts.cpp", "tests/pre-entry/memory-faults.cpp",
+    "tests/pre-entry/vector-context.cpp", "tests/pre-entry/vector-negative-return.cpp",
+    "tests/pre-entry/vector-negative-mixed.cpp", "tests/pre-entry/allocation-boundaries.cpp",
     "tests/vmx128/compare_evidence.py",
     "tests/vmx128/run.py", "tests/vmx128/emit_fixture.cpp", "tests/vmx128/README.md",
 }
@@ -111,6 +120,20 @@ def check():
                     raise ValueError("invalid reference commit")
         except (ValueError, KeyError, TypeError) as exc:
             errors.append(f"reference snapshot invalid: {exc}")
+
+    for name in ["tools/sdk/lock.json", "tools/sdk/pre-entry-lock.json"]:
+        if name not in texts:
+            continue
+        try:
+            locked = json.loads(texts[name])
+            if not re.fullmatch(r"[0-9a-f]{40}", locked["sdk_revision"]):
+                raise ValueError("invalid SDK revision")
+            for patch in locked["patches"]:
+                source = texts[patch["path"]].encode("utf-8")
+                if hashlib.sha256(source).hexdigest() != patch["sha256"]:
+                    raise ValueError("patch fingerprint mismatch: " + patch["path"])
+        except (ValueError, KeyError, TypeError) as exc:
+            errors.append(f"{name}: invalid patch lock: {exc}")
 
     if errors:
         for error in errors:

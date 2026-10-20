@@ -14,7 +14,6 @@ import urllib.request
 from supervise import command
 from stage import stage
 ROOT=Path(__file__).resolve().parents[2]
-LOCK=json.loads((Path(__file__).parent/'lock.json').read_text())
 
 
 def output(args,cwd):return subprocess.check_output(args,cwd=cwd,text=True,timeout=30).strip()
@@ -29,7 +28,9 @@ def main():
     ap.add_argument('--jobs',type=int,choices=[1,2],default=2)
     ap.add_argument('--profiles',nargs='+',choices=['Debug','Release','Sanitized'],default=['Debug','Release','Sanitized'])
     ap.add_argument('--clean',action='store_true',help='Remove only owned build/staging output, retaining pinned source/cache')
+    ap.add_argument('--lock',type=Path,default=Path(__file__).parent/'lock.json',help='Ordered SDK patch/dependency lock; defaults to Phase 7')
     a=ap.parse_args();work=a.workspace.resolve()
+    LOCK=json.loads(a.lock.read_text())
     if work==ROOT or ROOT in work.parents:ap.error('workspace must be outside public checkout')
     if sys.platform!='darwin':ap.error('this locked build profile currently targets macOS ARM64')
     if output(['uname','-m'],ROOT)!='arm64':ap.error('ARM64 host required for this profile')

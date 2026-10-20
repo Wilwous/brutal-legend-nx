@@ -1,4 +1,4 @@
-# Proposed architecture — Phase 7
+# Proposed architecture — Phase 8
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -28,6 +28,16 @@ Do not infer modules from extensions: `live.dll` is an XEX executable/header var
 **VERIFIED:** configured analysis and private C++ emission complete; two sample partitions compile to Mac objects. [Phase 3 findings and measurement limitations](research/rexglue-analysis.md).
 
 **Not yet validated:** complete CPU semantics, host game link/runtime and Horizon cross build. Keep all local manifests, generated glue, code, decoded images and outputs outside the public checkout. Host codegen tools and target runtime libraries are separate build inputs.
+
+## Phase 8 pre-entry safety boundary
+
+[The pre-entry report](research/pre-entry-safety.md) records eleven ordered SDK patches with clean coherent runtime/codegen builds. XDBF uses bounded byte decoding; allocation size/alignment are checked before narrowing and zeroing. The saved nearly-4-GiB allocation SIGBUS is preserved as a pre-fix regression, with arithmetic-only boundary tests preceding any fixed-runtime retry.
+
+XamFree now requires an owner token in the actual heap, using the runtime's XamModule instance. Release/reset/new reservations clear owner records; ordinary foreign blocks and stale XAM addresses reused by foreign allocations cannot be freed through XamFree. This is host-side provenance, not a guest capability, complete object bounds or same-owner ABA detection. XamAlloc OOM and three unsupported exception exports fail explicitly at the host boundary; Xbox failure values and guest unwind remain unverified.
+
+Guest views start NOACCESS and committed allocations determine host protection. Selected virtual/physical reserve/decommit/release/read-only denials and explicit guest-range checks are verified. **A 16 KiB host page cannot independently protect all four 4 KiB guest pages.** Raw generated accesses can still reach slack while an adjacent committed page needs access; logical checks are not automatically inserted into those accesses or pinned against concurrent lifetime changes. MMIO and signal tests remain selected host contracts.
+
+**Phase 9 NO-GO for generated-game execution:** checked guest-access integration and a fail-closed entry/import policy must precede any trace. Typed vector marshalling, full Xbox ABI, error-status compatibility and guest exception dispatch/unwind remain incomplete. No game function, entry or boot is executed in this milestone. Historical Phase 7/6 limitations below describe their original snapshots; current safety findings above supersede the resolved XDBF alignment and allocation false-success paths within the tested scope.
 
 ## Phase 7 unified SDK boundary
 

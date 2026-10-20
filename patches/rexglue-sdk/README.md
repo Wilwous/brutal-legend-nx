@@ -41,3 +41,14 @@ The [isolated builder](../../tools/sdk/README.md) applies all seven patches in t
 - `0007-defined-pe-header-offset.patch`: use compiler offsetof and assert offset 24, removing a UBSan null-member expression without changing PE layout.
 
 [Final tests and remaining blockers](../../docs/research/unified-sdk.md): clean Debug/Release/sanitized original fixtures pass, but the sanitized private XEX loader stops on an additional XDBF alignment defect. No alignment suppression or resource-parser patch is included. These contributions share the existing BSD-3-Clause retained notices and have not been submitted upstream. No game-derived code is included.
+
+## Phase 8 pre-entry safety series
+
+The first seven patches above are unchanged. [pre-entry-lock.json](../../tools/sdk/pre-entry-lock.json) explicitly orders and hashes the additional four patches. Use the isolated builder's `--lock` option and rebuild every SDK client against matching headers. These patches have the same BSD-3-Clause notice boundary; no game-derived code is included.
+
+- `0008-xdbf-byte-parser.patch`: bounded big-endian byte decoding, deterministic status, table/payload validation and naturally aligned decoded achievements; immutable borrowed-buffer contract.
+- `0009-guest-memory-ownership.patch`: default NOACCESS mappings, owned commitment/protection reconciliation, checked logical guest ranges, and physical recovery restricted to current committed permissions. Host-page slack remains an explicit limitation.
+- `0010-allocation-and-exception-failures.patch`: explicit host exceptions for unsafe allocation arguments/OOM and three unsupported guest exception exports. No Xbox failure value or guest unwind is invented.
+- `0011-checked-allocation-ownership.patch`: wide checked size/alignment arithmetic before allocation, capacity/actual-size validation before zeroing, nonfatal expected heap exhaustion, and heap-maintained subsystem owner tokens checked atomically by XamFree. Release/reset/new reservations erase ownership.
+
+[Root causes, original regressions and remaining execution blockers](../../docs/research/pre-entry-safety.md). Owner tokens do not solve same-owner raw-pointer ABA, guest object bounds, concurrent pointer lifetime, save-state serialization or complete Xbox error/ABI conformance. No game entry or boot is validated.

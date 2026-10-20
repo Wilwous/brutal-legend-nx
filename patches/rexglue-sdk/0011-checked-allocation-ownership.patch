@@ -1,0 +1,306 @@
+--- a/include/rex/system/xmemory.h
++++ b/include/rex/system/xmemory.h
+@@ -15,6 +15,7 @@
+ #include <mutex>
+ #include <string>
+ #include <utility>
++#include <unordered_map>
+ #include <vector>
+ 
+ #include <rex/memory/utils.h>
+@@ -129,6 +130,16 @@
+   };
+ };
+ 
++// Checked allocation rounding only; unrelated generic math helpers are unchanged.
++// Zero-sized SDK reservations retain the existing minimum-one-page policy.
++constexpr bool CheckedAllocationRoundUp(uint32_t value, uint32_t multiple, uint32_t& out) {
++  if (!multiple) return false;
++  uint64_t rounded = value ? ((uint64_t(value)+multiple-1)/multiple)*multiple : multiple;
++  if (rounded > 0xffffffffull) return false;
++  out = uint32_t(rounded);
++  return true;
++}
++
+ // Heap abstraction for page-based allocation.
+ class BaseHeap {
+  public:
+@@ -204,6 +215,10 @@
+   // Modifies the protection mode of pages within the given range.
+   virtual bool Protect(uint32_t address, uint32_t size, uint32_t protect,
+                        uint32_t* old_protect = nullptr);
++
++  // Opaque subsystem ownership; cleared on release/reset/new reservation.
++  void SetAllocationOwner(uint32_t address, const void* owner);
++  bool ReleaseOwned(uint32_t address, const void* owner);
+ 
+   // Queries information about the given region of pages.
+   bool QueryRegionInfo(uint32_t base_address, HeapAllocationInfo* out_info);
+@@ -270,6 +285,7 @@
+   rex::thread::global_critical_region global_critical_region_;
+   std::recursive_mutex heap_mutex_;
+   std::vector<PageEntry> page_table_;
++  std::unordered_map<uint32_t, const void*> allocation_owners_;
+ };
+ 
+ // Normal heap allowing allocations from guest virtual address ranges.
+@@ -515,10 +531,12 @@
+   // using normal guest virtual addresses. Kernel structures and other internal
+   // 'system' allocations should come from this heap when possible.
+   uint32_t SystemHeapAlloc(uint32_t size, uint32_t alignment = 0x20,
+-                           uint32_t system_heap_flags = kSystemHeapDefault);
++                           uint32_t system_heap_flags = kSystemHeapDefault, const void* owner = nullptr);
+ 
+   // Frees memory allocated with SystemHeapAlloc.
+   void SystemHeapFree(uint32_t address, uint32_t* out_region_size = nullptr);
++
++  bool SystemHeapFreeOwned(uint32_t address, const void* owner);
+ 
+   // Logical committed-page permission check; not an allocation lifetime pin.
+   // MMIO/unowned/overflowing ranges are rejected, including host-page slack.
+--- a/src/system/xmemory.cpp
++++ b/src/system/xmemory.cpp
+@@ -44,7 +44,8 @@
+ namespace rex::memory {
+ 
+ uint32_t get_page_count(uint32_t value, uint32_t page_size, uint32_t page_size_shift) {
+-  return rex::round_up(value, page_size) >> page_size_shift;
++  uint32_t rounded;
++  return CheckedAllocationRoundUp(value,page_size,rounded) ? rounded >> page_size_shift : 0;
+ }
+ 
+ /**
+@@ -647,18 +648,33 @@
+                                          enable_invalidation_notifications, enable_data_providers);
+ }
+ 
+-uint32_t Memory::SystemHeapAlloc(uint32_t size, uint32_t alignment, uint32_t system_heap_flags) {
++uint32_t Memory::SystemHeapAlloc(uint32_t size, uint32_t alignment, uint32_t system_heap_flags,
++                                 const void* owner) {
++  auto global_lock = rex::thread::global_critical_region::AcquireDirect();
+   // TODO(benvanik): lightweight pool.
+   bool is_physical = !!(system_heap_flags & memory::kSystemHeapPhysical);
+   auto heap = LookupHeapByType(is_physical, 4096);
++  uint32_t rounded;
++  if (!CheckedAllocationRoundUp(size,heap->page_size(),rounded) || rounded > heap->heap_size()) return 0;
+   uint32_t address;
+   if (!heap->AllocSystemHeap(
+           size, alignment, memory::kMemoryAllocationReserve | memory::kMemoryAllocationCommit,
+           memory::kMemoryProtectRead | memory::kMemoryProtectWrite, false, &address)) {
+     return 0;
+   }
++  uint32_t actual_size = 0;
++  if (!heap->QuerySize(address,&actual_size) || actual_size < size) {
++    heap->Release(address); return 0;
++  }
++  try { heap->SetAllocationOwner(address,owner); }
++  catch (...) { heap->Release(address); throw; }
+   Zero(address, size);
+   return address;
++}
++
++bool Memory::SystemHeapFreeOwned(uint32_t address, const void* owner) {
++  auto* heap = LookupHeap(address);
++  return address && owner && heap && heap->ReleaseOwned(address,owner);
+ }
+ 
+ void Memory::SystemHeapFree(uint32_t address, uint32_t* out_region_size) {
+@@ -1188,6 +1204,7 @@
+ }
+ 
+ void BaseHeap::Reset() {
++  allocation_owners_.clear();
+   // TODO(DrChat): protect pages.
+   std::memset(page_table_.data(), 0, sizeof(PageEntry) * page_table_.size());
+   // TODO(Triang3l): Remove access callbacks from pages if this is a physical
+@@ -1197,8 +1214,8 @@
+ bool BaseHeap::Alloc(uint32_t size, uint32_t alignment, uint32_t allocation_type, uint32_t protect,
+                      bool top_down, uint32_t* out_address) {
+   *out_address = 0;
+-  size = rex::round_up(size, page_size_);
+-  alignment = rex::round_up(alignment, page_size_);
++  if (!CheckedAllocationRoundUp(size,page_size_,size) || size > heap_size_ ||
++      !CheckedAllocationRoundUp(alignment,page_size_,alignment) || alignment > heap_size_) return false;
+ 
+   // Reserve address space at the top for thread stacks.
+   // 0x3XXXXXXX is for system threads, 0x7XXXXXXX is for title threads.
+@@ -1219,8 +1236,8 @@
+ bool BaseHeap::AllocSystemHeap(uint32_t size, uint32_t alignment, uint32_t allocation_type,
+                                uint32_t protect, bool top_down, uint32_t* out_address) {
+   *out_address = 0;
+-  size = rex::round_up(size, page_size_);
+-  alignment = rex::round_up(alignment, page_size_);
++  if (!CheckedAllocationRoundUp(size,page_size_,size) || size > heap_size_ ||
++      !CheckedAllocationRoundUp(alignment,page_size_,alignment) || alignment > heap_size_) return false;
+ 
+   uint32_t low_address = heap_base_;
+   if (heap_type_ == memory::HeapType::kGuestVirtual) {
+@@ -1233,7 +1250,7 @@
+ 
+ bool BaseHeap::AllocFixed(uint32_t base_address, uint32_t size, uint32_t alignment,
+                           uint32_t allocation_type, uint32_t protect) {
+-  alignment = rex::round_up(alignment, page_size_);
++  if (!CheckedAllocationRoundUp(alignment,page_size_,alignment) || alignment > heap_size_) return false;
+   if (base_address % alignment != 0) {
+     if (base_address % page_size_ != 0) {
+       REXSYS_ERROR(
+@@ -1250,11 +1267,11 @@
+         alignment, page_size_, base_address);
+     alignment = page_size_;
+   }
+-  size = rex::align(size, alignment);
++  if (!CheckedAllocationRoundUp(size,alignment,size) || size > heap_size_) return false;
+   uint32_t page_count = get_page_count(size, page_size_, page_size_shift_);
+   uint32_t start_page_number = (base_address - heap_base_) >> page_size_shift_;
+   uint32_t end_page_number = start_page_number + page_count - 1;
+-  if (start_page_number >= page_table_.size() || end_page_number > page_table_.size()) {
++  if (start_page_number >= page_table_.size() || end_page_number >= page_table_.size()) {
+     REXSYS_ERROR("BaseHeap::AllocFixed passed out of range address range");
+     return false;
+   }
+@@ -1323,6 +1340,9 @@
+     return false;
+   }
+ 
++  if (allocation_type & memory::kMemoryAllocationReserve)
++    allocation_owners_.erase(heap_base_ + (start_page_number << page_size_shift_));
++
+   if (allocation_type != memory::kMemoryAllocationReserve && REXCVAR_GET(scribble_heap) &&
+       (protect & memory::kMemoryProtectWrite)) {
+     std::memset(TranslateRelative(start_page_number << page_size_shift_), 0xCD,
+@@ -1337,10 +1357,13 @@
+                           bool top_down, uint32_t* out_address) {
+   *out_address = 0;
+ 
+-  alignment = rex::round_up(alignment, page_size_);
++  if (!CheckedAllocationRoundUp(alignment,page_size_,alignment) || alignment > heap_size_ ||
++      !CheckedAllocationRoundUp(size,page_size_,size) || size > heap_size_) return false;
+   uint32_t page_count = get_page_count(size, page_size_, page_size_shift_);
+-  low_address = std::max(heap_base_, rex::align(low_address, alignment));
+-  high_address = std::min(heap_base_ + (heap_size_ - 1), rex::align(high_address, alignment));
++  uint64_t aligned_low = ((uint64_t(low_address)+alignment-1)/alignment)*alignment;
++  if (aligned_low > 0xffffffffull) return false;
++  low_address = std::max(heap_base_,uint32_t(aligned_low));
++  high_address = std::min(heap_base_ + (heap_size_ - 1), high_address);
+   if (high_address < low_address) {
+     REXSYS_ERROR("BaseHeap::Alloc invalid requested range");
+     return false;
+@@ -1446,7 +1469,6 @@
+   if (start_page_number == UINT_MAX || end_page_number == UINT_MAX) {
+     // Out of memory.
+     REXSYS_ERROR("BaseHeap::Alloc failed to find contiguous range");
+-    assert_always("Heap exhausted!");
+     return false;
+   }
+ 
+@@ -1483,12 +1505,16 @@
+     return false;
+   }
+ 
++  if (allocation_type & memory::kMemoryAllocationReserve)
++    allocation_owners_.erase(heap_base_ + (start_page_number << page_size_shift_));
++
+   if (allocation_type != memory::kMemoryAllocationReserve && REXCVAR_GET(scribble_heap) &&
+       (protect & memory::kMemoryProtectWrite)) {
+     std::memset(TranslateRelative(start_page_number << page_size_shift_), 0xCD,
+                 page_count << page_size_shift_);
+   }
+ 
++  allocation_owners_.erase(heap_base_ + (start_page_number << page_size_shift_));
+   *out_address = heap_base_ + (start_page_number << page_size_shift_);
+   return true;
+ }
+@@ -1593,6 +1619,7 @@
+     return false;
+   }
+ 
++  allocation_owners_.erase(base_address);
+   return true;
+ }
+ 
+@@ -1682,6 +1709,21 @@
+   }
+ 
+   return true;
++}
++
++void BaseHeap::SetAllocationOwner(uint32_t address, const void* owner) {
++  std::lock_guard<std::recursive_mutex> lock(heap_mutex_);
++  if (owner) allocation_owners_[address] = owner;
++  else allocation_owners_.erase(address);
++}
++
++bool BaseHeap::ReleaseOwned(uint32_t address, const void* owner) {
++  // Global-before-heap lock order matches allocation and physical heap paths.
++  auto global_lock = rex::thread::global_critical_region::AcquireDirect();
++  std::lock_guard<std::recursive_mutex> lock(heap_mutex_);
++  auto it = allocation_owners_.find(address);
++  if (!owner || it == allocation_owners_.end() || it->second != owner) return false;
++  return Release(address);
+ }
+ 
+ bool BaseHeap::QueryRegionInfo(uint32_t base_address, HeapAllocationInfo* out_info) {
+@@ -1850,8 +1892,8 @@
+   top_down = true;
+ 
+   // Adjust alignment size our page size differs from the parent.
+-  size = rex::round_up(size, page_size_);
+-  alignment = rex::round_up(alignment, page_size_);
++  if (!CheckedAllocationRoundUp(size,page_size_,size) || size > heap_size_ ||
++      !CheckedAllocationRoundUp(alignment,page_size_,alignment) || alignment > heap_size_) return false;
+ 
+   // Global critical region before heap_mutex_ - see
+   // AcquireHostPageReconcileLock for why the order matters.
+@@ -1883,8 +1925,8 @@
+ bool PhysicalHeap::AllocFixed(uint32_t base_address, uint32_t size, uint32_t alignment,
+                               uint32_t allocation_type, uint32_t protect) {
+   // Adjust alignment size our page size differs from the parent.
+-  size = rex::round_up(size, page_size_);
+-  alignment = rex::round_up(alignment, page_size_);
++  if (!CheckedAllocationRoundUp(size,page_size_,size) || size > heap_size_ ||
++      !CheckedAllocationRoundUp(alignment,page_size_,alignment) || alignment > heap_size_) return false;
+ 
+   // Global critical region before heap_mutex_ - see
+   // AcquireHostPageReconcileLock for why the order matters.
+@@ -1919,8 +1961,8 @@
+   *out_address = 0;
+ 
+   // Adjust alignment size our page size differs from the parent.
+-  size = rex::round_up(size, page_size_);
+-  alignment = rex::round_up(alignment, page_size_);
++  if (!CheckedAllocationRoundUp(size,page_size_,size) || size > heap_size_ ||
++      !CheckedAllocationRoundUp(alignment,page_size_,alignment) || alignment > heap_size_) return false;
+ 
+   // Global critical region before heap_mutex_ - see
+   // AcquireHostPageReconcileLock for why the order matters.
+--- a/src/kernel/xam/xam_info.cpp
++++ b/src/kernel/xam/xam_info.cpp
+@@ -303,7 +303,9 @@
+   }
+   // The Xbox OOM status is unverified. Fail closed at the host boundary rather
+   // than fabricate an HRESULT or let a zero pointer return success to the guest.
+-  uint32_t ptr = memory->SystemHeapAlloc(size);
++  auto xam = REX_KERNEL_STATE()->GetKernelModule<XamModule>("xam.xex");
++  if (!xam) throw std::logic_error("XamAlloc: module unavailable");
++  uint32_t ptr = memory->SystemHeapAlloc(size,0x20,memory::kSystemHeapDefault,xam.get());
+   if (!ptr) { *out_ptr = 0; throw std::bad_alloc(); }
+   *out_ptr = ptr;
+   return X_ERROR_SUCCESS;
+@@ -312,14 +314,9 @@
+ u32 XamFree_entry(mapped_u32 ptr) {
+   auto* memory = REX_KERNEL_MEMORY();
+   auto address = ptr.guest_address();
+-  auto* heap = memory->LookupHeap(address);
+-  memory::HeapAllocationInfo info{};
+-  if (!address || !heap || heap->heap_type() != memory::HeapType::kGuestVirtual ||
+-      !heap->QueryRegionInfo(address,&info) || info.allocation_base != address ||
+-      !(info.state & memory::kMemoryAllocationCommit)) {
+-    throw std::invalid_argument("XamFree: pointer is not a live virtual allocation base");
+-  }
+-  memory->SystemHeapFree(address);
++  auto xam = REX_KERNEL_STATE()->GetKernelModule<XamModule>("xam.xex");
++  if (!xam || !memory->SystemHeapFreeOwned(address,xam.get()))
++    throw std::invalid_argument("XamFree: allocation is not owned by XAM");
+   return X_ERROR_SUCCESS;
+ }
+ 

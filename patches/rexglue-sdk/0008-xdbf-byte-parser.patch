@@ -1,0 +1,297 @@
+--- a/include/rex/system/util/xdbf_utils.h
++++ b/include/rex/system/util/xdbf_utils.h
+@@ -78,22 +78,22 @@
+ };
+ static_assert_size(XdbfStringTableEntry, 4);
+ 
++#pragma pack(pop)
++// Decoded host values. Wire achievement records are 36 bytes, never typed overlays.
+ struct XdbfAchievementTableEntry {
+-  rex::be<uint16_t> id;
+-  rex::be<uint16_t> label_id;
+-  rex::be<uint16_t> description_id;
+-  rex::be<uint16_t> unachieved_id;
+-  rex::be<uint32_t> image_id;
+-  rex::be<uint16_t> gamerscore;
+-  rex::be<uint16_t> unkE;
+-  rex::be<uint32_t> flags;
+-  rex::be<uint32_t> unk14;
+-  rex::be<uint32_t> unk18;
+-  rex::be<uint32_t> unk1C;
+-  rex::be<uint32_t> unk20;
++  uint16_t id;
++  uint16_t label_id;
++  uint16_t description_id;
++  uint16_t unachieved_id;
++  uint32_t image_id;
++  uint16_t gamerscore;
++  uint16_t unkE;
++  uint32_t flags;
++  uint32_t unk14;
++  uint32_t unk18;
++  uint32_t unk1C;
++  uint32_t unk20;
+ };
+-static_assert_size(XdbfAchievementTableEntry, 0x24);
+-#pragma pack(pop)
+ 
+ struct XdbfBlock {
+   const uint8_t* buffer;
+@@ -108,6 +108,10 @@
+  public:
+   XdbfWrapper(const uint8_t* data, size_t data_size);
+ 
++  enum class Status { kOk, kHeader, kVersion, kTable, kEntry, kFree, kPayload };
++  Status status() const { return status_; }
++
++  // Input is borrowed and must remain alive and immutable.
+   // True if the target memory contains a valid XDBF instance.
+   bool is_valid() const { return data_ != nullptr; }
+ 
+@@ -125,9 +129,9 @@
+   size_t data_size_ = 0;
+   const uint8_t* content_offset_ = nullptr;
+ 
+-  const XbdfHeader* header_ = nullptr;
+-  const XbdfEntry* entries_ = nullptr;
+-  const XbdfFileLoc* files_ = nullptr;
++  Status status_ = Status::kHeader;
++  uint32_t entry_used_ = 0;
++
+ };
+ 
+ class XdbfGameData : public XdbfWrapper {
+--- a/src/system/util/xdbf_utils.cpp
++++ b/src/system/util/xdbf_utils.cpp
+@@ -11,128 +11,126 @@
+ 
+ #include <rex/system/util/xdbf_utils.h>
+ 
+-namespace rex {
+-namespace system {
+-namespace util {
++namespace rex::system::util {
++namespace {
++// Explicit byte loads are valid for every input alignment and host byte order.
++uint64_t Read(const uint8_t* p, unsigned n) {
++  uint64_t value = 0;
++  for (unsigned i = 0; i < n; ++i) value = (value << 8) | p[i];
++  return value;
++}
++bool Span(size_t offset, size_t size, size_t total) {
++  return offset <= total && size <= total - offset;
++}
++bool Signature(const uint8_t* p, const char* magic) {
++  for (unsigned i = 0; i < 4; ++i) if (p[i] != uint8_t(magic[i])) return false;
++  return true;
++}
++bool Payload(uint16_t section, uint64_t id, const uint8_t* p, size_t size) {
++  if (section == 3 || (section == 1 && id == 0x58414348)) {
++    const bool strings = section == 3;
++    if (size < 14 || !Signature(p, strings ? "XSTR" : "XACH") || Read(p+4,4) != 1)
++      return false;
++    uint64_t serialized = Read(p+8,4) + uint64_t(4);
++    if (serialized > size) return false;
++    size_t declared = size_t(serialized), count = Read(p+12,2);
++    if (declared < 14 || declared > size) return false;
++    size_t offset = 14;
++    if (!strings) return count <= (declared - offset) / 36;
++    for (size_t i = 0; i < count; ++i) {
++      if (!Span(offset,4,declared)) return false;
++      size_t length = Read(p+offset+2,2); offset += 4;
++      if (!Span(offset,length,declared)) return false;
++      offset += length;
++    }
++  } else if (section == 1 && id == 0x58535443) {
++    if (size < 16 || !Signature(p,"XSTC") || Read(p+4,4) != 1 ||
++        Read(p+8,4)+uint64_t(4) < 16 || Read(p+8,4)+uint64_t(4) > size) return false;
++  }
++  return true;
++}
++}  // namespace
+ 
+-constexpr memory::fourcc_t kXdbfSignatureXdbf = memory::make_fourcc("XDBF");
+-constexpr memory::fourcc_t kXdbfSignatureXstc = memory::make_fourcc("XSTC");
+-constexpr memory::fourcc_t kXdbfSignatureXstr = memory::make_fourcc("XSTR");
+-constexpr memory::fourcc_t kXdbfSignatureXach = memory::make_fourcc("XACH");
+-
+-constexpr uint64_t kXdbfIdTitle = 0x8000;
+-constexpr uint64_t kXdbfIdXstc = 0x58535443;
+-constexpr uint64_t kXdbfIdXach = 0x58414348;
+-
+-XdbfWrapper::XdbfWrapper(const uint8_t* data, size_t data_size)
+-    : data_(data), data_size_(data_size) {
+-  if (!data || data_size <= sizeof(XbdfHeader)) {
+-    data_ = nullptr;
+-    return;
++XdbfWrapper::XdbfWrapper(const uint8_t* data, size_t size) : data_size_(size) {
++  if (!data || size < 24 || !Signature(data,"XDBF")) return;
++  if (Read(data+4,4) != 0x10000) { status_ = Status::kVersion; return; }
++  size_t count = Read(data+8,4), used = Read(data+12,4);
++  size_t free_count = Read(data+16,4), free_used = Read(data+20,4);
++  // Subtraction/division before multiplication prevents integer wrap.
++  if (used > count || free_used > free_count || count > (size-24)/18) {
++    status_ = Status::kTable; return;
+   }
+-
+-  const uint8_t* ptr = data_;
+-
+-  header_ = reinterpret_cast<const XbdfHeader*>(ptr);
+-  ptr += sizeof(XbdfHeader);
+-  if (header_->magic != kXdbfSignatureXdbf) {
+-    data_ = nullptr;
+-    return;
++  size_t free_offset = 24 + count*18;
++  if (free_count > (size-free_offset)/8) { status_ = Status::kTable; return; }
++  size_t content = free_offset + free_count*8, content_size = size-content;
++  for (size_t i = 0; i < used; ++i) {
++    const uint8_t* e = data+24+i*18;
++    size_t offset = Read(e+10,4), length = Read(e+14,4);
++    if (!Span(offset,length,content_size)) { status_ = Status::kEntry; return; }
++    if (!Payload(uint16_t(Read(e,2)),Read(e+2,8),data+content+offset,length)) {
++      status_ = Status::kPayload; return;
++    }
+   }
+-
+-  entries_ = reinterpret_cast<const XbdfEntry*>(ptr);
+-  ptr += sizeof(XbdfEntry) * header_->entry_count;
+-
+-  files_ = reinterpret_cast<const XbdfFileLoc*>(ptr);
+-  ptr += sizeof(XbdfFileLoc) * header_->free_count;
+-
+-  content_offset_ = ptr;
++  for (size_t i = 0; i < free_used; ++i) {
++    const uint8_t* e = data+free_offset+i*8;
++    // Final descriptor encodes the end of content and its complement, not a span.
++    if (i+1 == free_used && Read(e,4) == content_size &&
++        Read(e+4,4) == 0xffffffffull-content_size) continue;
++    if (!Span(Read(e,4),Read(e+4,4),content_size)) { status_ = Status::kFree; return; }
++  }
++  data_ = data; content_offset_ = data+content; entry_used_ = uint32_t(used);
++  status_ = Status::kOk;
+ }
+ 
+ XdbfBlock XdbfWrapper::GetEntry(XdbfSection section, uint64_t id) const {
+-  for (uint32_t i = 0; i < header_->entry_used; ++i) {
+-    auto& entry = entries_[i];
+-    if (entry.section == static_cast<uint16_t>(section) && entry.id == id) {
+-      XdbfBlock block;
+-      block.buffer = content_offset_ + entry.offset;
+-      block.size = entry.size;
+-      return block;
+-    }
++  if (!is_valid()) return {};
++  for (size_t i = 0; i < entry_used_; ++i) {
++    const uint8_t* e = data_+24+i*18;
++    if (Read(e,2) == uint16_t(section) && Read(e+2,8) == id)
++      return {content_offset_+Read(e+10,4),size_t(Read(e+14,4))};
+   }
+   return {};
+ }
+ 
+-std::string XdbfWrapper::GetStringTableEntry(XLanguage language, uint16_t string_id) const {
+-  auto language_block = GetEntry(XdbfSection::kStringTable, static_cast<uint64_t>(language));
+-  if (!language_block) {
+-    return "";
++std::string XdbfWrapper::GetStringTableEntry(XLanguage language, uint16_t id) const {
++  auto block = GetEntry(XdbfSection::kStringTable,uint64_t(language));
++  if (!block) return {};
++  size_t offset = 14;
++  for (size_t i = 0, count = Read(block.buffer+12,2); i < count; ++i) {
++    const uint8_t* entry = block.buffer+offset;
++    size_t length = Read(entry+2,2); offset += 4;
++    if (Read(entry,2) == id)
++      return std::string(reinterpret_cast<const char*>(block.buffer+offset),length);
++    offset += length;
+   }
+-
+-  auto xstr_head = reinterpret_cast<const XdbfSectionHeader*>(language_block.buffer);
+-  assert_true(xstr_head->magic == kXdbfSignatureXstr);
+-  assert_true(xstr_head->version == 1);
+-
+-  const uint8_t* ptr = language_block.buffer + sizeof(XdbfSectionHeader);
+-  for (uint16_t i = 0; i < xstr_head->count; ++i) {
+-    auto entry = reinterpret_cast<const XdbfStringTableEntry*>(ptr);
+-    ptr += sizeof(XdbfStringTableEntry);
+-    if (entry->id == string_id) {
+-      return std::string(reinterpret_cast<const char*>(ptr), entry->string_length);
+-    }
+-    ptr += entry->string_length;
+-  }
+-  return "";
++  return {};
+ }
+ 
+ std::vector<XdbfAchievementTableEntry> XdbfWrapper::GetAchievements() const {
+-  std::vector<XdbfAchievementTableEntry> achievements;
+-
+-  auto achievement_table = GetEntry(XdbfSection::kMetadata, kXdbfIdXach);
+-  if (!achievement_table) {
+-    return achievements;
++  std::vector<XdbfAchievementTableEntry> result;
++  auto block = GetEntry(XdbfSection::kMetadata,0x58414348);
++  if (!block) return result;
++  size_t count = Read(block.buffer+12,2); result.reserve(count);
++  for (size_t i = 0; i < count; ++i) {
++    const uint8_t* e = block.buffer+14+i*36;
++    result.push_back({uint16_t(Read(e,2)),uint16_t(Read(e+2,2)),uint16_t(Read(e+4,2)),
++      uint16_t(Read(e+6,2)),uint32_t(Read(e+8,4)),uint16_t(Read(e+12,2)),
++      uint16_t(Read(e+14,2)),uint32_t(Read(e+16,4)),uint32_t(Read(e+20,4)),
++      uint32_t(Read(e+24,4)),uint32_t(Read(e+28,4)),uint32_t(Read(e+32,4))});
+   }
+-
+-  auto xach_head = reinterpret_cast<const XdbfSectionHeader*>(achievement_table.buffer);
+-  assert_true(xach_head->magic == kXdbfSignatureXach);
+-  assert_true(xach_head->version == 1);
+-
+-  const uint8_t* ptr = achievement_table.buffer + sizeof(XdbfSectionHeader);
+-  for (uint16_t i = 0; i < xach_head->count; ++i) {
+-    auto entry = reinterpret_cast<const XdbfAchievementTableEntry*>(ptr);
+-    ptr += sizeof(XdbfAchievementTableEntry);
+-    achievements.push_back(*entry);
+-  }
+-  return achievements;
++  return result;
+ }
+ 
+-XLanguage XdbfGameData::GetExistingLanguage(XLanguage language_to_check) const {
+-  // A bit of a hack. Check if title in specific language exist.
+-  // If it doesn't then for sure language is not supported.
+-  return title(language_to_check).empty() ? default_language() : language_to_check;
++XLanguage XdbfGameData::GetExistingLanguage(XLanguage language) const {
++  return title(language).empty() ? default_language() : language;
+ }
+-
+-XdbfBlock XdbfGameData::icon() const {
+-  return GetEntry(XdbfSection::kImage, kXdbfIdTitle);
++XdbfBlock XdbfGameData::icon() const { return GetEntry(XdbfSection::kImage,0x8000); }
++XLanguage XdbfGameData::default_language() const {
++  auto block = GetEntry(XdbfSection::kMetadata,0x58535443);
++  return block ? XLanguage(Read(block.buffer+12,4)) : XLanguage::kEnglish;
+ }
+-
+-XLanguage XdbfGameData::default_language() const {
+-  auto block = GetEntry(XdbfSection::kMetadata, kXdbfIdXstc);
+-  if (!block.buffer) {
+-    return XLanguage::kEnglish;
+-  }
+-  auto xstc = reinterpret_cast<const XdbfXstc*>(block.buffer);
+-  assert_true(xstc->magic == kXdbfSignatureXstc);
+-  return static_cast<XLanguage>(static_cast<uint32_t>(xstc->default_language));
++std::string XdbfGameData::title() const { return title(default_language()); }
++std::string XdbfGameData::title(XLanguage language) const {
++  return GetStringTableEntry(language,0x8000);
+ }
+-
+-std::string XdbfGameData::title() const {
+-  return GetStringTableEntry(default_language(), kXdbfIdTitle);
+-}
+-
+-std::string XdbfGameData::title(XLanguage language) const {
+-  return GetStringTableEntry(language, kXdbfIdTitle);
+-}
+-
+-}  // namespace util
+-}  // namespace system
+-}  // namespace rex
++}  // namespace rex::system::util

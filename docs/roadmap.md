@@ -1,4 +1,4 @@
-# Research roadmap — Phase 7
+# Research roadmap — Phase 8
 
 ## Completed
 
@@ -22,13 +22,15 @@
 
 **R2g — Unified SDK and selected ABI/failure integration:** clean Debug/Release/ASan+UBSan builds of pinned ReXGlue with seven ordered patches completed. All 261 baseline shim symbols are present; one new library supplies Memory/MMIO/dispatcher/thread/export behavior. Original contracts/fault checks plus watchdog regressions total 137 passes. Selected GPR64/stack64/r2/nested callback and TLS-free failures are corrected. Debug private loader-only succeeds; sanitized loader aborts on XDBF alignment. Six additional runtime/vector/pointer blockers are recorded separately. [Exact reproduction and limitations](research/unified-sdk.md).
 
-## Next exact task: R2h / Phase 8 — loader safety and fail-closed entry prerequisites
+**R2h — Pre-entry safety:** bounded XDBF byte decoding and synthetic corpus; wide checked allocation arithmetic fixing the saved SIGBUS path; heap-maintained XAM ownership and foreign/stale/double-free rejection; explicit host failure for selected unsupported exception exports; controlled guest reservation/protection checks. Existing eleven-patch SDK sources and all original game/config/generated data are preserved. [Final build/test evidence and limits](research/pre-entry-safety.md).
 
-**NO-GO for private generated-game execution now.** Implement bounded alignment-safe XDBF decoding with original aligned/unaligned/malformed resource regressions, then require the unchanged XEX to load under SDK ASan/UBSan. Establish the XamAlloc failure contract and fail-closed treatment of unsupported exception imports and unchecked guest pointers. Review memory initialization, title TLS/TOC, callback dispatch, required imports and a narrowly defined prospective entry trace. Do not execute guest code merely because a loader or fixture passes.
+## Next exact task: R2i / Phase 9 — checked guest accesses and entry-contract gates
 
-**Acceptance:** sanitizer-clean loader with unchanged input; independently justified allocation/error behavior; explicit unsupported-import/pointer gates; documented entry prerequisites and readiness review. Full game compilation, graphics/audio and Switch deployment remain outside this milestone. No complete generated-game link has been validated.
+**NO-GO for proprietary execution.** Address raw accesses to 4 KiB guest pages sharing 16 KiB host pages, and define a fail-closed entry/import policy. Establish which unsupported vector ABI/exception/error paths are unreachable or refused, title TLS/TOC/dispatch prerequisites, and memory/pointer lifetime boundaries with original fixtures. XamAlloc host exceptions are not an Xbox error-code implementation; complete guest unwinding is not supplied.
 
-Preserve the unpatched XEX, manifest/corrections and prior generated output. Alternate headers and title updates remain separate decisions. Phase 3's analyzer allowance remains consumed; no analyzer is rerun. Keep all proprietary inputs/outputs private and every dangerous probe externally bounded.
+**Acceptance before any execution proposal:** explicit checked-access scope, no unresolved critical safety issue on the proposed path, documented failure observability and independently justified required ABI/error contracts. A later readiness review must precede a narrowly bounded private generated-code trace. Full game compilation, game execution/boot, graphics/audio and Switch deployment are separate gates.
+
+Keep the XEX, assets, manifest and prior generated output private and unchanged. Alternate headers and title updates remain separate decisions. Phase 3's analyzer allowance remains consumed; no analyzer is rerun. The saved Phase 8 SIGBUS and exploratory diagnostics remain private evidence rather than being discarded.
 
 ## R3 — independent Horizon probes (not started)
 

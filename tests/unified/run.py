@@ -22,6 +22,7 @@ def main():
     ap.add_argument('--source',type=Path,required=True)
     ap.add_argument('--workdir',type=Path,required=True)
     ap.add_argument('--sanitize',action='store_true')
+    ap.add_argument('--pre-entry',action='store_true',help='Validate hardened failure contracts; Phase 7 remains the default')
     a=ap.parse_args();sdk=a.sdk.resolve();source=a.source.resolve();work=a.workdir.resolve()
     if work==ROOT or ROOT in work.parents:ap.error('outputs must stay private')
     work.mkdir(parents=True,exist_ok=False)
@@ -45,7 +46,7 @@ def main():
     for label,path,args in [
       ('phase6','tests/ppc/execution.cpp',[str(work/'phase6-data'),'unified',str(sdk)]),
       ('abi','tests/unified/abi.cpp',[str(work/'abi-data')]),
-      ('errors','tests/unified/errors.cpp',[str(work/'error-data')]),
+      ('errors','tests/unified/errors.cpp',[str(work/'error-data')]+(['hardened'] if a.pre_entry else [])),
       ('phase5','tests/runtime/harness.cpp',[]),
       ('native-memory','tests/runtime/sdk_memory_probe.cpp',[])]:
         binary=compile_file(path,label,['-iquote',str(ROOT)] if label=='phase5' else [])
@@ -69,13 +70,13 @@ def main():
     rec=execute([str(generated_binary)],'original-vmx');rec['checks']=[json.loads(line) for line in (work/'original-vmx.stdout').read_text().splitlines() if line.startswith('{')]
     # Native fault instructions are assembly; surrounding C++ follows this profile.
     fault_binary=compile_file('tests/unified/faults.cpp','faults')
-    modes={'mmio':0,'readonly':-signal.SIGBUS,'sigsegv':-signal.SIGSEGV,'invalid-guest':-signal.SIGBUS,'noaccess-read':-signal.SIGBUS,'nested':128+signal.SIGSEGV,'hole-probe':79}
+    modes={'mmio':0,'readonly':-signal.SIGBUS,'sigsegv':-signal.SIGSEGV,'invalid-guest':-signal.SIGBUS,'noaccess-read':-signal.SIGBUS,'nested':128+signal.SIGSEGV,'hole-probe':(-signal.SIGBUS if a.pre_entry else 79)}
     for mode,status in modes.items():
         rec=execute([str(fault_binary),mode],'fault-'+mode,status)
         raw=(work/('fault-'+mode+'.stderr')).read_bytes()
-        if mode=='hole-probe':
+        if mode=='hole-probe' and not a.pre_entry:
             blocked.append({'finding':'unallocated_guest_hole_writable','status':'BLOCKED'})
-        if mode not in ['mmio','hole-probe']:
+        if mode!='mmio' and (mode!='hole-probe' or a.pre_entry):
             found=[]
             for offset in range(0,len(raw)-31,8):
                 values=struct.unpack_from('=IiiIQQ',raw,offset)
@@ -89,7 +90,7 @@ def main():
     for mode,status in old_modes.items():execute([str(old_fault),mode],'phase6-'+mode,status)
     summary={'sdk':metadata,'sanitizers':a.sanitize,'records':results,'blocked_findings':blocked,
              'passed_groups':sum(sum(x.get('result')=='PASS' for x in r.get('checks',[])) for r in results),
-             'fault_checks':len(modes)-1+len(old_modes),'unexpected_failures':0}
+             'fault_checks':len(modes)-(0 if a.pre_entry else 1)+len(old_modes),'unexpected_failures':0}
     (work/'results.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps({k:summary[k] for k in ['passed_groups','fault_checks','unexpected_failures','blocked_findings']}))
 if __name__=='__main__':
     try:main()
