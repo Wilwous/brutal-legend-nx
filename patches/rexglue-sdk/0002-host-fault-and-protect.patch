@@ -1,0 +1,29 @@
+--- a/src/core/exception_handler_posix.cpp
++++ b/src/core/exception_handler_posix.cpp
+@@ -417,6 +417,15 @@
+       return;
+     }
+   }
++
++  // No handler claimed the fault. Retrying the unchanged instruction loops
++  // forever. Fail-stop with the original signal; this is not guest unwinding.
++  struct sigaction fatal_action;
++  std::memset(&fatal_action, 0, sizeof(fatal_action));
++  fatal_action.sa_handler = SIG_DFL;
++  sigemptyset(&fatal_action.sa_mask);
++  sigaction(signal_number, &fatal_action, nullptr);
++  raise(signal_number);
+ }
+ 
+ void ExceptionHandler::Install(Handler fn, void* data) {
+--- a/src/kernel/xboxkrnl/xboxkrnl_memory.cpp
++++ b/src/kernel/xboxkrnl/xboxkrnl_memory.cpp
+@@ -239,7 +239,7 @@
+   *region_size_ptr = adjusted_size;
+ 
+   if (old_protect) {
+-    *old_protect = tmp_old_protect;
++    *old_protect = ToXdkProtectFlags(tmp_old_protect);
+   }
+ 
+   return X_STATUS_SUCCESS;

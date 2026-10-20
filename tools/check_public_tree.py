@@ -27,6 +27,9 @@ EXACT = {
     "tests/runtime/sdk_memory_probe.cpp", "tests/runtime/README.md",
     "patches/rexglue-sdk/0001-runtime-safety.patch", "patches/rexglue-sdk/LICENSE.BSD-3-Clause",
     "patches/rexglue-sdk/README.md",
+    "tests/ppc/README.md", "tests/ppc/run.py", "tests/ppc/watchdog.py",
+    "tests/ppc/test_watchdog.py", "tests/ppc/host_fault.cpp", "tests/ppc/execution.cpp",
+    "patches/rexglue-sdk/0002-host-fault-and-protect.patch",
     "tests/vmx128/compare_evidence.py",
     "tests/vmx128/run.py", "tests/vmx128/emit_fixture.cpp", "tests/vmx128/README.md",
 }

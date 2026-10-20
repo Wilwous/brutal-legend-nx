@@ -54,3 +54,6 @@ sdk/
 .DS_Store
 __pycache__/
 *.pyc
+
+# Original PPC fixtures only; publication still requires the explicit source allowlist.
+!tests/ppc/

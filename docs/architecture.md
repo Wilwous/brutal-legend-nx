@@ -1,4 +1,4 @@
-# Proposed architecture — Phase 5
+# Proposed architecture — Phase 6
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -10,7 +10,7 @@ flowchart TD
   D --> E[Function analysis: passed with five metadata hints]
   E --> F[Private generated C++: emitted; two sample objects compile]
   F --> T[Original isolated VMX fixtures: executed; gaps identified]
-  T --> G[Private runtime contracts and host link: future]
+  T --> G[Original PPC exports: tested; full host game link: future]
   G --> H[Independent Switch runtime and graphics tests: future]
   H --> I[Sanitized public findings]
 ```
@@ -29,11 +29,15 @@ Do not infer modules from extensions: `live.dll` is an XEX executable/header var
 
 **Not yet validated:** complete CPU semantics, host game link/runtime and Horizon cross build. Keep all local manifests, generated glue, code, decoded images and outputs outside the public checkout. Host codegen tools and target runtime libraries are separate build inputs.
 
-## Phase 5 component foundation
+## Phase 6 original PPC execution boundary
 
-[Runtime foundation](research/runtime-foundation.md) now provides original checked memory, host-thread TLS and explicit diagnostic failure handling, plus a narrowly scoped BSD SDK safety patch. These components execute synthetic commands independently; an SDK/PPC-context import bridge remains future work. Checked memory uses allocation-sized logical permissions and quarantined guest addresses; it does not insert bounds checks into existing generated memory operations or replace Horizon mappings.
+[The original PPC harness](research/ppc-execution.md) now calls 13 verified SDK exports with a real PPCContext, Memory, KernelState and XThread lifecycle, without loading an XEX. Direct-call register preservation, endian/mapped access, selected allocation errors, process TLS slots, PCR/r13 and two-thread isolation pass O0/O2 and limited ASan/UBSan checks. Original fixtures additionally test selected stack/FPR marshalling. r2 preservation does not establish title TOC initialization or callback ABI correctness.
 
-The actual prebuilt SDK memory subsystem passed valid-range allocation/mapping/lifecycle probes. A deliberate read-only write child timed out after 45 seconds; native fault delivery/recovery is UNKNOWN and must be investigated before an execution bridge. Guest unwinding remains unsupported. The SDK patch fixes vector aliasing and TLS bounds, and replaces STFS false success with NOT_IMPLEMENTED; it is tested as source/isolated functions, not integrated into the installed runtime.
+The Phase 5 read-only write hang is an unclaimed synchronous signal retry in the SDK dispatcher: protection works, but a declined fault returns to the same store. External 30-second process-group watchdogs, sampled stacks and compact fault records establish the cause. A separate dispatcher patch provides fail-stop; a controlled claimed fault resumes after an original fixture store while leaving its page read-only. This is host recovery, not guest unwind.
+
+Patches are applied only in isolated private copies. Complete memory/I/O/threading export units and exact real-class TLS methods link beside the unchanged prebuilt SDK; shim ownership is checked. A coherent rebuilt SDK dispatcher/MMIO/thread binding is still required. The new protection-output conversion and prior STFS/TLS corrections pass selected real-context tests, but unsupported STFS remains a functional blocker.
+
+The [Phase 5 foundation](research/runtime-foundation.md) remains an independent bounded checked arena, host-thread TLS and diagnostic error component. It does not insert bounds checks into generated accesses or replace SDK/Horizon mappings. Full callback/64-bit ABI, guest dispatch/unwind, fibers/APCs, VMX numeric truth and target memory behavior remain unresolved. No game-derived execution or full game linking is added.
 
 ## Phase 4 validation boundary
 
@@ -69,4 +73,4 @@ Use reviewed libnx pad/audio/filesystem adapters only after defining the game's 
 
 NRO in full application/title takeover mode remains the candidate deployment; no applet/forwarder/key-dependent packaging is added. Prove address aliases, invalidation/protection, fault recovery, FP/SIMD state, synchronization, SD streaming and physical memory budgets on hardware. Stock-clock measurement is required; no overclock assumption or FPS prediction is made.
 
-Only original documentation/checking code is public. Game files, generated source/shaders, decoded payloads, raw logs and full manifests stay private. A future NRO may contain game-derived machine code; no redistribution conclusion or Release is made here. [Third-party boundaries](../THIRD_PARTY_NOTICES.md).
+Only original research/components/fixtures and narrowly scoped open-source SDK patches are public. Game files, generated source/shaders, decoded payloads, raw logs and full manifests stay private. A future NRO may contain game-derived machine code; no redistribution conclusion or Release is made here. [Third-party boundaries](../THIRD_PARTY_NOTICES.md).

@@ -11,7 +11,6 @@ import json
 from pathlib import Path
 import subprocess
 import sys
-import resource
 import signal
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -82,17 +81,15 @@ def main():
         r=run([str(work/'sdk-memory')],'sdk-memory')
         results.extend(json.loads(l) for l in r.stdout.splitlines() if l.startswith('{'))
         if args.probe_protection_fault:
-            def limits():
-                resource.setrlimit(resource.RLIMIT_CORE,(0,0))
-                resource.setrlimit(resource.RLIMIT_CPU,(30,30))
-            try:
-                r=subprocess.run([str(work/'sdk-memory'),'--fault-readonly'],cwd=work,capture_output=True,text=True,timeout=45,preexec_fn=limits)
-                (work/'sdk-readonly-fault.stderr').write_text(r.stderr)
-                if r.returncode not in [-signal.SIGSEGV,-signal.SIGBUS]:
-                    raise RuntimeError('Native read-only write did not fault as expected: '+str(r.returncode))
-                results.append({'test':'prebuilt_sdk_os_readonly_enforcement','result':'PASS','signal':-r.returncode})
-            except subprocess.TimeoutExpired:
-                results.append({'test':'prebuilt_sdk_os_readonly_enforcement','result':'UNKNOWN','reason':'bounded child timeout; killed and reaped'})
+            sys.path.insert(0,str(ROOT/'tests/ppc'))
+            from watchdog import run as run_bounded
+            r=run_bounded([str(work/'sdk-memory'),'--fault-readonly'],work,'sdk-readonly-fault',30,True)
+            if r['timeout']:
+                results.append({'test':'prebuilt_sdk_os_readonly_enforcement','result':'UNKNOWN','reason':'30-second monotonic timeout; entire process group killed and leader reaped'})
+            elif r['exit_code'] in [-signal.SIGSEGV,-signal.SIGBUS]:
+                results.append({'test':'prebuilt_sdk_os_readonly_enforcement','result':'PASS','signal':-r['exit_code']})
+            else:
+                raise RuntimeError('Native read-only write unexpected exit: '+str(r['exit_code']))
     summary={'compiler':run([args.compiler,'--version'],'compiler').stdout.splitlines()[0],
              'optimization':args.optimization,'sanitizers':args.sanitize,'sdk_leaf_tests':bool(args.sdk_source_root),'status':'PARTIAL' if any(r.get('result')=='UNKNOWN' for r in results) else 'PASS', 'results':results}
     (work/'results.json').write_text(json.dumps(summary,indent=2)+'\n')

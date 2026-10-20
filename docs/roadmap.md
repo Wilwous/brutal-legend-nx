@@ -1,4 +1,4 @@
-# Research roadmap — Phase 5
+# Research roadmap — Phase 6
 
 ## Completed
 
@@ -18,15 +18,15 @@
 
 **Independent numeric evidence:** pinned Canary differs from Xenia/ReXGlue in rounding, denormals and upper range; a primary DirectXMath note distinguishes an Xbox variant. No hardware-verified special-value corpus exists here, so no numeric correction is applied.
 
-## Next exact task: R2f — native fault contract and original PPC-context bridge
+**R2f — Native fault diagnostics and original PPC-context execution:** completed within the documented boundary. Two 30-second child/group watchdog reproductions establish SDK unclaimed-signal retry as the Phase 5 hang. Isolated fail-stop/PC-resume fixtures pass. Thirteen real SDK exports, register preservation, memory lifecycle, actual XThread/PCR/r13 and synthetic process TLS pass O0/O2 and limited ASan/UBSan checks. Source patches are tested against real runtime objects; no installed SDK is changed. [Exact contracts, 57 final checks and remaining limits](research/ppc-execution.md).
 
-Investigate the single 45-second native read-only write timeout with a further explicitly bounded, instrumented host-only probe: collect compact stacks/CPU and distinguish enforcement, unclaimed-signal retry, handler failure and diagnostic environment issues. The normal SDK memory allocation/mapping/protection-query lifecycle passed, but actual fault delivery/recovery must not be inferred from that result.
+## Next exact task: R2g / Phase 7 — coherent SDK runtime and ABI/failure conformance
 
-Then connect a tiny original PPC-context fixture to a reviewed subset of actual SDK memory/TLS exports. Keep ownership/bounds, zero/init/cleanup and error outcomes explicit; whitelist supported imports and reject unsupported guest exception behavior. The standalone TLS class is not a PCR/r13 or XThread implementation. Do not silently bypass exception/STFS failures or change RtlCompareMemoryUlong based solely on Windows documentation.
+Build one pinned SDK runtime in an isolated environment with the reviewed patches, so its dispatcher/MMIO handler chain and current-thread binding come from one library. Re-run original fixtures against it, instrumenting the runtime where supported. Add r2/callback propagation and 64-bit integer argument probes; establish the invalid TLS-free return contract and test failure propagation. Do not infer whole-library patch integration from a hybrid executable plus prebuilt library.
 
-**Acceptance:** deterministic native fail-stop/recovery evidence, an original no-game PPC/export fixture with reproducible sanitizer checks, exact source/binary fingerprints and documented unsupported contracts. Resolve the numeric evidence and required guest exception behavior independently before any separately authorized private early-call trace. Do not boot or compile the full game, add graphics/audio, deploy to Switch or re-run the game analyzer in this work item.
+**Acceptance:** deterministic 30-second-bounded fault/recovery, one real MMIO chain/thread binding, exact library/source fingerprints, explicit tested ABI/failure contracts and zero unexpected fixture failures. Preserve unsupported guest exceptions and hardware numeric semantics as separate gates. No game entry, full game compilation, graphics/audio integration or Switch deployment is part of this next milestone.
 
-Preserve the exact unpatched XEX, manifest/corrections and prior output. Alternate headers and title updates remain separate future decisions. Fix sleep-inclusive/calendar supervision before any new analyzer budget; Phase 3's two-run allowance remains consumed.
+Preserve the unpatched XEX, manifest/corrections and prior generated output. Alternate headers and title updates remain separate decisions. Fix suspend-inclusive/calendar supervision before any new analyzer budget; Phase 3's two-run allowance remains consumed. No analyzer was re-run in Phase 6.
 
 ## R3 — independent Horizon probes (not started)
 
