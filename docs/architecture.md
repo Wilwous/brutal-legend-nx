@@ -1,4 +1,4 @@
-# Proposed architecture — Phase 6
+# Proposed architecture — Phase 7
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -23,19 +23,27 @@ Do not infer modules from extensions: `live.dll` is an XEX executable/header var
 
 ## Host and target separation
 
-**VERIFIED host path:** official ReXGlue 0.10.0 macOS ARM64 release at tag commit `f5337cdc947ff6d4c4196737e2c807a48f2a1fc2`. The CLI and a small original tool-mode metadata helper run on the existing Mac; no SDK/dependency build or Linux environment was needed. [Exact commands and artifact fingerprints](research/phase2-commands.md).
+**VERIFIED host path:** official ReXGlue 0.10.0 macOS ARM64 release at tag commit `f5337cdc947ff6d4c4196737e2c807a48f2a1fc2`. The CLI and a small original tool-mode metadata helper run on the existing Mac; no SDK/dependency build or Linux environment was needed for that initial analysis. Phase 7 separately builds the SDK and dependencies natively. [Exact commands and artifact fingerprints](research/phase2-commands.md).
 
 **VERIFIED:** configured analysis and private C++ emission complete; two sample partitions compile to Mac objects. [Phase 3 findings and measurement limitations](research/rexglue-analysis.md).
 
 **Not yet validated:** complete CPU semantics, host game link/runtime and Horizon cross build. Keep all local manifests, generated glue, code, decoded images and outputs outside the public checkout. Host codegen tools and target runtime libraries are separate build inputs.
 
-## Phase 6 original PPC execution boundary
+## Phase 7 unified SDK boundary
+
+[The unified SDK report](research/unified-sdk.md) establishes a clean pinned source build with seven ordered patches, matching runtime/codegen headers and libraries, and full supported C-family ASan/UBSan instrumentation. Real Memory, MMIO, signal dispatcher, thread binding and export calls now come from one newly built library. The isolated recipe does not install or register a global SDK. The GPU plugin is not built or run.
+
+The original matrix passes 131 fixture/fault checks plus six watchdog checks at Debug/optimized/sanitized settings. Selected 64-bit GPR/stack and nested callback/r2 defects are corrected; real XThread/TLS boundaries, invalid-free failure propagation and STFS explicit rejection pass. This supersedes Phase 6's hybrid-library limitation within the tested contracts. It does not establish complete Xbox ABI or title launch initialization.
+
+A private Debug loader-only probe recognizes all 274 imports, while the sanitized probe aborts on misaligned XDBF endian-field access. XamAlloc OOM false-success, exception stubs, typed-vector marshalling and writable unallocated guest holes remain blockers. Complete generated game linking is untested; symbol presence is insufficient. **Phase 8 NO-GO for generated-game execution:** first repair loader decoding with independent bounded-resource tests and review fail-closed entry/import/pointer prerequisites. No guest entry is prepared or executed.
+
+## Historical Phase 6 original PPC execution boundary
 
 [The original PPC harness](research/ppc-execution.md) now calls 13 verified SDK exports with a real PPCContext, Memory, KernelState and XThread lifecycle, without loading an XEX. Direct-call register preservation, endian/mapped access, selected allocation errors, process TLS slots, PCR/r13 and two-thread isolation pass O0/O2 and limited ASan/UBSan checks. Original fixtures additionally test selected stack/FPR marshalling. r2 preservation does not establish title TOC initialization or callback ABI correctness.
 
 The Phase 5 read-only write hang is an unclaimed synchronous signal retry in the SDK dispatcher: protection works, but a declined fault returns to the same store. External 30-second process-group watchdogs, sampled stacks and compact fault records establish the cause. A separate dispatcher patch provides fail-stop; a controlled claimed fault resumes after an original fixture store while leaving its page read-only. This is host recovery, not guest unwind.
 
-Patches are applied only in isolated private copies. Complete memory/I/O/threading export units and exact real-class TLS methods link beside the unchanged prebuilt SDK; shim ownership is checked. A coherent rebuilt SDK dispatcher/MMIO/thread binding is still required. The new protection-output conversion and prior STFS/TLS corrections pass selected real-context tests, but unsupported STFS remains a functional blocker.
+Patches are applied only in isolated private copies. Complete memory/I/O/threading export units and exact real-class TLS methods link beside the unchanged prebuilt SDK; shim ownership is checked. At that milestone, a coherent rebuilt SDK dispatcher/MMIO/thread binding was still required; Phase 7 now tests that integration above. The new protection-output conversion and prior STFS/TLS corrections pass selected real-context tests, but unsupported STFS remains a functional blocker.
 
 The [Phase 5 foundation](research/runtime-foundation.md) remains an independent bounded checked arena, host-thread TLS and diagnostic error component. It does not insert bounds checks into generated accesses or replace SDK/Horizon mappings. Full callback/64-bit ABI, guest dispatch/unwind, fibers/APCs, VMX numeric truth and target memory behavior remain unresolved. No game-derived execution or full game linking is added.
 
@@ -57,7 +65,7 @@ All 274 import ordinals resolve and 261 function shims exist, but source review 
 
 ## Graphics and asset path
 
-**INFERRED first candidate:** adapt a reviewed native PM4/register-to-Vulkan renderer through Mesa/NVK using the architecture of [project8-sw](https://github.com/R-drg/project8-sw/tree/3393f2615deb7e8ac11ce51d2cd0e9defded5669), with the [Simpsons](https://github.com/R-drg/the-simpsons-game-nx/tree/3cb2cdf7fa1665a1f2d653aa7502fe4baa03680f) and [Mercenaries](https://github.com/penettrator/Mercenaries2-NX/tree/65167852496f94b278a82ffea465c51703575f01) integrations as comparisons. No reference was built or run in this phase, and no renderer/SDK patches were imported. Their baselines and game-specific hooks must not be combined blindly.
+**INFERRED first candidate:** adapt a reviewed native PM4/register-to-Vulkan renderer through Mesa/NVK using the architecture of [project8-sw](https://github.com/R-drg/project8-sw/tree/3393f2615deb7e8ac11ce51d2cd0e9defded5669), with the [Simpsons](https://github.com/R-drg/the-simpsons-game-nx/tree/3cb2cdf7fa1665a1f2d653aa7502fe4baa03680f) and [Mercenaries](https://github.com/penettrator/Mercenaries2-NX/tree/65167852496f94b278a82ffea465c51703575f01) integrations as comparisons. No reference was built or run in this phase, and no renderer or reference-port SDK patches were imported. Their baselines and game-specific hooks must not be combined blindly.
 
 Actual shader-related evidence is limited to `.fxo` paths in `dfpf` archive indexes and embedded D3D9/XGRAPHC/Vd interfaces. Extract a bounded shader/feature census before deciding how much of the reference SPIR-V path transfers. Test render-target aliasing, resolves, depth/MSAA, queries/predication, CPU readbacks, memexport, texture invalidation and presentation only where demonstrated by game data/traces. None is yet established as a required feature or solved path for this game.
 

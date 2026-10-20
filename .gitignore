@@ -57,3 +57,4 @@ __pycache__/
 
 # Original PPC fixtures only; publication still requires the explicit source allowlist.
 !tests/ppc/
+!tools/sdk/

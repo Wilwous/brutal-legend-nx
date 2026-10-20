@@ -29,3 +29,15 @@ git -C "$PRIVATE_SDK_COPY" apply "$PROJECT/patches/rexglue-sdk/0002-host-fault-a
 ```
 
 [Phase 6](../../docs/research/ppc-execution.md) validates selected real PPC exports, real-class TLS methods and isolated dispatcher behavior with original fixtures. A hybrid test executable does not establish complete SDK library integration or guest unwinding. The installed SDK remains unchanged; neither patch has been submitted upstream. Phase 6 contributions retain the same BSD-3-Clause boundary.
+
+## Phase 7 coherent integration
+
+The [isolated builder](../../tools/sdk/README.md) applies all seven patches in the order and with the SHA-256 values in [lock.json](../../tools/sdk/lock.json). It validates pristine source plus patches, builds new runtime/codegen libraries and stages matching headers privately. Never apply this series to an installed SDK or game output. The earlier hybrid commands above remain historical evidence, not the unified build recipe.
+
+- `0003-ppc-callback-arguments.patch`: preserve full GPR integer values and selected 64-bit stack arguments; preserve r2 in CallFrame; use/restorably snapshot the bound context for nested callbacks; reject unbound or undispatched integer-address callbacks explicitly. FPSCR propagation policy stays unchanged. No complete hardware ABI claim.
+- `0004-initialization-failures.patch`: return real TLS-free failure through KeTlsFree, handle absent memory heaps, and permit existing null-metadata error returns in Debug. The internal FreeTLS return type changes, requiring coherent headers/library rebuilding. XamAlloc remains unchanged because its proper Xbox failure code is unverified.
+- `0005-signal-diagnostics.patch`: fixed-size write-based unhandled/nested fault records, thread guard initialization outside signal context, and explicit nested-fault fail-stop. The existing wider MMIO chain is not proven fully async-signal-safe.
+- `0006-darwin-signal-context.patch`: copy the Darwin mcontext pointer by byte offset instead of dereferencing a potentially misaligned ucontext C++ object.
+- `0007-defined-pe-header-offset.patch`: use compiler offsetof and assert offset 24, removing a UBSan null-member expression without changing PE layout.
+
+[Final tests and remaining blockers](../../docs/research/unified-sdk.md): clean Debug/Release/sanitized original fixtures pass, but the sanitized private XEX loader stops on an additional XDBF alignment defect. No alignment suppression or resource-parser patch is included. These contributions share the existing BSD-3-Clause retained notices and have not been submitted upstream. No game-derived code is included.

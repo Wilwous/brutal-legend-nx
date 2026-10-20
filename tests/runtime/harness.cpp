@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 Wilwous
 #include "runtime/checked_tls.h"
+#include <exception>
 #include "runtime/execution_boundary.h"
 #include <array>
 #include <barrier>

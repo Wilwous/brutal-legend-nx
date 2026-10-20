@@ -67,6 +67,17 @@ class BoundaryThread final:public rex::system::XThread {
     memory()->Zero(tls_static_address_,tls_total_size_);
     memory()->Fill(tls_static_address_,28,0x6d);
   }
+  bool rejects_invalid_metadata(){
+    auto original_static=tls_static_address_,original_dynamic=tls_dynamic_address_,original_total=tls_total_size_;
+    uint32_t value=0x1234;bool ok=true;
+    tls_static_address_=0;ok&=!GetTLSValue(0,&value)&&!SetTLSValue(0,7);
+    tls_static_address_=original_static;tls_dynamic_address_=original_static-4;
+    ok&=!GetTLSValue(0,&value)&&!SetTLSValue(0,7);
+    tls_dynamic_address_=original_dynamic;tls_total_size_=16;
+    ok&=!GetTLSValue(0,&value)&&!SetTLSValue(0,7)&&value==0x1234;
+    tls_static_address_=original_static;tls_dynamic_address_=original_dynamic;tls_total_size_=original_total;
+    return ok;
+  }
 };
 class ExecutionThread final:public rex::system::XThread {
   std::function<int()> body_;
@@ -76,10 +87,11 @@ class ExecutionThread final:public rex::system::XThread {
   void Execute() override { kernel_state()->OnThreadExecute(this); int result=body_(); Exit(result); }
 };
 int main(int argc,char** argv){
-  if(argc!=3)return 2;
+  if(argc!=3 && argc!=4)return 2;
   std::setbuf(stdout,nullptr);
   try{
-    bool patched=std::string(argv[2])=="patched";
+    bool unified=std::string(argv[2])=="unified";
+    bool patched=unified||std::string(argv[2])=="patched";
     rex::InitLoggingEarly();std::filesystem::path work=argv[1];
     std::filesystem::create_directories(work/"empty-game");
     rex::Runtime runtime(work/"empty-game",work/"user",work/"updates",work/"cache",work/"metadata");
@@ -106,8 +118,12 @@ int main(int argc,char** argv){
       require(found&&found->type==rex::runtime::Export::Type::kFunction,"export identity missing");
       Dl_info image{};require(dladdr(reinterpret_cast<void*>(item.function),&image)!=0,"export owner unknown");
       bool in_library=std::string(image.dli_fname).find("librexruntime")!=std::string::npos;
-      require(in_library!=bool(patched&&item.replaced),"unexpected shim image binding");
-      std::printf("EXPORT %s ordinal=%u image=%s\n",item.name,found->ordinal,in_library?"prebuilt-runtime":"isolated-executable");
+      require(in_library!=bool(!unified&&patched&&item.replaced),"unexpected shim image binding");
+      if(unified){
+        require(argc==4,"unified library root argument missing");
+        require(std::filesystem::weakly_canonical(image.dli_fname).parent_path()==std::filesystem::weakly_canonical(argv[3])/"lib","shim outside unified SDK");
+      }
+      std::printf("EXPORT %s ordinal=%u image=%s\n",item.name,found->ordinal,in_library?(unified?"unified-runtime":"prebuilt-runtime"):"isolated-executable");
     }
     uint32_t stack=memory->SystemHeapAlloc(0x4000,16), data=memory->SystemHeapAlloc(0x1000,16);
     require(stack&&data,"fixture allocations");
@@ -149,7 +165,8 @@ int main(int argc,char** argv){
     require(get(0)==0&&get(4)==4096,"failure output preservation");pass("memory_lifecycle_protection_and_failure");
     auto stfs_create=call(__imp__StfsCreateDevice,ctx,base,{0,0,data+16});
     auto stfs_control=call(__imp__StfsControlDevice,ctx,base,{0,0,0,0,data+16,4});
-    if(patched){require(get(16)==0x01234567,"STFS output modified");require(stfs_create==0xc0000002&&stfs_control==0xc0000002,"STFS false success");pass("patched_STFS_rejects");}
+    if(patched){require(get(16)==0x01234567,"STFS output modified");require(stfs_create==0xc0000002&&stfs_control==0xc0000002,"STFS false success");require(call(__imp__StfsCreateDevice,ctx,base,{0xffffffff,0,0xffffffff})==0xc0000002,"STFS invalid pointer path");
+      require(call(__imp__StfsControlDevice,ctx,base,{0xffffffff,7,0xffffffff,16,0xffffffff,16})==0xc0000002,"STFS invalid control pointer path");pass("patched_STFS_rejects");}
     else {require(stfs_create==0&&stfs_control==0,"baseline STFS changed");pass("baseline_STFS_false_success_reproduced");}
     if(patched){
       rex::system::object_ref<BoundaryThread> thread(new BoundaryThread(kernel));
@@ -158,7 +175,8 @@ int main(int argc,char** argv){
       require(!thread->GetTLSValue(64,&value)&&!thread->SetTLSValue(64,7),"one-past TLS");
       require(!thread->GetTLSValue(0x40000000,&value)&&!thread->SetTLSValue(0x40000000,7),"TLS overflow");
       require(!thread->GetTLSValue(0,nullptr),"null TLS output");require(value==0xa1b2c3d4,"failed get output changed");
-      for(int i=0;i<28;++i)require(memory->TranslateVirtual(thread->tls_ptr())[i]==0x6d,"static TLS prefix modified");pass("patched_real_XThread_TLS_boundaries");
+      for(int i=0;i<28;++i)require(memory->TranslateVirtual(thread->tls_ptr())[i]==0x6d,"static TLS prefix modified");
+      require(thread->rejects_invalid_metadata(),"malformed TLS metadata accepted");pass("patched_real_XThread_TLS_boundaries");
     }
     auto* process=memory->TranslateVirtual<rex::system::X_KPROCESS*>(kernel->GetTitleProcess());
     process->tls_slot_size=256;for(int i=0;i<8;++i)process->tls_slot_bitmap[i]=i<2?0xffffffffu:0;
@@ -190,6 +208,11 @@ int main(int argc,char** argv){
             if(patched){
               if(call(__imp__KeTlsSetValue,*c,base,{1024,7})!=0)++errors;
               if(call(__imp__KeTlsSetValue,*c,base,{0x40000000,7})!=0)++errors;
+              if(unified){
+                if(call(__imp__KeTlsFree,*c,base,{256})!=0)++errors;
+                if(call(__imp__KeTlsFree,*c,base,{0xffffffff})!=0)++errors;
+                if(call(__imp__KeTlsFree,*c,base,{s})!=0)++errors;
+              }
             }}
         }catch(...){++errors;std::abort();}
         return 0;

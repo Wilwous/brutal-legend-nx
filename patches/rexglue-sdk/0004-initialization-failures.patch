@@ -1,0 +1,114 @@
+--- a/include/rex/system/kernel_state.h
++++ b/include/rex/system/kernel_state.h
+@@ -228,7 +228,7 @@
+   void EndDPCImpersonation(const DPCImpersonationScope& scope);
+ 
+   uint32_t AllocateTLS(PPCContext* context);
+-  void FreeTLS(PPCContext* context, uint32_t slot);
++  bool FreeTLS(PPCContext* context, uint32_t slot);
+ 
+   void RegisterTitleTerminateNotification(uint32_t routine, uint32_t priority);
+   void RemoveTitleTerminateNotification(uint32_t routine);
+--- a/src/system/kernel_state.cpp
++++ b/src/system/kernel_state.cpp
+@@ -373,33 +373,33 @@
+   return result;
+ }
+ 
+-void KernelState::FreeTLS(PPCContext* context, uint32_t slot) {
++bool KernelState::FreeTLS(PPCContext* context, uint32_t slot) {
+   if (!context) {
+     REXSYS_ERROR("FreeTLS: null PPCContext");
+-    return;
++    return false;
+   }
+   if (slot >= 256) {
+     REXSYS_WARN("FreeTLS: invalid TLS slot {}", slot);
+-    return;
++    return false;
+   }
+ 
+   auto current_thread = XThread::GetCurrentThread();
+   if (!current_thread) {
+     REXSYS_ERROR("FreeTLS: no current thread");
+-    return;
++    return false;
+   }
+ 
+   auto current_kthread = current_thread->guest_object<X_KTHREAD>();
+   if (!current_kthread) {
+     REXSYS_ERROR("FreeTLS: failed to resolve current KTHREAD");
+-    return;
++    return false;
+   }
+ 
+   auto process_ptr =
+       memory()->TranslateVirtual<X_KPROCESS*>(static_cast<uint32_t>(current_kthread->process));
+   if (!process_ptr) {
+     REXSYS_ERROR("FreeTLS: failed to resolve current process");
+-    return;
++    return false;
+   }
+ 
+   auto globals = memory()->TranslateVirtual<KernelGuestGlobals*>(GetKernelGuestGlobals());
+@@ -413,7 +413,7 @@
+   if (bitmap_value & bit_mask) {
+     REXSYS_WARN("FreeTLS: slot {} already free", slot);
+     kernel::xboxkrnl::xeKeKfReleaseSpinLock(context, tls_lock, old_irql);
+-    return;
++    return false;
+   }
+ 
+   const std::vector<object_ref<XThread>> threads = object_table()->GetObjectsByType<XThread>();
+@@ -432,6 +432,7 @@
+   process_ptr->tls_slot_bitmap[bitmap_index] = bitmap_value | bit_mask;
+ 
+   kernel::xboxkrnl::xeKeKfReleaseSpinLock(context, tls_lock, old_irql);
++  return true;
+ }
+ 
+ void KernelState::RegisterTitleTerminateNotification(uint32_t routine, uint32_t priority) {
+--- a/src/kernel/xboxkrnl/xboxkrnl_threading.cpp
++++ b/src/kernel/xboxkrnl/xboxkrnl_threading.cpp
+@@ -419,9 +419,9 @@
+     return 0;
+   }
+ 
+-  REX_KERNEL_STATE()->FreeTLS(current_ppc_context(), tls_index);
+-  REXKRNL_IMPORT_RESULT("KeTlsFree", "1");
+-  return 1;
++  bool freed = REX_KERNEL_STATE()->FreeTLS(current_ppc_context(), tls_index);
++  REXKRNL_IMPORT_RESULT("KeTlsFree", "{}", freed ? 1 : 0);
++  return freed ? 1 : 0;
+ }
+ 
+ // https://msdn.microsoft.com/en-us/library/ms686812
+--- a/src/kernel/xboxkrnl/xboxkrnl_memory.cpp
++++ b/src/kernel/xboxkrnl/xboxkrnl_memory.cpp
+@@ -75,8 +75,6 @@
+   // _In_     ULONG Protect
+   // _In_     BOOLEAN DebugMemory
+ 
+-  assert_not_null(base_addr_ptr);
+-  assert_not_null(region_size_ptr);
+ 
+   // Set to TRUE when allocation is from devkit memory area.
+   // assert_true(debug_memory == 0);
+@@ -218,7 +216,7 @@
+   }
+ 
+   auto heap = REX_KERNEL_MEMORY()->LookupHeap(*base_addr_ptr);
+-  if (heap->heap_type() != memory::HeapType::kGuestVirtual) {
++  if (!heap || heap->heap_type() != memory::HeapType::kGuestVirtual) {
+     return X_STATUS_INVALID_PARAMETER;
+   }
+   // Adjust the base downwards to the nearest page boundary.
+@@ -268,7 +266,7 @@
+   }
+ 
+   auto heap = REX_KERNEL_MEMORY()->LookupHeap(base_addr_value);
+-  if (heap->heap_type() != memory::HeapType::kGuestVirtual) {
++  if (!heap || heap->heap_type() != memory::HeapType::kGuestVirtual) {
+     return X_STATUS_INVALID_PARAMETER;
+   }
+   bool result = false;

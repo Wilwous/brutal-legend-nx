@@ -1,4 +1,4 @@
-# Research roadmap — Phase 6
+# Research roadmap — Phase 7
 
 ## Completed
 
@@ -20,13 +20,15 @@
 
 **R2f — Native fault diagnostics and original PPC-context execution:** completed within the documented boundary. Two 30-second child/group watchdog reproductions establish SDK unclaimed-signal retry as the Phase 5 hang. Isolated fail-stop/PC-resume fixtures pass. Thirteen real SDK exports, register preservation, memory lifecycle, actual XThread/PCR/r13 and synthetic process TLS pass O0/O2 and limited ASan/UBSan checks. Source patches are tested against real runtime objects; no installed SDK is changed. [Exact contracts, 57 final checks and remaining limits](research/ppc-execution.md).
 
-## Next exact task: R2g / Phase 7 — coherent SDK runtime and ABI/failure conformance
+**R2g — Unified SDK and selected ABI/failure integration:** clean Debug/Release/ASan+UBSan builds of pinned ReXGlue with seven ordered patches completed. All 261 baseline shim symbols are present; one new library supplies Memory/MMIO/dispatcher/thread/export behavior. Original contracts/fault checks plus watchdog regressions total 137 passes. Selected GPR64/stack64/r2/nested callback and TLS-free failures are corrected. Debug private loader-only succeeds; sanitized loader aborts on XDBF alignment. Six additional runtime/vector/pointer blockers are recorded separately. [Exact reproduction and limitations](research/unified-sdk.md).
 
-Build one pinned SDK runtime in an isolated environment with the reviewed patches, so its dispatcher/MMIO handler chain and current-thread binding come from one library. Re-run original fixtures against it, instrumenting the runtime where supported. Add r2/callback propagation and 64-bit integer argument probes; establish the invalid TLS-free return contract and test failure propagation. Do not infer whole-library patch integration from a hybrid executable plus prebuilt library.
+## Next exact task: R2h / Phase 8 — loader safety and fail-closed entry prerequisites
 
-**Acceptance:** deterministic 30-second-bounded fault/recovery, one real MMIO chain/thread binding, exact library/source fingerprints, explicit tested ABI/failure contracts and zero unexpected fixture failures. Preserve unsupported guest exceptions and hardware numeric semantics as separate gates. No game entry, full game compilation, graphics/audio integration or Switch deployment is part of this next milestone.
+**NO-GO for private generated-game execution now.** Implement bounded alignment-safe XDBF decoding with original aligned/unaligned/malformed resource regressions, then require the unchanged XEX to load under SDK ASan/UBSan. Establish the XamAlloc failure contract and fail-closed treatment of unsupported exception imports and unchecked guest pointers. Review memory initialization, title TLS/TOC, callback dispatch, required imports and a narrowly defined prospective entry trace. Do not execute guest code merely because a loader or fixture passes.
 
-Preserve the unpatched XEX, manifest/corrections and prior generated output. Alternate headers and title updates remain separate decisions. Fix suspend-inclusive/calendar supervision before any new analyzer budget; Phase 3's two-run allowance remains consumed. No analyzer was re-run in Phase 6.
+**Acceptance:** sanitizer-clean loader with unchanged input; independently justified allocation/error behavior; explicit unsupported-import/pointer gates; documented entry prerequisites and readiness review. Full game compilation, graphics/audio and Switch deployment remain outside this milestone. No complete generated-game link has been validated.
+
+Preserve the unpatched XEX, manifest/corrections and prior generated output. Alternate headers and title updates remain separate decisions. Phase 3's analyzer allowance remains consumed; no analyzer is rerun. Keep all proprietary inputs/outputs private and every dangerous probe externally bounded.
 
 ## R3 — independent Horizon probes (not started)
 

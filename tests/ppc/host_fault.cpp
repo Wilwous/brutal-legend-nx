@@ -9,6 +9,7 @@
 #include <rex/logging.h>
 #include <rex/system/xmemory.h>
 #include <csignal>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -34,7 +35,9 @@ struct Event { int signal, code; uintptr_t address, pc; };
 static void signal_exit(int number, siginfo_t* info, void* raw) {
   Event event{number, info->si_code, reinterpret_cast<uintptr_t>(info->si_addr), 0};
 #if defined(__APPLE__) && defined(__aarch64__)
-  event.pc = reinterpret_cast<ucontext_t*>(raw)->uc_mcontext->__ss.__pc;
+  mcontext_t context;
+  std::memcpy(&context,static_cast<const char*>(raw)+offsetof(ucontext_t,uc_mcontext),sizeof(context));
+  event.pc = context->__ss.__pc;
 #elif defined(__linux__) && defined(__x86_64__)
   event.pc = reinterpret_cast<ucontext_t*>(raw)->uc_mcontext.gregs[REG_RIP];
 #endif

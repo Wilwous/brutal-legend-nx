@@ -1,0 +1,23 @@
+--- a/src/core/exception_handler_posix.cpp
++++ b/src/core/exception_handler_posix.cpp
+@@ -23,6 +23,7 @@
+ #include <unistd.h>
+ 
+ #include <cstdint>
++#include <cstddef>
+ #include <cstring>
+ 
+ #include <rex/assert.h>
+@@ -74,7 +75,11 @@
+                                      void* signal_context) {
+ #if REX_PLATFORM_MAC
+   // Darwin's mcontext_t is already a pointer (__darwin_mcontext64*); copy it.
+-  mcontext_t mcontext = reinterpret_cast<ucontext_t*>(signal_context)->uc_mcontext;
++  // Darwin's signal frame may only be 8-byte aligned while ucontext_t
++  // requires 16-byte alignment. Read the pointer representation via memcpy.
++  mcontext_t mcontext;
++  std::memcpy(&mcontext, static_cast<const char*>(signal_context) +
++                            offsetof(ucontext_t, uc_mcontext), sizeof(mcontext));
+ #else
+   // Linux's mcontext_t is a large struct; bind by reference to avoid copying it
+   // inside the signal handler.

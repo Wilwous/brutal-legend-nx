@@ -1,0 +1,15 @@
+--- a/src/system/xex_module.cpp
++++ b/src/system/xex_module.cpp
+@@ -794,9 +794,9 @@
+ // IAT              Import Address Table ptr
+ // opthdr->DataDirectory[IMAGE_DIRECTORY_ENTRY_X].VirtualAddress / .Size
+ 
+-// The macros in pe_image.h don't work with clang, for some reason.
+-// offsetof seems to be unable to find OptionalHeader.
+-#define offsetof1(type, member) ((std::size_t)&(((type*)0)->member))
++// Use the compiler's offset operation without forming a member access on null.
++#define offsetof1(type, member) __builtin_offsetof(type, member)
++static_assert(offsetof1(IMAGE_NT_HEADERS, OptionalHeader) == 24);
+ #define IMAGE_FIRST_SECTION1(ntheader)                                                        \
+   ((PIMAGE_SECTION_HEADER)((uint8_t*)ntheader + offsetof1(IMAGE_NT_HEADERS, OptionalHeader) + \
+                            ((PIMAGE_NT_HEADERS)(ntheader))->FileHeader.SizeOfOptionalHeader))

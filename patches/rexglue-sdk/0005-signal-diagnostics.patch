@@ -1,0 +1,123 @@
+--- a/include/rex/exception_handler.h
++++ b/include/rex/exception_handler.h
+@@ -523,6 +523,10 @@
+  public:
+   typedef bool (*Handler)(Exception* ex, void* data);
+ 
++  // Call outside signal context before a thread may enter the dispatcher.
++  // Initializes trivial TLS without allocating on its first signal.
++  static void InitializeThread();
++
+   // Installs an exception handler.
+   // Handlers are called in the order they are installed.
+   static void Install(Handler fn, void* data);
+--- a/src/core/exception_handler_posix.cpp
++++ b/src/core/exception_handler_posix.cpp
+@@ -20,6 +20,7 @@
+ #if REX_PLATFORM_LINUX || REX_PLATFORM_MAC
+ 
+ #include <signal.h>
++#include <unistd.h>
+ 
+ #include <cstdint>
+ #include <cstring>
+@@ -48,6 +49,26 @@
+ // All custom handlers, left-aligned and null terminated.
+ // Executed in order.
+ std::pair<ExceptionHandler::Handler, void*> handlers_[kMaxHandlerCount];
++
++// Initialized by Install on its thread and by ThreadState::Bind on SDK threads.
++static thread_local volatile sig_atomic_t handling_signal_ = 0;
++
++static void WriteFaultRecord(int number, siginfo_t* info, uint64_t pc, bool nested) {
++  struct FaultRecord {
++    uint32_t magic;
++    int32_t signal_number;
++    int32_t signal_code;
++    uint32_t nested;
++    uint64_t address;
++    uint64_t pc;
++  } record{0x52455846, number, info->si_code, nested ? 1u : 0u,
++           reinterpret_cast<uint64_t>(info->si_addr), pc};
++  (void)!write(STDERR_FILENO, &record, sizeof(record));
++}
++
++void ExceptionHandler::InitializeThread() {
++  handling_signal_ = 0;
++}
+ 
+ static void ExceptionHandlerCallback(int signal_number, siginfo_t* signal_info,
+                                      void* signal_context) {
+@@ -161,6 +182,18 @@
+   }
+ #endif  // REX_PLATFORM_MAC
+ #endif  // REX_ARCH
++
++#if REX_ARCH_AMD64
++  uint64_t fault_pc = thread_context.rip;
++#else
++  uint64_t fault_pc = thread_context.pc;
++#endif
++  if (handling_signal_) {
++    WriteFaultRecord(signal_number, signal_info, fault_pc, true);
++    // A second fault inside dispatch cannot safely re-enter MMIO or logging.
++    _exit(128 + signal_number);
++  }
++  handling_signal_ = 1;
+ 
+   Exception ex;
+   switch (signal_number) {
+@@ -414,10 +447,12 @@
+       }
+ #endif  // REX_PLATFORM_MAC
+ #endif  // REX_ARCH
++      handling_signal_ = 0;
+       return;
+     }
+   }
+ 
++  WriteFaultRecord(signal_number, signal_info, fault_pc, false);
+   // No handler claimed the fault. Retrying the unchanged instruction loops
+   // forever. Fail-stop with the original signal; this is not guest unwinding.
+   struct sigaction fatal_action;
+@@ -429,6 +464,7 @@
+ }
+ 
+ void ExceptionHandler::Install(Handler fn, void* data) {
++  InitializeThread();
+   if (!signal_handlers_installed_) {
+     struct sigaction signal_handler;
+ 
+--- a/src/system/thread_state.cpp
++++ b/src/system/thread_state.cpp
+@@ -15,6 +15,7 @@
+ #include <rex/kernel.h>
+ #include <rex/logging.h>
+ #include <rex/system/thread_state.h>
++#include <rex/exception_handler.h>
+ #include <rex/thread.h>
+ 
+ namespace rex::runtime {
+@@ -46,6 +47,7 @@
+ }
+ 
+ void ThreadState::Bind(ThreadState* thread_state) {
++  arch::ExceptionHandler::InitializeThread();
+   thread_state_ = thread_state;
+ }
+ 
+--- a/src/system/xmemory.cpp
++++ b/src/system/xmemory.cpp
+@@ -543,10 +543,8 @@
+   uint32_t virtual_address = HostToGuestVirtual(host_address);
+   BaseHeap* heap = LookupHeap(virtual_address);
+   if (!heap || heap->heap_type() != memory::HeapType::kGuestPhysical) {
+-    REXSYS_ERROR(
+-        "Unhandled guest access violation: {} of guest 0x{:08X} (host 0x{:016X}) on thread 0x{:X}",
+-        is_write ? "write" : "read", virtual_address, reinterpret_cast<uintptr_t>(host_address),
+-        rex::thread::current_thread_id());
++    // The dispatcher records unhandled faults with async-signal-safe write.
++    // Entering the formatter/logger here may deadlock interrupted code.
+     return false;
+   }
+ 

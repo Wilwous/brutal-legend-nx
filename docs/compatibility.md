@@ -1,4 +1,4 @@
-# Compatibility — v0.0.6-ppc-execution
+# Compatibility — v0.0.7-unified-sdk
 
 No supported playable editions or game builds. The following are **analysis fingerprints**, not a compatibility allowlist.
 
@@ -17,11 +17,13 @@ No supported playable editions or game builds. The following are **analysis fing
 | Game C++ / host game binary | GENERATED PRIVATELY / NOT BUILT OR LINKED; two selected partitions compile to Mac objects |
 | Instruction semantics | Isolated fixtures reproduce alias and special-value concerns; mask warnings are diagnostically restrictive; hardware equivalence UNKNOWN |
 | Foundation | Original checked memory/TLS and SDK safety patch tested; 13 original real-export PPC fixtures and selected XThread/PCR/TLS behavior pass; game runtime not integrated |
-| Native protection faults | VERIFIED host cause: unclaimed SDK signal retry; isolated fail-stop/recovery pass. Coherent runtime integration PARTIAL |
+| Native protection faults | VERIFIED host cause: unclaimed SDK signal retry; isolated fail-stop/recovery pass. Selected coherent runtime integration passes; complete signal safety PARTIAL |
+| Unified SDK | Seven ordered patches; clean Debug/Release/sanitized builds; 137 original checks pass; full ABI PARTIAL |
+| Patched private loader | Debug PASS; Sanitized BLOCKED by misaligned XDBF access; no guest entry |
 | Runtime audit | 261 source classifications: 7 IMPLEMENTED / 184 PARTIAL / 61 STUB / 9 UNKNOWN; no game execution |
 | Horizon NRO / launch | NOT BUILT / NOT TESTED |
 | Graphics, sound, movies, gameplay | NOT TESTED |
 | Input, saves, suspend/resume, dock/undock | NOT TESTED |
 | Game memory, stock-clock performance, thermals | NOT MEASURED |
 
-[Phase 6 PPC/fault results](research/ppc-execution.md) record the diagnosed hang, 57 passing final checks and limited ABI/runtime contracts. [Phase 5 foundation](research/runtime-foundation.md) remains historical component evidence. [Phase 4 tests](research/vmx128-validation.md) and [runtime matrix](research/runtime-audit.md) record current semantic/runtime gates. [Phase 3 report](research/rexglue-analysis.md) records coverage, warnings, commands and a calendar-budget measurement defect. [Binary report](research/xbox360-analysis.md) includes the full variant/update hashes, metadata, resources and limitations. Header/internal-hash consistency does not authenticate a retail dump or establish every edition's compatibility. Future hardware results require exact game/update/module hashes, compiler/SDK/driver/patch revisions, console/firmware/Atmosphère, launch mode, clocks and a reproducible scenario.
+[Phase 7 unified results](research/unified-sdk.md) document current integration and Phase 8 NO-GO. [Phase 6 PPC/fault results](research/ppc-execution.md) record the diagnosed hang, 57 passing final checks and limited ABI/runtime contracts. [Phase 5 foundation](research/runtime-foundation.md) remains historical component evidence. [Phase 4 tests](research/vmx128-validation.md) and [runtime matrix](research/runtime-audit.md) record current semantic/runtime gates. [Phase 3 report](research/rexglue-analysis.md) records coverage, warnings, commands and a calendar-budget measurement defect. [Binary report](research/xbox360-analysis.md) includes the full variant/update hashes, metadata, resources and limitations. Header/internal-hash consistency does not authenticate a retail dump or establish every edition's compatibility. Future hardware results require exact game/update/module hashes, compiler/SDK/driver/patch revisions, console/firmware/Atmosphère, launch mode, clocks and a reproducible scenario.

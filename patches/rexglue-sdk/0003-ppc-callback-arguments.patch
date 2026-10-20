@@ -1,0 +1,187 @@
+--- a/include/rex/ppc/function.h
++++ b/include/rex/ppc/function.h
+@@ -18,6 +18,7 @@
+ #include <concepts>
+ #include <cstdint>
+ #include <cstring>
++#include <stdexcept>
+ #include <tuple>
+ #include <type_traits>
+ #include <utility>
+@@ -107,21 +108,21 @@
+     if (arg <= 7) {
+       switch (arg) {
+         case 0:
+-          return ctx.r3.u32;
++          return ctx.r3.u64;
+         case 1:
+-          return ctx.r4.u32;
++          return ctx.r4.u64;
+         case 2:
+-          return ctx.r5.u32;
++          return ctx.r5.u64;
+         case 3:
+-          return ctx.r6.u32;
++          return ctx.r6.u64;
+         case 4:
+-          return ctx.r7.u32;
++          return ctx.r7.u64;
+         case 5:
+-          return ctx.r8.u32;
++          return ctx.r8.u64;
+         case 6:
+-          return ctx.r9.u32;
++          return ctx.r9.u64;
+         case 7:
+-          return ctx.r10.u32;
++          return ctx.r10.u64;
+         default:
+           break;
+       }
+@@ -280,6 +281,12 @@
+     if constexpr (is_precise_v<T>) {
+       return static_cast<T>(GetPrecisionArgumentValue(ctx, base, idx));
+     } else {
++      if constexpr (sizeof(T) == 8) {
++        if (idx > 7) {
++          return static_cast<T>(rex::memory::load_and_swap<uint64_t>(
++              rex::memory::GuestPtr(base, ctx.r1.u32 + 0x54 + ((idx - 8) * 8))));
++        }
++      }
+       return static_cast<T>(GetIntegerArgumentValue(ctx, base, idx));
+     }
+   }
+@@ -308,6 +315,14 @@
+                               static_cast<uint32_t>(reinterpret_cast<uintptr_t>(value) -
+                                                     reinterpret_cast<uintptr_t>(base)));
+     } else {
++      if constexpr (sizeof(T) == 8) {
++        if (idx > 7) {
++          rex::memory::store_and_swap<uint64_t>(
++              rex::memory::GuestPtr(base, ctx.r1.u32 + 0x54 + ((idx - 8) * 8)),
++              static_cast<uint64_t>(value));
++          return;
++        }
++      }
+       SetIntegerArgumentValue(ctx, base, idx, value);
+     }
+   }
+@@ -437,42 +452,53 @@
+ //=============================================================================
+ // Calls a PPC function from host code with proper context setup
+ 
++// Use the bound context so nested callbacks see the active stack/TOC/PCR.
++// Restore isolated register state even when a native fixture throws.
++class ScopedCallbackContext {
++ public:
++  explicit ScopedCallbackContext(PPCContext& context) : context_(context), saved_(context) {
++    if (context.r1.u32 < 0x70 || (context.r1.u32 & 15)) {
++      throw std::invalid_argument("PPC callback requires an aligned stack frame");
++    }
++    context_.r1.u64 = context.r1.u32 - 0x70;
++  }
++  ~ScopedCallbackContext() {
++    auto fpscr = context_.fpscr;
++    context_ = saved_;
++    context_.fpscr = fpscr;
++  }
++  ScopedCallbackContext(const ScopedCallbackContext&) = delete;
++  ScopedCallbackContext& operator=(const ScopedCallbackContext&) = delete;
++ private:
++  PPCContext& context_;
++  PPCContext saved_;
++};
++
+ template <typename T, typename TFunction, typename... TArgs>
+ T GuestToHostFunction(const TFunction& func, TArgs&&... argv) {
+   auto args = std::make_tuple(std::forward<TArgs>(argv)...);
+ 
+   auto* ts = rex::runtime::ThreadState::Get();
+   if (!ts) {
+-    if constexpr (std::is_void_v<T>) {
+-      return;
+-    } else {
+-      return T{};
+-    }
++    throw std::logic_error("PPC callback requires a bound ThreadState");
+   }
+   PPCContext* currentCtx = ts->context();
+ 
+   auto* ks = rex::system::kernel_state();
+   if (!ks || !ks->memory()) {
+-    if constexpr (std::is_void_v<T>) {
+-      return;
+-    } else {
+-      return T{};
+-    }
++    throw std::logic_error("PPC callback requires initialized guest memory");
+   }
+   uint8_t* base = ks->memory()->virtual_membase();
+ 
+-  PPCContext newCtx{};
+-  newCtx.r1 = currentCtx->r1;
+-  newCtx.r1.u32 -= 0x70;  // PPC64 minimum frame: linkage + param save
+-  newCtx.r13 = currentCtx->r13;
+-  newCtx.fpscr = currentCtx->fpscr;
++  ScopedCallbackContext scope(*currentCtx);
++  PPCContext& newCtx = *currentCtx;
+ 
+   _translate_args_to_guest(newCtx, base, args);
+ 
+   if constexpr (std::is_function_v<TFunction>) {
+     func(newCtx, base);
+   } else if constexpr (std::is_integral_v<TFunction>) {
+-    (void)func;
++    throw std::invalid_argument("PPC callback address requires explicit dispatch");
+   } else {
+     func(newCtx, base);
+   }
+--- a/include/rex/hook.h
++++ b/include/rex/hook.h
+@@ -91,11 +91,12 @@
+ // actually needs from the parent context.
+ 
+ struct CallFrame {
+-  PPCContext ctx;
++  PPCContext ctx{};
+   PPCContext& parent_;
+ 
+   explicit CallFrame(PPCContext& parent) : parent_(parent) {
+     ctx.r1 = parent.r1;
++    ctx.r2 = parent.r2;
+     ctx.r13 = parent.r13;
+     ctx.fpscr = parent.fpscr;
+   }
+@@ -143,31 +144,7 @@
+   /// Auto-isolating call: retrieves ctx/base internally, creates isolated
+   /// context with 0x70 frame, calls function, returns result.
+   R operator()(Args... args) const {
+-    auto* ts = rex::runtime::ThreadState::Get();
+-    PPCContext* parentCtx = ts->context();
+-
+-    auto* ks = rex::system::kernel_state();
+-    uint8_t* base = ks->memory()->virtual_membase();
+-
+-    PPCContext ctx{};
+-    ctx.r1 = parentCtx->r1;
+-    ctx.r1.u32 -= 0x70;
+-    ctx.r13 = parentCtx->r13;
+-    ctx.fpscr = parentCtx->fpscr;
+-
+-    auto tpl = std::make_tuple(args...);
+-    _translate_args_to_guest(ctx, base, tpl);
+-    fn(ctx, base);
+-
+-    parentCtx->fpscr = ctx.fpscr;
+-
+-    if constexpr (std::is_void_v<R>) {
+-      return;
+-    } else if constexpr (is_precise_v<R>) {
+-      return static_cast<R>(ctx.f1.f64);
+-    } else {
+-      return static_cast<R>(ctx.r3.u64);
+-    }
++    return GuestToHostFunction<R>(fn, args...);
+   }
+ };
+ 

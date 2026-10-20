@@ -1,2 +1,2 @@
 # Unified-diff context lines contain a required space even for an empty line.
-patches/rexglue-sdk/*.patch whitespace=-blank-at-eol
+patches/rexglue-sdk/*.patch whitespace=-blank-at-eol,-blank-at-eof
