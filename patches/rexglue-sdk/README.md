@@ -52,3 +52,12 @@ The first seven patches above are unchanged. [pre-entry-lock.json](../../tools/s
 - `0011-checked-allocation-ownership.patch`: wide checked size/alignment arithmetic before allocation, capacity/actual-size validation before zeroing, nonfatal expected heap exhaustion, and heap-maintained subsystem owner tokens checked atomically by XamFree. Release/reset/new reservations erase ownership.
 
 [Root causes, original regressions and remaining execution blockers](../../docs/research/pre-entry-safety.md). Owner tokens do not solve same-owner raw-pointer ABA, guest object bounds, concurrent pointer lifetime, save-state serialization or complete Xbox error/ABI conformance. No game entry or boot is validated.
+
+## Phase 9 checked accesses and closed handles
+
+[entry-readiness-lock.json](../../tools/sdk/entry-readiness-lock.json) preserves patches 0001–0011 and adds:
+
+- `0012-checked-guest-copy.patch`: owner-tagged, heap-locked, bounded full-span copies on the 4-KiB virtual heap. Check reservation/commit/protection before copying; conservatively reject MMIO and shared host-page padding. Fetch is explicitly unsupported; physical/XEX/large-page heaps and raw pointers are not covered.
+- `0013-closed-handle-failure.patch`: reject empty/exhausted object-table entries in ReleaseHandle using its existing INVALID_HANDLE status before decrement. Original single/double/concurrent-close regressions use real NtClose exports.
+
+These retain the BSD-3-Clause notice boundary. The original GPL adapter/fixtures are separate. [Supported contracts and execution NO-GO](../../docs/research/guest-memory-entry-readiness.md). This is not transparent mediation of generated game accesses, a complete handle-lifetime fix, guest execute permissions or Xbox ABI support.

@@ -1,6 +1,6 @@
-# Feasibility — Phase 8
+# Feasibility — Phase 9
 
-Assessment: **2026-10-21 · v0.0.8-pre-entry-safety**. Verdict: **PARTIAL; Phase 9 NO-GO for generated-game execution pending checked guest accesses and complete entry/error contracts**. The Phase 3 configuration-assisted analysis/generation PASS stands.
+Assessment: **2026-10-21 · v0.0.9-entry-readiness**. Verdict: **PARTIAL; NO-GO for generated-game execution: mediated original accesses pass, existing generated accesses and required entry contracts remain uncovered**. The Phase 3 configuration-assisted analysis/generation PASS stands.
 
 Extraction, XEX loading, configured analysis and private C++ emission are verified. Two selected game partitions previously compiled on Mac. Phase 4 executed isolated VMX fixtures and classified all 261 imports. Phase 5 implemented original checked memory/TLS components and an SDK alias/TLS/STFS patch, with deterministic O0/O2/sanitized regressions. Phase 6 diagnoses the Phase 5 native read-only write timeout as an SDK unclaimed-signal retry. Original PPC-context calls to 13 exports, real XThread/PCR/TLS and isolated fail-stop/recovery checks pass. Phase 7 completes a clean coherent patched SDK build and 137 original fixture/fault/supervision checks; complete ABI conformance remains unresolved. That milestone left packed XDBF alignment and allocation false-success blockers. Phase 8 adds bounded byte parsing, checked allocator arithmetic, owner-checked XamFree and explicit unsupported exceptions; current results are in the pre-entry report. Full linking, runtime correctness, execution and Nintendo Switch compatibility are not established. [Phase 3 results and exact limitations](research/rexglue-analysis.md) supersede the historical [Phase 2 timeout](research/xbox360-analysis.md).
 
@@ -16,11 +16,17 @@ Extraction, XEX loading, configured analysis and private C++ emission are verifi
 | Audio/middleware | UNKNOWN / substantial work | FMOD/Havok/Bink/Lua evidence, XMA imports; 157 banks lack standard initial FSB magic; codecs/active paths unproven |
 | Input | INFERRED reusable foundation | XamInput and libnx reference adapters exist; no game input test |
 | Filesystem/saves | UNKNOWN | File/content imports and archives identified; streaming/persistence behavior not tested |
-| Memory | VERIFIED limited components / UNKNOWN integration | Checked bounded arena passes bounds/ownership/epoch/protection/endian tests. Real PPC memory-export lifecycle/errors and integrated MMIO/recovery/fail-stop pass on the rebuilt SDK. Whole unowned host pages now fault; accessible sub-host-page slack remains a critical raw-access limitation. Guest aliases, raw generated accesses and Horizon behavior remain open |
+| Memory | VERIFIED checked subset / PARTIAL coverage | The real-SDK opaque-handle copy layer passes selected page/ownership/lifetime/endian/concurrency tests; generated accesses remain unmediated. Real PPC memory-export lifecycle/errors and integrated MMIO/recovery/fail-stop pass on the rebuilt SDK. Whole unowned host pages now fault; accessible sub-host-page slack remains a critical raw-access limitation. Guest aliases, raw generated accesses and Horizon behavior remain open |
 | TLS | PARTIAL | Real XThread/PCR/r13, selected PPC export calls, 64-slot process lifecycle/exhaustion and isolation pass; patched real-class bounds pass. Synthetic metadata only; title TLS initialization and fibers/APCs untested; selected coherent SDK integration passes |
 | Performance | UNKNOWN | Tool RSS/timing is not game performance; no stock-clock FPS/resolution prediction |
 | Host toolchain | VERIFIED for limited checks | Pinned macOS ARM64 CLI completed emission; two partitions compile to objects; full compiler/link closure UNKNOWN |
 | Target build/deployment | UNKNOWN | Private game C++ exists; no complete host game binary, ARM64 Horizon build, NRO or hardware test |
+
+## Phase 9 readiness review
+
+**VERIFIED limited integration:** an opaque lifetime/byte-bound adapter copies through a new locked primitive on the real SDK virtual heap. Synthetic cross-page, owner/free, endian, MMIO and selected concurrency contracts are tested; an import regression fixes NtClose false-success after close. Thirteen patches are pinned; historical locks are unchanged.
+
+**PARTIAL / BLOCKED:** no guest execute permission exists, so fetch is refused. None of the 791,353 lexical generated load/store sites is mediated. The direct entry closure has 33 imports and 21 indirect calls; unchecked pointer imports, UI false-success, exception dispatch/unwind, typed vectors and title TLS/TOC remain gates. Checked fixture success cannot establish a safe game-entry scope. [Exact contracts, import matrix and final measurements](research/guest-memory-entry-readiness.md).
 
 ## Current blocker register
 
@@ -30,7 +36,7 @@ Extraction, XEX loading, configured analysis and private C++ emission are verifi
 | B02 extraction | Cleared for supplied data | Internal hash checks/bounds/extraction passed; authenticity/signature provenance remains UNKNOWN |
 | B03 identity/modules/update | Partly cleared | Main XEX metadata known; `live.dll` has changed headers with identical stored payload; source authenticity not established; TU not applied |
 | B04 function analysis | Cleared with five metadata hints | Default Validate fails on five branch targets; explicit bounded spans permit Validate and emission. Exhaustive control-flow coverage remains unproved |
-| B05 memory/exceptions | Unresolved | Diagnostic boundary rejects unsupported exception operations; installed SDK void stubs remain. The 45 s timeout is diagnosed as unclaimed-signal retry; isolated dispatcher fail-stop/PC-resume pass under group watchdogs. Selected coherent MMIO/dispatcher integration passes; selected explicit logical pointer checks pass; raw-access integration, guest unwind and full signal safety remain unresolved |
+| B05 memory/exceptions | Unresolved | Diagnostic boundary rejects unsupported exception operations; installed SDK void stubs remain. The 45 s timeout is diagnosed as unclaimed-signal retry; isolated dispatcher fail-stop/PC-resume pass under group watchdogs. Selected coherent MMIO/dispatcher integration passes; selected explicit logical pointer checks pass; new bounded owner-checked copies cover original fixtures only; existing raw-access integration, guest unwind and full signal safety remain unresolved |
 | B06 graphics | Unresolved | Inventory actual `.fxo` shaders and render features; validate PM4, formats/resolves, readbacks and invalidation before adapting a renderer |
 | B07 runtime/media/assets | Source correction / integration unresolved | Integrated real PPC exports return STFS NOT_IMPLEMENTED with unchanged output sentinel; installed SDK remains unchanged. Other false-success stubs, required paths, banks, codecs and saves remain UNKNOWN |
 | B08 memory/performance | UNKNOWN | Measure guest/game/renderer memory and representative stock-clock hardware workloads after correctness milestones |
@@ -53,7 +59,7 @@ The [Phase 5 report](research/runtime-foundation.md) separates original standalo
 
 **PARTIAL / UNKNOWN:** host-page protection does not isolate individual 4 KiB guest pages on this 16 KiB host. Logical guest-range validation is not an allocation lifetime pin and is absent from raw generated accesses. Typed vectors, full Xbox ABI/error codes, same-owner pointer ABA, save-state owner serialization and complete guest exception dispatch/unwind remain unvalidated or unsupported. Successful codegen/loader/fixture behaviour cannot establish entry readiness.
 
-**Phase 9 NO-GO. Exact next task:** checked guest-access integration and fail-closed entry/import contract review with original fixtures, before considering a private trace. [Confirmed fixes, exact regression matrix, preserved failures and reproduction](research/pre-entry-safety.md).
+**NO-GO for proprietary execution. Exact next task: Phase 10 original emitted-access mediation and fail-closed dispatch/import policy.** [Phase 9 coverage, import matrix, measurements and reproduction](research/guest-memory-entry-readiness.md).
 
 ## Platform and resource constraints
 

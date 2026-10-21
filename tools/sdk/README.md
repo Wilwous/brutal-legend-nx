@@ -33,3 +33,7 @@ The build configures upstream Vulkan dependencies because the pinned CMake proje
 Run the [unified fixtures](../../tests/unified/README.md) against these outputs. Do not run old SDK/hybrid adapter commands and call them unified integration.
 
 Phase 8 selects `--lock tools/sdk/pre-entry-lock.json` in a new private workspace, retaining the original seven-patch default for Phase 7. Its eleven-patch series adds bounded XDBF decoding, stricter reservation, explicit unsupported failures, checked allocation arithmetic and subsystem ownership. [Phase 8 reproduction](../../tests/pre-entry/README.md) and [safety limits](../../docs/research/pre-entry-safety.md). All headers and libraries must be rebuilt together; the extended SystemHeapAlloc signature and ownership metadata are not binary-compatible with old SDK clients.
+
+## Phase 9 lock
+
+Use `--lock tools/sdk/entry-readiness-lock.json` in a new private workspace for the thirteen-patch checked-copy/closed-handle series. Rebuild matching headers and all clients; older locks remain historical. [New fixture recipe](../../tests/guest-memory/README.md) · [Coverage and NO-GO gate](../../docs/research/guest-memory-entry-readiness.md).

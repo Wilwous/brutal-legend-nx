@@ -49,6 +49,12 @@ EXACT = {
     "tests/pre-entry/xdbf.cpp", "tests/pre-entry/contracts.cpp", "tests/pre-entry/memory-faults.cpp",
     "tests/pre-entry/vector-context.cpp", "tests/pre-entry/vector-negative-return.cpp",
     "tests/pre-entry/vector-negative-mixed.cpp", "tests/pre-entry/allocation-boundaries.cpp",
+    "runtime/sdk_checked_memory.h", "tools/audit_entry.py",
+    "tools/sdk/entry-readiness-lock.json", "patches/rexglue-sdk/0012-checked-guest-copy.patch",
+    "patches/rexglue-sdk/0013-closed-handle-failure.patch",
+    "tests/guest-memory/README.md", "tests/guest-memory/run.py",
+    "tests/guest-memory/contracts.cpp", "tests/guest-memory/imports.cpp",
+    "tests/guest-memory/test_audit.py",
     "tests/vmx128/compare_evidence.py",
     "tests/vmx128/run.py", "tests/vmx128/emit_fixture.cpp", "tests/vmx128/README.md",
 }
@@ -121,7 +127,7 @@ def check():
         except (ValueError, KeyError, TypeError) as exc:
             errors.append(f"reference snapshot invalid: {exc}")
 
-    for name in ["tools/sdk/lock.json", "tools/sdk/pre-entry-lock.json"]:
+    for name in ["tools/sdk/lock.json", "tools/sdk/pre-entry-lock.json", "tools/sdk/entry-readiness-lock.json"]:
         if name not in texts:
             continue
         try:

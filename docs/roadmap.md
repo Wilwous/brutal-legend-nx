@@ -1,4 +1,4 @@
-# Research roadmap — Phase 8
+# Research roadmap — Phase 9
 
 ## Completed
 
@@ -24,7 +24,15 @@
 
 **R2h — Pre-entry safety:** bounded XDBF byte decoding and synthetic corpus; wide checked allocation arithmetic fixing the saved SIGBUS path; heap-maintained XAM ownership and foreign/stale/double-free rejection; explicit host failure for selected unsupported exception exports; controlled guest reservation/protection checks. Existing eleven-patch SDK sources and all original game/config/generated data are preserved. [Final build/test evidence and limits](research/pre-entry-safety.md).
 
-## Next exact task: R2i / Phase 9 — checked guest accesses and entry-contract gates
+## R2i / Phase 9 — checked guest accesses and entry-contract gates
+
+Completed the bounded original-fixture implementation and static readiness audit. A real-SDK owner-checked copy layer validates 4-KiB pages and full spans; unsupported fetch and MMIO/host-page padding fail closed. Synthetic import tests expose and correct NtClose accepting closed handles. The literal entry closure has 108 generated functions, 33 imports and 21 unresolved indirect sites. No generated access is mediated and no game code is executed. [Contracts, final regressions and NO-GO justification](research/guest-memory-entry-readiness.md).
+
+## Next exact task: R2j / Phase 10 — original emitted-access mediation and fail-closed dispatch
+
+Route original emitted scalar/stack/vector/atomic/indirect fixtures through a checked backend before proposing proprietary execution. Establish validated executable-section authorization and reject unsupported fetch/dispatch/import signatures. Audit the complete access/lifetime scope and independently test every allowed import contract. Preserve guest unwind, typed-vector, title TLS/TOC and callback limitations until evidence supports a correction.
+
+The following entry-readiness acceptance gate remains open:
 
 **NO-GO for proprietary execution.** Address raw accesses to 4 KiB guest pages sharing 16 KiB host pages, and define a fail-closed entry/import policy. Establish which unsupported vector ABI/exception/error paths are unreachable or refused, title TLS/TOC/dispatch prerequisites, and memory/pointer lifetime boundaries with original fixtures. XamAlloc host exceptions are not an Xbox error-code implementation; complete guest unwinding is not supplied.
 

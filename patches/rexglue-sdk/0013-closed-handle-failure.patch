@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2026 Wilwous; upstream notices retained.
+# Empty or exhausted handle entries use the existing invalid-handle branch.
+--- a/src/system/util/object_table.cpp
++++ b/src/system/util/object_table.cpp
+@@ -161,7 +161,7 @@
+   auto global_lock = global_critical_region_.Acquire();
+ 
+   ObjectTableEntry* entry = LookupTable(handle);
+-  if (!entry) {
++  if (!entry || !entry->object || entry->handle_ref_count <= 0) {
+     return X_STATUS_INVALID_HANDLE;
+   }
+ 

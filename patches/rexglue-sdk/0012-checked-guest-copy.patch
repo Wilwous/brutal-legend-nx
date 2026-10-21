@@ -1,0 +1,92 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2026 Wilwous; upstream notices retained.
+# Bounded owner-checked copies on the virtual 4-KiB heap only.
+--- a/include/rex/system/xmemory.h
++++ b/include/rex/system/xmemory.h
+@@ -140,6 +140,14 @@
+   return true;
+ }
+ 
++// Host-side diagnostics, not Xbox status values. Fetch is deliberately unsupported:
++// the pinned guest page table has no execute permission metadata.
++enum class CheckedMemoryAccess { read, write, fetch };
++enum class CheckedMemoryResult {
++  ok, invalid_range, ownership, uncommitted, protection, mmio,
++  unsupported_heap, unsupported_fetch
++};
++
+ // Heap abstraction for page-based allocation.
+ class BaseHeap {
+  public:
+@@ -219,6 +227,11 @@
+   // Opaque subsystem ownership; cleared on release/reset/new reservation.
+   void SetAllocationOwner(uint32_t address, const void* owner);
+   bool ReleaseOwned(uint32_t address, const void* owner);
++
++  // Bounded copy, all pages validated before any byte is copied. The owner token
++  // must uniquely identify this reservation lifetime. No guest host pointer escapes.
++  CheckedMemoryResult CopyOwnedMemory(uint32_t allocation_base, const void* owner,
++      uint32_t address, void* host_buffer, uint64_t length, CheckedMemoryAccess access);
+ 
+   // Queries information about the given region of pages.
+   bool QueryRegionInfo(uint32_t base_address, HeapAllocationInfo* out_info);
+--- a/src/system/xmemory.cpp
++++ b/src/system/xmemory.cpp
+@@ -1726,6 +1726,57 @@
+   return Release(address);
+ }
+ 
++CheckedMemoryResult BaseHeap::CopyOwnedMemory(uint32_t allocation_base, const void* owner,
++    uint32_t address, void* host_buffer, uint64_t length, CheckedMemoryAccess access) {
++  // Trusted host buffers only, disjoint from guest mappings. Runtime teardown,
++  // Reset/Restore and MMIO registration must be quiescent for this API.
++  // 64 KiB bounds both the copy and exact (possibly masked) MMIO scan.
++  if (!address || !host_buffer || !length || length > 65536 ||
++      length > 0x100000000ull - address) return CheckedMemoryResult::invalid_range;
++  auto global_lock = rex::thread::global_critical_region::AcquireDirect();
++  std::lock_guard<std::recursive_mutex> heap_lock(heap_mutex_);
++  const uint64_t end = uint64_t(address) + length;
++  // MMIO protects whole host pages. Conservatively reject even ordinary bytes
++  // sharing one with a masked MMIO address, so padding cannot cause a host fault.
++  const uint64_t host_page = memory_->system_page_size_;
++  const uint64_t scan_start = uint64_t(address) / host_page * host_page;
++  const uint64_t scan_end = ((end - 1) / host_page + 1) * host_page;
++  for (uint64_t byte = scan_start; byte < scan_end; ++byte) {
++    if (memory_->LookupVirtualMappedRange(uint32_t(byte))) return CheckedMemoryResult::mmio;
++  }
++  // Physical aliases, XEX and large-page heaps require different lifetime and
++  // instruction-fetch contracts. Do not infer them from host accessibility.
++  if (heap_type_ != HeapType::kGuestVirtual || page_size_ != 4096)
++    return CheckedMemoryResult::unsupported_heap;
++  if (address < heap_base_ || end > uint64_t(heap_base_) + heap_size_)
++    return CheckedMemoryResult::invalid_range;
++  auto it = allocation_owners_.find(allocation_base);
++  if (!owner || it == allocation_owners_.end() || it->second != owner)
++    return CheckedMemoryResult::ownership;
++  const uint32_t first = (address - heap_base_) >> page_size_shift_;
++  const uint32_t last = uint32_t((end - 1 - heap_base_) >> page_size_shift_);
++  for (uint32_t page = first; page <= last; ++page) {
++    const auto entry = page_table_[page];
++    if (!(entry.state & kMemoryAllocationReserve) ||
++        heap_base_ + (entry.base_address << page_size_shift_) != allocation_base)
++      return CheckedMemoryResult::ownership;
++    if (!(entry.state & kMemoryAllocationCommit)) return CheckedMemoryResult::uncommitted;
++    if (!(entry.current_protect & kMemoryProtectRead) ||
++        (access == CheckedMemoryAccess::write &&
++         !(entry.current_protect & (kMemoryProtectWrite | kMemoryProtectWriteCombine))))
++      return CheckedMemoryResult::protection;
++  }
++  if (access == CheckedMemoryAccess::fetch) return CheckedMemoryResult::unsupported_fetch;
++  if (access != CheckedMemoryAccess::read && access != CheckedMemoryAccess::write)
++    return CheckedMemoryResult::invalid_range;
++  // The heap lock pins metadata and backing through the copy against ordinary
++  // Alloc/AllocFixed/Release/Decommit/Protect. Never return a raw guest pointer.
++  auto* guest = TranslateRelative(address - heap_base_);
++  if (access == CheckedMemoryAccess::write) std::memcpy(guest, host_buffer, size_t(length));
++  else std::memcpy(host_buffer, guest, size_t(length));
++  return CheckedMemoryResult::ok;
++}
++
+ bool BaseHeap::QueryRegionInfo(uint32_t base_address, HeapAllocationInfo* out_info) {
+   uint32_t start_page_number = (base_address - heap_base_) >> page_size_shift_;
+   if (!out_info || base_address < heap_base_ || start_page_number >= page_table_.size()) {

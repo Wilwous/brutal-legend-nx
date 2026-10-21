@@ -18,6 +18,8 @@ jobs:
           persist-credentials: false
       - name: Check public research contents and local links
         run: python3 tools/check_public_tree.py
+      - name: Check original static-audit fixtures
+        run: python3 tests/guest-memory/test_audit.py
       - name: Check monotonic watchdog and process group cleanup
         run: python3 tests/ppc/test_watchdog.py
 

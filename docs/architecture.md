@@ -1,4 +1,4 @@
-# Proposed architecture — Phase 8
+# Proposed architecture — Phase 9
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -29,6 +29,14 @@ Do not infer modules from extensions: `live.dll` is an XEX executable/header var
 
 **Not yet validated:** complete CPU semantics, host game link/runtime and Horizon cross build. Keep all local manifests, generated glue, code, decoded images and outputs outside the public checkout. Host codegen tools and target runtime libraries are separate build inputs.
 
+## Phase 9 checked guest-access boundary
+
+[The entry-readiness report](research/guest-memory-entry-readiness.md) adds an original opaque-handle adapter and a locked, bounded SDK copy primitive on the actual 4-KiB virtual heap. Each supported transfer validates owner/reservation, commitment, permissions, overflow and all pages before copying. Unique lifetime tokens and the heap lock cover the copy against ordinary free/protect operations; requested byte bounds are enforced by the adapter. MMIO and its host-page padding are refused. Read/write/endian, cross-page and selected concurrent operations use original fixtures; no guest backing pointer escapes through this API.
+
+**PARTIAL coverage:** existing generated accesses, SDK mapped pointers, stack marshalling, atomics, physical aliases and raw memory helpers remain unmediated. Fetch is explicitly unsupported because guest execute permissions are absent from the pinned page table. Reset/restore/teardown and MMIO registration require quiescence. No complete guest memory isolation, title lifetime or Xbox ABI claim follows.
+
+Thirteen pinned patches are built coherently in private. A new import regression exposed NtClose accepting a previously closed handle; its existing INVALID_HANDLE branch now rejects empty/exhausted entries before decrement. The direct entry closure contains 108 generated functions and 33 imports, with 21 unresolved indirect sites and zero mediated generated memory sites. **NO-GO for proprietary execution.** Phase 10 must first demonstrate original emitted-access mediation and fail-closed dispatch/import policy.
+
 ## Phase 8 pre-entry safety boundary
 
 [The pre-entry report](research/pre-entry-safety.md) records eleven ordered SDK patches with clean coherent runtime/codegen builds. XDBF uses bounded byte decoding; allocation size/alignment are checked before narrowing and zeroing. The saved nearly-4-GiB allocation SIGBUS is preserved as a pre-fix regression, with arithmetic-only boundary tests preceding any fixed-runtime retry.
@@ -37,7 +45,7 @@ XamFree now requires an owner token in the actual heap, using the runtime's XamM
 
 Guest views start NOACCESS and committed allocations determine host protection. Selected virtual/physical reserve/decommit/release/read-only denials and explicit guest-range checks are verified. **A 16 KiB host page cannot independently protect all four 4 KiB guest pages.** Raw generated accesses can still reach slack while an adjacent committed page needs access; logical checks are not automatically inserted into those accesses or pinned against concurrent lifetime changes. MMIO and signal tests remain selected host contracts.
 
-**Phase 9 NO-GO for generated-game execution:** checked guest-access integration and a fail-closed entry/import policy must precede any trace. Typed vector marshalling, full Xbox ABI, error-status compatibility and guest exception dispatch/unwind remain incomplete. No game function, entry or boot is executed in this milestone. Historical Phase 7/6 limitations below describe their original snapshots; current safety findings above supersede the resolved XDBF alignment and allocation false-success paths within the tested scope.
+**Historical Phase 8 gate — NO-GO for generated-game execution:** checked guest-access integration and a fail-closed entry/import policy must precede any trace. Typed vector marshalling, full Xbox ABI, error-status compatibility and guest exception dispatch/unwind remain incomplete. No game function, entry or boot is executed in this milestone. Historical Phase 7/6 limitations below describe their original snapshots; current safety findings above supersede the resolved XDBF alignment and allocation false-success paths within the tested scope.
 
 ## Phase 7 unified SDK boundary
 
