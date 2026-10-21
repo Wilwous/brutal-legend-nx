@@ -61,3 +61,7 @@ The first seven patches above are unchanged. [pre-entry-lock.json](../../tools/s
 - `0013-closed-handle-failure.patch`: reject empty/exhausted object-table entries in ReleaseHandle using its existing INVALID_HANDLE status before decrement. Original single/double/concurrent-close regressions use real NtClose exports.
 
 These retain the BSD-3-Clause notice boundary. The original GPL adapter/fixtures are separate. [Supported contracts and execution NO-GO](../../docs/research/guest-memory-entry-readiness.md). This is not transparent mediation of generated game accesses, a complete handle-lifetime fix, guest execute permissions or Xbox ABI support.
+
+## Phase 10 optional generated-access seam
+
+[The instrumentation lock](../../tools/sdk/instrumentation-lock.json) retains all prior hashes and adds `0014-generated-access-seam.patch` under the existing BSD-3-Clause notice boundary. Both PCH templates support an explicit consumer include after memory/dispatch macros and before inline helper expansion. Full vectors use two macros, partial vectors a default no-op guard, and all identified direct-call emission sites the existing call macro. Default behavior is retained; the original GPL checked consumer opts in and refuses unsupported operations. No game output is rewritten. Custom/older templates require review and matching regeneration. [Contracts and NO-GO gate](../../docs/research/generated-memory-instrumentation.md).

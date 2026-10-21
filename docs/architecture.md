@@ -1,4 +1,4 @@
-# Proposed architecture — Phase 9
+# Proposed architecture — Phase 10
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -28,6 +28,14 @@ Do not infer modules from extensions: `live.dll` is an XEX executable/header var
 **VERIFIED:** configured analysis and private C++ emission complete; two sample partitions compile to Mac objects. [Phase 3 findings and measurement limitations](research/rexglue-analysis.md).
 
 **Not yet validated:** complete CPU semantics, host game link/runtime and Horizon cross build. Keep all local manifests, generated glue, code, decoded images and outputs outside the public checkout. Host codegen tools and target runtime libraries are separate build inputs.
+
+## Phase 10 generated-access prototype
+
+[The instrumentation report](research/generated-memory-instrumentation.md) connects the real generator's PCH macros to the original Phase 9 allocation layer. An explicit compile-time opt-in selects checked scalar/finite-FP/full-vector transfers. Full vectors have named macro seams; raw/atomic/partial-vector/string operations fail explicitly. Direct emitted calls share a policy macro and synthetic indirect calls use an explicit host allowlist. Matching seams exist in the SDK test-PCH template. The default mode retains the original runtime behavior.
+
+Original encoded PPC words pass through the actual decoder, builder and template before compilation/execution. Selected page, ownership, endian, alignment, failure and concurrent contracts are checked independently. The checked generated body receives a null arena base. This is a controlled original fixture boundary, not a native-code sandbox, checked instruction fetch, complete ABI, guest exception delivery or title memory integration.
+
+**NO-GO for proprietary execution:** private generated output is unchanged and uninstrumented; old literal calls/raw vector bodies require reviewed regeneration, not just a header substitution. Image/stack/TLS capabilities, required imports, indirect targets, atomic/partial-vector semantics and guest unwind remain unresolved. Phase 11 should admit and validate an original mini-module before any title execution proposal.
 
 ## Phase 9 checked guest-access boundary
 

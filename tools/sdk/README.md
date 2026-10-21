@@ -37,3 +37,7 @@ Phase 8 selects `--lock tools/sdk/pre-entry-lock.json` in a new private workspac
 ## Phase 9 lock
 
 Use `--lock tools/sdk/entry-readiness-lock.json` in a new private workspace for the thirteen-patch checked-copy/closed-handle series. Rebuild matching headers and all clients; older locks remain historical. [New fixture recipe](../../tests/guest-memory/README.md) · [Coverage and NO-GO gate](../../docs/research/guest-memory-entry-readiness.md).
+
+## Phase 10 lock
+
+Use `--lock tools/sdk/instrumentation-lock.json` for the fourteen-patch series in a private workspace. Run only one builder against that workspace, wait for all profiles to finish, and rebuild matching clients. [Synthetic instrumentation recipe](../../tests/instrumentation/README.md) · [Coverage and limits](../../docs/research/generated-memory-instrumentation.md). Existing locks remain unchanged.

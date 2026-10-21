@@ -20,6 +20,8 @@ jobs:
         run: python3 tools/check_public_tree.py
       - name: Check original static-audit fixtures
         run: python3 tests/guest-memory/test_audit.py
+      - name: Check original instrumentation census fixtures
+        run: python3 tests/instrumentation/test_audit.py
       - name: Check monotonic watchdog and process group cleanup
         run: python3 tests/ppc/test_watchdog.py
 

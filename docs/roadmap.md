@@ -1,4 +1,4 @@
-# Research roadmap — Phase 9
+# Research roadmap — Phase 10
 
 ## Completed
 
@@ -28,7 +28,15 @@
 
 Completed the bounded original-fixture implementation and static readiness audit. A real-SDK owner-checked copy layer validates 4-KiB pages and full spans; unsupported fetch and MMIO/host-page padding fail closed. Synthetic import tests expose and correct NtClose accepting closed handles. The literal entry closure has 108 generated functions, 33 imports and 21 unresolved indirect sites. No generated access is mediated and no game code is executed. [Contracts, final regressions and NO-GO justification](research/guest-memory-entry-readiness.md).
 
-## Next exact task: R2j / Phase 10 — original emitted-access mediation and fail-closed dispatch
+## R2j / Phase 10 — original emitted-access mediation and fail-closed dispatch
+
+Original decoder→builder→template fixtures validate an opt-in checked-memory seam on the real SDK. Selected scalar/finite-FP/full-vector transfers pass; atomics, partial vectors, raw strings and unsupported calls are refused. Typed-vector signatures remain unsupported. The prior private game output is statically assessed but never rewritten/compiled/executed. [Exact coverage, regressions and limitations](research/generated-memory-instrumentation.md).
+
+## Next exact task: R2k / Phase 11 — synthetic scope admission and image/stack/TLS capabilities
+
+Validate an original mini-module's section permissions and lifetimes, stack/TLS accesses and a fail-closed helper/import allowlist. Establish the complete access/call scope and observable failure paths with independent original fixtures. Preserve the current atomic, vector-ABI, exception and title-memory limitations; optimize the diagnostic MMIO scan only after regression evidence. Proprietary execution remains NO-GO.
+
+The following previous mediation/entry gates remain requirements beyond the tested subset:
 
 Route original emitted scalar/stack/vector/atomic/indirect fixtures through a checked backend before proposing proprietary execution. Establish validated executable-section authorization and reject unsupported fetch/dispatch/import signatures. Audit the complete access/lifetime scope and independently test every allowed import contract. Preserve guest unwind, typed-vector, title TLS/TOC and callback limitations until evidence supports a correction.
 

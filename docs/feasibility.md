@@ -1,6 +1,6 @@
-# Feasibility — Phase 9
+# Feasibility — Phase 10
 
-Assessment: **2026-10-21 · v0.0.9-entry-readiness**. Verdict: **PARTIAL; NO-GO for generated-game execution: mediated original accesses pass, existing generated accesses and required entry contracts remain uncovered**. The Phase 3 configuration-assisted analysis/generation PASS stands.
+Assessment: **2026-10-21 · v0.0.10-memory-instrumentation**. Verdict: **PARTIAL; NO-GO for generated-game execution: mediated original accesses pass, existing generated accesses and required entry contracts remain uncovered**. The Phase 3 configuration-assisted analysis/generation PASS stands.
 
 Extraction, XEX loading, configured analysis and private C++ emission are verified. Two selected game partitions previously compiled on Mac. Phase 4 executed isolated VMX fixtures and classified all 261 imports. Phase 5 implemented original checked memory/TLS components and an SDK alias/TLS/STFS patch, with deterministic O0/O2/sanitized regressions. Phase 6 diagnoses the Phase 5 native read-only write timeout as an SDK unclaimed-signal retry. Original PPC-context calls to 13 exports, real XThread/PCR/TLS and isolated fail-stop/recovery checks pass. Phase 7 completes a clean coherent patched SDK build and 137 original fixture/fault/supervision checks; complete ABI conformance remains unresolved. That milestone left packed XDBF alignment and allocation false-success blockers. Phase 8 adds bounded byte parsing, checked allocator arithmetic, owner-checked XamFree and explicit unsupported exceptions; current results are in the pre-entry report. Full linking, runtime correctness, execution and Nintendo Switch compatibility are not established. [Phase 3 results and exact limitations](research/rexglue-analysis.md) supersede the historical [Phase 2 timeout](research/xbox360-analysis.md).
 
@@ -22,7 +22,13 @@ Extraction, XEX loading, configured analysis and private C++ emission are verifi
 | Host toolchain | VERIFIED for limited checks | Pinned macOS ARM64 CLI completed emission; two partitions compile to objects; full compiler/link closure UNKNOWN |
 | Target build/deployment | UNKNOWN | Private game C++ exists; no complete host game binary, ARM64 Horizon build, NRO or hardware test |
 
-## Phase 9 readiness review
+## Phase 10 instrumentation review
+
+**VERIFIED selected prototype:** actual SDK decoding/emission/template rendering routes original scalar/finite-FP/full-vector memory fixtures through the checked owner/page/lifetime layer. Unsupported atomics, partial vectors, borrowed strings and unknown calls are refused. Three typed-vector signature forms are rejected at compile time. Default/checked execution and selected template compatibility are independently checked.
+
+**PARTIAL / BLOCKED:** no private game output is instrumented or executed. Scalar macro eligibility is a static estimate; old raw vectors/direct calls require regeneration. Image/stack/TLS capabilities, instruction-fetch authorization, imported pointer/ABI contracts, dynamic targets and guest exceptions remain gates. The conservative backend has substantial measured overhead. **Phase 11 NO-GO for proprietary execution.** [Coverage, failure history, measurements and exact next milestone](research/generated-memory-instrumentation.md).
+
+## Historical Phase 9 readiness review
 
 **VERIFIED limited integration:** an opaque lifetime/byte-bound adapter copies through a new locked primitive on the real SDK virtual heap. Synthetic cross-page, owner/free, endian, MMIO and selected concurrency contracts are tested; an import regression fixes NtClose false-success after close. Thirteen patches are pinned; historical locks are unchanged.
 
@@ -59,7 +65,7 @@ The [Phase 5 report](research/runtime-foundation.md) separates original standalo
 
 **PARTIAL / UNKNOWN:** host-page protection does not isolate individual 4 KiB guest pages on this 16 KiB host. Logical guest-range validation is not an allocation lifetime pin and is absent from raw generated accesses. Typed vectors, full Xbox ABI/error codes, same-owner pointer ABA, save-state owner serialization and complete guest exception dispatch/unwind remain unvalidated or unsupported. Successful codegen/loader/fixture behaviour cannot establish entry readiness.
 
-**NO-GO for proprietary execution. Exact next task: Phase 10 original emitted-access mediation and fail-closed dispatch/import policy.** [Phase 9 coverage, import matrix, measurements and reproduction](research/guest-memory-entry-readiness.md).
+**NO-GO for proprietary execution. Exact next task: Phase 11 original mini-module scope admission and image/stack/TLS capability validation.** [Phase 10 coverage, measurements and readiness gate](research/generated-memory-instrumentation.md).
 
 ## Platform and resource constraints
 

@@ -1,0 +1,178 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2026 Wilwous; upstream notices retained.
+# Optional consumer checked-memory seam; default memory/call behavior retained.
+--- a/resources/templates/codegen/pch_h.inja
++++ b/resources/templates/codegen/pch_h.inja
+@@ -243,8 +243,18 @@
+ //=============================================================================
+ 
+ #define REX_CALL_FUNC(x) x(ctx, base)
++#define REX_PARTIAL_VECTOR_GUARD() ((void)0)
++// Full vector operations retain the pinned whole-vector byte reversal by default.
++#define REX_LOAD_VECTOR(v, addr) simde_mm_store_si128((simde__m128i*)(v).u8, simde_mm_shuffle_epi8(simde_mm_load_si128((simde__m128i*)REX_RAW_ADDR(addr)), simde_mm_load_si128((simde__m128i*)VectorMaskL)))
++#define REX_STORE_VECTOR(addr, v) simde_mm_store_si128((simde__m128i*)REX_RAW_ADDR(addr), simde_mm_shuffle_epi8(simde_mm_load_si128((simde__m128i*)(v).u8), simde_mm_load_si128((simde__m128i*)VectorMaskL)))
+ 
+ {% include "codegen/_indirect_call.inja" %}
++
++// Explicit consumer opt-in, after every memory/dispatch macro and before inline
++// helpers expand them. No project-specific code is required by the default SDK.
++#ifdef REX_CHECKED_ACCESS_HEADER
++#include REX_CHECKED_ACCESS_HEADER
++#endif
+ 
+ //=============================================================================
+ // Flush Mode
+--- a/resources/templates/test/ppc_config_h.inja
++++ b/resources/templates/test/ppc_config_h.inja
+@@ -100,8 +100,16 @@
+ //=============================================================================
+ 
+ #define REX_CALL_FUNC(x) x(ctx, base)
++#define REX_PARTIAL_VECTOR_GUARD() ((void)0)
++// Full vector operations retain the pinned whole-vector byte reversal by default.
++#define REX_LOAD_VECTOR(v, addr) simde_mm_store_si128((simde__m128i*)(v).u8, simde_mm_shuffle_epi8(simde_mm_load_si128((simde__m128i*)REX_RAW_ADDR(addr)), simde_mm_load_si128((simde__m128i*)VectorMaskL)))
++#define REX_STORE_VECTOR(addr, v) simde_mm_store_si128((simde__m128i*)REX_RAW_ADDR(addr), simde_mm_shuffle_epi8(simde_mm_load_si128((simde__m128i*)(v).u8), simde_mm_load_si128((simde__m128i*)VectorMaskL)))
+ 
++
+ {% include "codegen/_indirect_call.inja" %}
++#ifdef REX_CHECKED_ACCESS_HEADER
++#include REX_CHECKED_ACCESS_HEADER
++#endif
+ 
+ //=============================================================================
+ // Flush Mode
+--- a/src/codegen/builders/memory.cpp
++++ b/src/codegen/builders/memory.cpp
+@@ -545,15 +545,12 @@
+   // NOTE(tomc): for endian swapping, we reverse the whole vector instead of individual elements.
+   // this is accounted for in every instruction (eg. dp3 sums yzw instead of xyz)
+   emitVectorEA(ctx, "0xF");
+-  ctx.println(
+-      "\tsimde_mm_store_si128((simde__m128i*){}.u8, "
+-      "simde_mm_shuffle_epi8(simde_mm_load_si128((simde__m128i*)REX_RAW_ADDR({})), "
+-      "simde_mm_load_si128((simde__m128i*)VectorMaskL)));",
+-      ctx.v(ctx.insn.operands[0]), ctx.ea());
++  ctx.println("\tREX_LOAD_VECTOR({}, {});", ctx.v(ctx.insn.operands[0]), ctx.ea());
+   return true;
+ }
+ 
+ bool build_lvlx(BuilderContext& ctx) {
++  ctx.println("\tREX_PARTIAL_VECTOR_GUARD();");
+   emitVectorTempEA(ctx);
+   ctx.println(
+       "\tsimde_mm_store_si128((simde__m128i*){}.u8, "
+@@ -564,6 +561,7 @@
+ }
+ 
+ bool build_lvrx(BuilderContext& ctx) {
++  ctx.println("\tREX_PARTIAL_VECTOR_GUARD();");
+   emitVectorTempEA(ctx);
+   ctx.println(
+       "\tsimde_mm_store_si128((simde__m128i*){}.u8, {}.u32 & 0xF ? "
+@@ -624,6 +622,7 @@
+ }
+ 
+ bool build_stvlx(BuilderContext& ctx) {
++  ctx.println("\tREX_PARTIAL_VECTOR_GUARD();");
+   // TODO(tomc): vectorize
+   // NOTE: accounting for the full vector reversal here
+   emitVectorEA(ctx);
+@@ -634,6 +633,7 @@
+ }
+ 
+ bool build_stvrx(BuilderContext& ctx) {
++  ctx.println("\tREX_PARTIAL_VECTOR_GUARD();");
+   // TODO(tomc): vectorize
+   // NOTE: accounting for the full vector reversal here
+   emitVectorEA(ctx);
+@@ -645,11 +645,7 @@
+ 
+ bool build_stvx(BuilderContext& ctx) {
+   emitVectorEA(ctx, "0xF");
+-  ctx.println(
+-      "\tsimde_mm_store_si128((simde__m128i*)REX_RAW_ADDR({}), "
+-      "simde_mm_shuffle_epi8(simde_mm_load_si128((simde__m128i*){}.u8), "
+-      "simde_mm_load_si128((simde__m128i*)VectorMaskL)));",
+-      ctx.ea(), ctx.v(ctx.insn.operands[0]));
++  ctx.println("\tREX_STORE_VECTOR({}, {});", ctx.ea(), ctx.v(ctx.insn.operands[0]));
+   return true;
+ }
+ 
+--- a/src/codegen/builders/context.cpp
++++ b/src/codegen/builders/context.cpp
+@@ -218,7 +218,7 @@
+             println("\tctx.r{} = r{};", i, i);
+         }
+         emitCtx.reference(name);
+-        println("\t{}(ctx, base);", name);
++        println("\tREX_CALL_FUNC({});", name);
+         for (size_t i = 14; i < 32; ++i) {
+           if (locals.r[i])
+             println("\tr{} = ctx.r{};", i, i);
+@@ -227,7 +227,7 @@
+       }
+ 
+       emitCtx.reference(name);
+-      println("\t{}(ctx, base);", name);
++      println("\tREX_CALL_FUNC({});", name);
+       return;
+     }
+ 
+@@ -258,7 +258,7 @@
+       }
+ 
+       emitCtx.reference(func_name);
+-      println("\t{}(ctx, base);", func_name);
++      println("\tREX_CALL_FUNC({});", func_name);
+       return;
+     }
+ 
+@@ -298,7 +298,7 @@
+           auto* targetFn = callTarget->asFunction();
+           emitCtx.reference(targetFn->name());
+           println("\tif ({}{}.{}) {{", not_ ? "!" : "", cr(insn.operands[0]), cond);
+-          println("\t\t{}(ctx, base);", targetFn->name());
++          println("\t\tREX_CALL_FUNC({});", targetFn->name());
+           println("\t\treturn;");
+           println("\t}}");
+         } else if (callTarget->isImport()) {
+@@ -308,7 +308,7 @@
+           std::replace(func_name.begin(), func_name.end(), '.', '_');
+           emitCtx.reference(func_name);
+           println("\tif ({}{}.{}) {{", not_ ? "!" : "", cr(insn.operands[0]), cond);
+-          println("\t\t{}(ctx, base);", func_name);
++          println("\t\tREX_CALL_FUNC({});", func_name);
+           println("\t\treturn;");
+           println("\t}}");
+         }
+--- a/src/codegen/builders/control_flow.cpp
++++ b/src/codegen/builders/control_flow.cpp
+@@ -147,7 +147,7 @@
+         case TargetKind::Import:
+           if (auto* targetFn = ctx.graph().getFunction(label)) {
+             ctx.emitCtx.reference(targetFn->name());
+-            ctx.println("\t\t{}(ctx, base);", targetFn->name());
++            ctx.println("\t\tREX_CALL_FUNC({});", targetFn->name());
+           } else {
+             REXCODEGEN_ERROR(
+                 "Jump target 0x{:08X} classified as function but not in graph at bctr 0x{:08X}",
+--- a/src/codegen/function_graph.cpp
++++ b/src/codegen/function_graph.cpp
+@@ -618,7 +618,7 @@
+       const auto& scope = *it;
+       if (scope.filter == 0 && scope.handler != 0) {
+         ctx.reference(fmt::format("sub_{:08X}", scope.handler));
+-        emit_println(body, "\t\t\tsub_{:08X}(ctx, base);  // __finally handler", scope.handler);
++        emit_println(body, "\t\t\tREX_CALL_FUNC(sub_{:08X});  // __finally handler", scope.handler);
+       }
+     }
+ 
+@@ -626,7 +626,7 @@
+       auto* restoreFn = ctx.graph.getFunction(sehInfo->restoreHelper);
+       if (restoreFn && !restoreFn->name().empty()) {
+         ctx.reference(restoreFn->name());
+-        emit_println(body, "\t\t\t{}(ctx, base);  // Restore caller registers", restoreFn->name());
++        emit_println(body, "\t\t\tREX_CALL_FUNC({});  // Restore caller registers", restoreFn->name());
+       }
+     }
+ 

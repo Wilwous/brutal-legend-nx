@@ -1,6 +1,6 @@
 # Brütal Legend NX
 
-**Wilwous · v0.0.9-entry-readiness · Xbox 360 → Nintendo Switch / Atmosphère**
+**Wilwous · v0.0.10-memory-instrumentation · Xbox 360 → Nintendo Switch / Atmosphère**
 
 Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Legend using static PowerPC recompilation and a homebrew runtime.
 
@@ -8,7 +8,7 @@ Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Le
 
 ## Current status
 
-Phase 9 snapshot: **2026-10-21**, following `v0.0.8-pre-entry-safety` (`30ba5df`).
+Phase 10 snapshot: **2026-10-21**, following `v0.0.9-entry-readiness` (`3e3222b`).
 
 - **VERIFIED:** the supplied directory contains a LIVE Games on Demand/SVOD package with 33 data fragments, three DLC packages and one title-update package. It contains no standalone ISO.
 - **VERIFIED:** full GOD hash-tree verification and private extraction succeeded. The base has 284 files totaling 5,544,498,100 bytes. All 38 source game files retained their SHA-256, size and modification time.
@@ -24,11 +24,12 @@ Phase 9 snapshot: **2026-10-21**, following `v0.0.8-pre-entry-safety` (`30ba5df`
 - **VERIFIED:** all 261 baseline runtime functions audited by source: 7 IMPLEMENTED, 184 PARTIAL, 61 STUB, 9 UNKNOWN. Baseline STFS false-success and selected exception stubs now have explicit failure paths; STFS functionality and guest exception semantics remain unresolved.
 - **VERIFIED:** Phase 8 built the coherent isolated SDK with eleven ordered patches. Bounded XDBF decoding, checked allocation arithmetic and owner-checked XamFree pass 191 core checks plus six watchdog checks; the saved allocation SIGBUS is retained as a corrected failure history.
 - **PARTIAL / BLOCKED:** selected XamAlloc and exception paths now fail explicitly at the host boundary. Xbox error values, typed vectors, complete guest exceptions and unchecked raw access to guest-page slack remain unresolved. No guest entry ran.
-- **VERIFIED limited scope:** the thirteen-patch SDK supports original owner-checked copies on its 4-KiB virtual heap, with cross-page, endian, MMIO/host-page padding and selected concurrent fixtures. NtClose now rejects already closed handles using the existing status.
+- **VERIFIED limited scope:** Phase 9 verified original owner-checked copies on its 4-KiB virtual heap, with cross-page, endian, MMIO/host-page padding and selected concurrent fixtures. NtClose now rejects already closed handles using the existing status.
 - **PARTIAL / BLOCKED:** none of the 791,353 lexical generated load/store sites is mediated. The direct entry closure has 33 imports and 21 unresolved indirect sites; fetch permissions, unsafe pointer imports, exceptions and typed-vector ABI prevent entry readiness.
+- **VERIFIED selected instrumentation:** original PPC words use the fourteen-patch SDK decoder/builders/templates and an opt-in checked scalar/finite-FP/full-vector memory backend. Atomic/partial-vector operations and unsupported calls fail explicitly; the default mode is retained. No private generated output is changed or executed.
 - **UNKNOWN:** runtime correctness, shaders, decoded audio-bank format, game memory budget and stock-clock performance.
 
-**Verdict: PARTIAL; NO-GO for proprietary execution.** [Guest memory, entry contracts and regression results](docs/research/guest-memory-entry-readiness.md). [Pre-entry safety results and commands](docs/research/pre-entry-safety.md). The Phase 3 mechanical pass stands; [Phase 6 PPC/fault results and limits](docs/research/ppc-execution.md) do not establish game execution. [VMX validation](docs/research/vmx128-validation.md) · [Complete runtime audit](docs/research/runtime-audit.md). [Phase 3 results, commands and timing caveat](docs/research/rexglue-analysis.md) · [Binary findings](docs/research/xbox360-analysis.md) · [Feasibility and blockers](docs/feasibility.md)
+**Verdict: PARTIAL; Phase 11 NO-GO for proprietary execution.** [Generated-memory instrumentation and evidence](docs/research/generated-memory-instrumentation.md). [Guest memory, entry contracts and regression results](docs/research/guest-memory-entry-readiness.md). [Pre-entry safety results and commands](docs/research/pre-entry-safety.md). The Phase 3 mechanical pass stands; [Phase 6 PPC/fault results and limits](docs/research/ppc-execution.md) do not establish game execution. [VMX validation](docs/research/vmx128-validation.md) · [Complete runtime audit](docs/research/runtime-audit.md). [Phase 3 results, commands and timing caveat](docs/research/rexglue-analysis.md) · [Binary findings](docs/research/xbox360-analysis.md) · [Feasibility and blockers](docs/feasibility.md)
 
 ## Technical approach
 
@@ -50,7 +51,7 @@ The first architecture candidate is ReXGlue plus reviewed Horizon adaptations an
 | Runtime execution, shaders, audio and hardware | Not validated |
 | Game build or distribution | Not started |
 
-Next: Phase 10 original emitted-access mediation and fail-closed dispatch/import policy, before any private execution proposal; continue independent Xbox numeric research. [Roadmap](docs/roadmap.md).
+Next: Phase 11 original mini-module scope admission and image/stack/TLS capability validation, before any private execution proposal; continue independent Xbox numeric research. [Roadmap](docs/roadmap.md).
 
 ## Game files and compatibility
 
@@ -66,7 +67,7 @@ No game build command or installation package exists. The repository contains re
 python3 tools/check_public_tree.py
 ```
 
-[Isolated SDK build](tools/sdk/README.md) and [guest-memory fixture commands](tests/guest-memory/README.md) reproduce the current milestone with the explicit Phase 9 lock; all dependencies, outputs and diagnostics remain private. [Phase 6 commands](tests/ppc/README.md) retain historical hybrid tests.
+[Isolated SDK build](tools/sdk/README.md) and [instrumentation fixture commands](tests/instrumentation/README.md) reproduce the current milestone with the explicit Phase 10 lock; all dependencies, outputs and diagnostics remain private. [Phase 6 commands](tests/ppc/README.md) retain historical hybrid tests.
 
 CI checks public contents/links, watchdog process-group cleanup, and builds/runs the original dependency-free memory/TLS components at O0/O2 and with sanitizers. It never fetches game data or the SDK, invokes codegen, builds the game or publishes releases. Overclocking is not a baseline requirement; no FPS or resolution is predicted.
 

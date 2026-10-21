@@ -55,6 +55,12 @@ EXACT = {
     "tests/guest-memory/README.md", "tests/guest-memory/run.py",
     "tests/guest-memory/contracts.cpp", "tests/guest-memory/imports.cpp",
     "tests/guest-memory/test_audit.py",
+    "runtime/generated_access.h", "tools/audit_instrumentation.py",
+    "tools/sdk/instrumentation-lock.json", "patches/rexglue-sdk/0014-generated-access-seam.patch",
+    "tests/instrumentation/README.md", "tests/instrumentation/run.py",
+    "tests/instrumentation/contracts.cpp", "tests/instrumentation/emitter.cpp",
+    "tests/instrumentation/vector-negative.cpp", "tests/instrumentation/test-template.cpp",
+    "tests/instrumentation/test_audit.py",
     "tests/vmx128/compare_evidence.py",
     "tests/vmx128/run.py", "tests/vmx128/emit_fixture.cpp", "tests/vmx128/README.md",
 }
@@ -127,7 +133,7 @@ def check():
         except (ValueError, KeyError, TypeError) as exc:
             errors.append(f"reference snapshot invalid: {exc}")
 
-    for name in ["tools/sdk/lock.json", "tools/sdk/pre-entry-lock.json", "tools/sdk/entry-readiness-lock.json"]:
+    for name in ["tools/sdk/lock.json", "tools/sdk/pre-entry-lock.json", "tools/sdk/entry-readiness-lock.json", "tools/sdk/instrumentation-lock.json"]:
         if name not in texts:
             continue
         try:
