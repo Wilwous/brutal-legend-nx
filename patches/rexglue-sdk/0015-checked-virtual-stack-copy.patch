@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2026 Wilwous; upstream notices retained.
+# Permit locked copies on ordinary 64-KiB virtual allocations (XThread stacks).
+--- a/src/system/xmemory.cpp
++++ b/src/system/xmemory.cpp
+@@ -1744,9 +1744,11 @@
+   for (uint64_t byte = scan_start; byte < scan_end; ++byte) {
+     if (memory_->LookupVirtualMappedRange(uint32_t(byte))) return CheckedMemoryResult::mmio;
+   }
+-  // Physical aliases, XEX and large-page heaps require different lifetime and
+-  // instruction-fetch contracts. Do not infer them from host accessibility.
+-  if (heap_type_ != HeapType::kGuestVirtual || page_size_ != 4096)
++  // Ordinary virtual 64-KiB allocations include real XThread stacks. The same
++  // locked owner/extent/commit/protection checks apply at their native page size.
++  // Physical aliases and XEX remain unsupported; execute is still not inferred.
++  if (heap_type_ != HeapType::kGuestVirtual ||
++      (page_size_ != 4096 && page_size_ != 65536))
+     return CheckedMemoryResult::unsupported_heap;
+   if (address < heap_base_ || end > uint64_t(heap_base_) + heap_size_)
+     return CheckedMemoryResult::invalid_range;

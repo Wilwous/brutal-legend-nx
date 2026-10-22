@@ -41,3 +41,7 @@ Use `--lock tools/sdk/entry-readiness-lock.json` in a new private workspace for 
 ## Phase 10 lock
 
 Use `--lock tools/sdk/instrumentation-lock.json` for the fourteen-patch series in a private workspace. Run only one builder against that workspace, wait for all profiles to finish, and rebuild matching clients. [Synthetic instrumentation recipe](../../tests/instrumentation/README.md) · [Coverage and limits](../../docs/research/generated-memory-instrumentation.md). Existing locks remain unchanged.
+
+## Phase 11 lock
+
+Use `--lock tools/sdk/synthetic-lock.json` in a fresh private workspace. The sixteen-patch series adds checked ordinary virtual 64-KiB stack copies and a Mac owned thread-exit boundary with balanced creation-failure ownership. Foreign asynchronous termination explicitly fails before state mutation. Physical/XEX heaps and fetch remain refused. Run one builder, wait for all profiles, then use each matching `sdk/out/mac-arm64/$PROFILE/rexglue` (`rexglued` for Debug) with its staged runtime. [Synthetic module recipe](../../tests/synthetic/README.md). No earlier SDK workspace or global installation is changed.

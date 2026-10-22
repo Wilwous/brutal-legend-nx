@@ -32,9 +32,13 @@ Completed the bounded original-fixture implementation and static readiness audit
 
 Original decoder→builder→template fixtures validate an opt-in checked-memory seam on the real SDK. Selected scalar/finite-FP/full-vector transfers pass; atomics, partial vectors, raw strings and unsupported calls are refused. Typed-vector signatures remain unsupported. The prior private game output is statically assessed but never rewritten/compiled/executed. [Exact coverage, regressions and limitations](research/generated-memory-instrumentation.md).
 
-## Next exact task: R2k / Phase 11 — synthetic scope admission and image/stack/TLS capabilities
+## R2k / Phase 11 — original synthetic execution module (completed in measured scope)
 
-Validate an original mini-module's section permissions and lifetimes, stack/TLS accesses and a fail-closed helper/import allowlist. Establish the complete access/call scope and observable failure paths with independent original fixtures. Preserve the current atomic, vector-ABI, exception and title-memory limitations; optimize the diagnostic MMIO scan only after regression evidence. Proprietary execution remains NO-GO.
+The actual pinned raw-test CLI generates nine original functions / 36 instructions; unchanged output executes through the checked seam and real patched runtime. An original fixture loader validates section/relocation/entry policy. Two real guest XThreads exercise their native stack, PCR/r13 and TLS with explicit scope loans. A narrow SDK correction permits checked ordinary virtual 64-KiB stack copies; physical/XEX/fetch remain refused. Unsupported operations and call targets fail explicitly. **Recovery completed:** a read-only debugger trace confirms the stranded local Exit reference on Mac. The owned SDK exit boundary now unwinds scopes before native lease release; all original teardown assertions and fourteen additional lifetime groups pass unchanged in meaning across Debug/Release/Sanitized. Native factory failures roll back process/lease/callback resources, and foreign asynchronous termination explicitly refuses unsafe work. All 263 core checks pass; historical failures remain private evidence. This is not production XEX loading or title startup. [Reproduction, regressions and limitations](research/synthetic-execution.md).
+
+## Next exact task: R2l / Phase 12 — synthetic XEX/image and required-import admission (private execution NO-GO)
+
+Validate original synthetic executable-container/image ownership, supported relocation and executable-target policy, then independently establish the precise ABI/TOC/TLS and required-import contracts for a proposed scope. Define safe cooperative title stop; forced foreign termination is refused on Mac. Preserve fail-closed atomics, partial vectors, typed-vector signatures and guest exceptions. APC/fiber/catch-all interactions and non-Mac exit behavior remain unverified. A separate readiness review must precede any private generated-code execution experiment; synthetic execution does not authorize it.
 
 The following previous mediation/entry gates remain requirements beyond the tested subset:
 

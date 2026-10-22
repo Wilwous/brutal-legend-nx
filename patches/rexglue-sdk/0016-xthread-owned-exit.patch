@@ -1,0 +1,188 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2026 Wilwous; upstream notices retained.
+# macOS owned exit boundary; balanced native-creation failure ownership.
+--- a/include/rex/system/xthread.h
++++ b/include/rex/system/xthread.h
+@@ -395,6 +395,7 @@
+  protected:
+   bool AllocateStack(uint32_t size);
+   void FreeStack();
++  void FinishExit(int exit_code);
+   void InitializeGuestObject();
+ 
+   void RundownAPCs();
+--- a/src/system/xthread.cpp
++++ b/src/system/xthread.cpp
+@@ -37,6 +37,11 @@
+ #include <rex/thread.h>
+ #include <rex/vec128.h>
+ 
++#if REX_PLATFORM_MAC
++#include <pthread.h>
++#include <stdexcept>
++#endif
++
+ REXCVAR_DEFINE_BOOL(ignore_thread_priorities, true, "Kernel",
+                     "Ignores game-specified thread priorities");
+ 
+@@ -44,6 +49,13 @@
+                     "Ignores game-specified thread affinities");
+ 
+ namespace rex::system {
++
++#if REX_PLATFORM_MAC
++namespace {
++// Host completion request only; not guest exception dispatch or an Xbox status.
++struct CooperativeThreadExit { int code; };
++}
++#endif
+ 
+ const uint32_t XAPC::kSize;
+ const uint32_t XAPC::kDummyKernelRoutine;
+@@ -409,8 +421,7 @@
+ 
+   uint8_t cpu_index = GetFakeCpuNumber(static_cast<uint8_t>(creation_params_.creation_flags >> 24));
+ 
+-  // Initialize the KTHREAD object.
+-  InitializeGuestObject();
++  // Publish KTHREAD process linkage only once native creation succeeds.
+ 
+   X_KPCR* pcr = memory()->TranslateVirtual<X_KPCR*>(pcr_address_);
+ 
+@@ -445,9 +456,29 @@
+     PROFILE_THREAD_ENTER(thread_name_.c_str());
+     PROFILE_THREAD_CREATED();
+ 
+-    // Execute user code.
++    // Create() retained one execution handle before starting this suspended host
++    // thread. Release that exact lease only after callbacks and C++ scopes end.
++#if REX_PLATFORM_MAC
++    pthread_cleanup_push([](void* value) {
++      static_cast<XThread*>(value)->ReleaseHandle();
++    }, this);
++#endif
+     current_xthread_tls_ = this;
+     running_ = true;
++#if REX_PLATFORM_MAC
++    int exit_code = 0;
++    try {
++      Execute();
++    } catch (const CooperativeThreadExit& request) {
++      exit_code = request.code;
++    }
++    // Execute's locals/callbacks have unwound; guest stack/PCR/TLS stayed live.
++    FinishExit(exit_code);
++    // Native state is signaled before pthread cleanup releases the execution
++    // handle. No SDK/native-thread object is accessed after that final release.
++    rex::thread::Thread::Exit(exit_code);
++    pthread_cleanup_pop(0);
++#else
+     Execute();
+     running_ = false;
+     current_xthread_tls_ = nullptr;
+@@ -457,13 +488,18 @@
+ 
+     // Release the self-reference to the thread.
+     ReleaseHandle();
++#endif
+   });
+ 
+   if (!thread_) {
+     // TODO(benvanik): translate error?
+     REXSYS_ERROR("CreateThread failed");
++    ReleaseHandle();  // No host thread exists to consume the execution lease.
+     return X_STATUS_NO_MEMORY;
+   }
++
++  // Native creation is suspended: publish guest process linkage before Resume.
++  InitializeGuestObject();
+ 
+   // Set the thread name based on host ID (for easier debugging).
+   if (thread_name_.empty()) {
+@@ -489,13 +525,21 @@
+ }
+ 
+ X_STATUS XThread::Exit(int exit_code) {
+-  // This may only be called on the thread itself.
+   assert_true(XThread::GetCurrentThread() == this);
+-  // Keep the object alive until Thread::Exit() transitions the host thread
+-  // into pthread_exit(). Otherwise ReleaseHandle() below may delete `this`
+-  // while this method is still running.
++#if REX_PLATFORM_MAC
++  // pthread_exit does not unwind C++ scopes here. Reach the owned boundary
++  // first, preserving guest backing until every executing scope has ended.
++  throw CooperativeThreadExit{exit_code};
++#else
+   auto self = retain_object(this);
+-
++  FinishExit(exit_code);
++  ReleaseHandle();
++  rex::thread::Thread::Exit(exit_code);
++  return X_STATUS_SUCCESS;
++#endif
++}
++
++void XThread::FinishExit(int exit_code) {
+   // Mark as terminated before running down APCs.
+   auto kthread = guest_object<X_KTHREAD>();
+   kthread->terminated = 1;
+@@ -529,19 +573,20 @@
+   // ExCreateThread fail even though the old threads are no longer running.
+   FreeStack();
+ 
+-  // NOTE: unless PlatformExit fails, expect it to never return!
++  // No guest execution or callback remains active beyond this boundary.
+   current_xthread_tls_ = nullptr;
+   PROFILE_THREAD_EXIT();
+ 
+   running_ = false;
+-  ReleaseHandle();
+-
+-  // NOTE: this does not return!
+-  rex::thread::Thread::Exit(exit_code);
+-  return X_STATUS_SUCCESS;
+ }
+ 
+ X_STATUS XThread::Terminate(int exit_code) {
++#if REX_PLATFORM_MAC
++  if (XThread::IsInThread(this)) return Exit(exit_code);
++  // Asynchronous cancellation could reclaim backing with active callbacks or
++  // locked runtime state. Refuse before mutating guest/thread/handle state.
++  throw std::runtime_error("External XThread termination is unsupported");
++#else
+   // TODO(benvanik): inform the profiler that this thread is exiting.
+ 
+   // Set exit code.
+@@ -566,6 +611,7 @@
+   }
+ 
+   return X_STATUS_SUCCESS;
++#endif
+ }
+ 
+ void XThread::Execute() {
+--- a/src/core/threading_posix.cpp
++++ b/src/core/threading_posix.cpp
+@@ -694,6 +694,9 @@
+   }
+ 
+   virtual ~PosixCondition() {
++#if defined(__APPLE__)
++    if (suspend_sem_ != SEM_FAILED) sem_close(suspend_sem_);
++#endif
+     // Match Canary/Edge behavior.
+     // Force-cancel/join from the condition destructor can self-join/crash
+     // depending on shutdown ordering, so threads must be stopped explicitly.
+@@ -1359,7 +1362,11 @@
+ 
+   bool Initialize(CreationParameters params, std::function<void()> start_routine) {
+     auto start_data = new ThreadStartData({std::move(start_routine), false, this});
+-    return handle_.Initialize(params, start_data);
++    if (!handle_.Initialize(params, start_data)) {
++      delete start_data;  // No native entry consumed the callback on failure.
++      return false;
++    }
++    return true;
+   }
+ 
+   void set_name(std::string name) override {

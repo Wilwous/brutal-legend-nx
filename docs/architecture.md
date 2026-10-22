@@ -1,4 +1,4 @@
-# Proposed architecture — Phase 10
+# Proposed architecture — Phase 11
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -29,7 +29,17 @@ Do not infer modules from extensions: `live.dll` is an XEX executable/header var
 
 **Not yet validated:** complete CPU semantics, host game link/runtime and Horizon cross build. Keep all local manifests, generated glue, code, decoded images and outputs outside the public checkout. Host codegen tools and target runtime libraries are separate build inputs.
 
-## Phase 10 generated-access prototype
+## Phase 11 original synthetic module
+
+[The synthetic execution report](research/synthetic-execution.md) exercises the actual pinned `recompile-tests` CLI on an original 144-byte PPC module: nine complete functions, real decoder/emitter/templates, unchanged generated translation unit, checked-memory opt-in and matching patched SDK. An original fixture loader separately reserves/commits code, RO and RW sections, applies one supported data relocation and admits only registered entries. This raw-test pipeline is not production XEX loading, GapFill or title startup.
+
+Two actual guest XThreads execute mediated native-stack/PCR/TLS, scalar and full-vector operations using explicit non-owning scope loans. Patch 0015 admits ordinary virtual 64-KiB stack pages under the existing locked owner/extent/protection checks. Patch 0016 fixes macOS exit ownership: private host completion unwinds execution/callback scopes while backing remains live, then guest finalization runs and native cleanup releases the exact execution handle. The object table and any caller/lookup/copy owners keep PCR/TLS live until their final release. The old stranded local Exit reference is removed from the supported Mac path. Creation failures balance leases and do not publish process linkage or retain native callback storage.
+
+**VERIFIED synthetic scope:** all 20 new execution/lifetime groups pass in each profile; the unchanged critical teardown oracle reports two thread/frame destructors and zero retained PCR/TLS regions. A separate debugger trace verifies actual pointer-reference transitions. Foreign asynchronous termination fails before mutating state on Mac; cooperative self termination and the real ExTerminateThread export are tested. This is host lifetime control, not guest exception dispatch/unwind. Other host/target platforms, APC/fiber/catch-all interactions and normal title ABI initialization remain unverified.
+
+**Phase 12 NO-GO:** private generated game output is unchanged and uninstrumented. XEX/image ownership/relocations, execute authorization, TLS/TOC/import contracts, unknown dynamic targets, atomics/partial vectors, typed-vector ABI, cooperative title stop and guest exceptions remain gates. Exact next work is original synthetic XEX/image and required-import admission before a separate bounded private-execution readiness review. No complete guest isolation or native C++ sandbox is established.
+
+## Historical Phase 10 generated-access prototype
 
 [The instrumentation report](research/generated-memory-instrumentation.md) connects the real generator's PCH macros to the original Phase 9 allocation layer. An explicit compile-time opt-in selects checked scalar/finite-FP/full-vector transfers. Full vectors have named macro seams; raw/atomic/partial-vector/string operations fail explicitly. Direct emitted calls share a policy macro and synthetic indirect calls use an explicit host allowlist. Matching seams exist in the SDK test-PCH template. The default mode retains the original runtime behavior.
 

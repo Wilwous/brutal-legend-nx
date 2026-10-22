@@ -1,6 +1,6 @@
-# Feasibility — Phase 10
+# Feasibility — Phase 11
 
-Assessment: **2026-10-21 · v0.0.10-memory-instrumentation**. Verdict: **PARTIAL; NO-GO for generated-game execution: mediated original accesses pass, existing generated accesses and required entry contracts remain uncovered**. The Phase 3 configuration-assisted analysis/generation PASS stands.
+Assessment: **2026-10-22 · v0.0.11-synthetic-execution**. Verdict: **Phase 11 PASS for the original synthetic Mac scope; overall port feasibility PARTIAL and Phase 12 NO-GO for proprietary execution**. The Phase 3 configuration-assisted analysis/generation PASS stands.
 
 Extraction, XEX loading, configured analysis and private C++ emission are verified. Two selected game partitions previously compiled on Mac. Phase 4 executed isolated VMX fixtures and classified all 261 imports. Phase 5 implemented original checked memory/TLS components and an SDK alias/TLS/STFS patch, with deterministic O0/O2/sanitized regressions. Phase 6 diagnoses the Phase 5 native read-only write timeout as an SDK unclaimed-signal retry. Original PPC-context calls to 13 exports, real XThread/PCR/TLS and isolated fail-stop/recovery checks pass. Phase 7 completes a clean coherent patched SDK build and 137 original fixture/fault/supervision checks; complete ABI conformance remains unresolved. That milestone left packed XDBF alignment and allocation false-success blockers. Phase 8 adds bounded byte parsing, checked allocator arithmetic, owner-checked XamFree and explicit unsupported exceptions; current results are in the pre-entry report. Full linking, runtime correctness, execution and Nintendo Switch compatibility are not established. [Phase 3 results and exact limitations](research/rexglue-analysis.md) supersede the historical [Phase 2 timeout](research/xbox360-analysis.md).
 
@@ -16,13 +16,21 @@ Extraction, XEX loading, configured analysis and private C++ emission are verifi
 | Audio/middleware | UNKNOWN / substantial work | FMOD/Havok/Bink/Lua evidence, XMA imports; 157 banks lack standard initial FSB magic; codecs/active paths unproven |
 | Input | INFERRED reusable foundation | XamInput and libnx reference adapters exist; no game input test |
 | Filesystem/saves | UNKNOWN | File/content imports and archives identified; streaming/persistence behavior not tested |
-| Memory | VERIFIED checked subset / PARTIAL coverage | The real-SDK opaque-handle copy layer passes selected page/ownership/lifetime/endian/concurrency tests; generated accesses remain unmediated. Real PPC memory-export lifecycle/errors and integrated MMIO/recovery/fail-stop pass on the rebuilt SDK. Whole unowned host pages now fault; accessible sub-host-page slack remains a critical raw-access limitation. Guest aliases, raw generated accesses and Horizon behavior remain open |
+| Memory | VERIFIED checked subset / PARTIAL coverage | The real-SDK opaque-handle copy layer passes selected page/ownership/lifetime/endian/concurrency tests; private generated game accesses remain unmediated. Real PPC memory-export lifecycle/errors and integrated MMIO/recovery/fail-stop pass on the rebuilt SDK. Whole unowned host pages now fault; accessible sub-host-page slack remains a critical raw-access limitation. Guest aliases, raw generated accesses and Horizon behavior remain open |
 | TLS | PARTIAL | Real XThread/PCR/r13, selected PPC export calls, 64-slot process lifecycle/exhaustion and isolation pass; patched real-class bounds pass. Synthetic metadata only; title TLS initialization and fibers/APCs untested; selected coherent SDK integration passes |
 | Performance | UNKNOWN | Tool RSS/timing is not game performance; no stock-clock FPS/resolution prediction |
 | Host toolchain | VERIFIED for limited checks | Pinned macOS ARM64 CLI completed emission; two partitions compile to objects; full compiler/link closure UNKNOWN |
 | Target build/deployment | UNKNOWN | Private game C++ exists; no complete host game binary, ARM64 Horizon build, NRO or hardware test |
 
-## Phase 10 instrumentation review
+## Phase 11 synthetic execution review
+
+**VERIFIED supported fixture:** actual pinned CLI generation of nine original functions / 36 instructions, compilation of unchanged emitted code and real patched runtime execution. An original fixture loader validates code/RO/RW sections, one relocation type, lifetime and entry/call policy. Two real XThreads exercise mediated native-stack/PCR/TLS accesses and scalar/vector operations. Patch 0015 corrects the checked-copy heap restriction for ordinary virtual 64-KiB stack pages while retaining physical/XEX refusal and unsupported fetch.
+
+**VERIFIED recovery:** the Mac native-exit path stranded a local retained object reference. Patch 0016 unwinds to the owned thread boundary before native completion, then releases its matched execution handle. The original teardown assertions pass unchanged in Debug/Release/Sanitized: PCR/TLS reclaim only after the last legitimate owner. Native-creation failure rollback/callback ownership, explicit cooperative exit, actual ExTerminateThread, early caller release, repeated cycles and simultaneous threads pass. All 263 core checks pass, with no unexpected native faults/timeouts or emitted ASan/UBSan findings. Foreign asynchronous termination is explicitly refused before state changes; other platforms and guest exception behavior remain unverified.
+
+**PARTIAL / BLOCKED:** the raw-test API does not test XEX loading, production analysis or arbitrary relocation. Host loans require explicit trusted lifetime control. Full ABI/TOC, title TLS/image ownership, required imports, unknown dynamic targets, atomics/partial vectors and guest exception dispatch/unwind remain unsupported or unverified. **Phase 12 NO-GO for proprietary execution.** [Results, root cause, recovery and exact next milestone](research/synthetic-execution.md).
+
+## Historical Phase 10 instrumentation review
 
 **VERIFIED selected prototype:** actual SDK decoding/emission/template rendering routes original scalar/finite-FP/full-vector memory fixtures through the checked owner/page/lifetime layer. Unsupported atomics, partial vectors, borrowed strings and unknown calls are refused. Three typed-vector signature forms are rejected at compile time. Default/checked execution and selected template compatibility are independently checked.
 
@@ -65,7 +73,7 @@ The [Phase 5 report](research/runtime-foundation.md) separates original standalo
 
 **PARTIAL / UNKNOWN:** host-page protection does not isolate individual 4 KiB guest pages on this 16 KiB host. Logical guest-range validation is not an allocation lifetime pin and is absent from raw generated accesses. Typed vectors, full Xbox ABI/error codes, same-owner pointer ABA, save-state owner serialization and complete guest exception dispatch/unwind remain unvalidated or unsupported. Successful codegen/loader/fixture behaviour cannot establish entry readiness.
 
-**NO-GO for proprietary execution. Exact next task: Phase 11 original mini-module scope admission and image/stack/TLS capability validation.** [Phase 10 coverage, measurements and readiness gate](research/generated-memory-instrumentation.md).
+**NO-GO for proprietary execution. Exact next task: original synthetic XEX/image ownership and required-import admission, with supported ABI/TOC/TLS, executable-target and cooperative title-stop policies, before a separate private-execution readiness review.** [Phase 11 evidence and gate](research/synthetic-execution.md).
 
 ## Platform and resource constraints
 

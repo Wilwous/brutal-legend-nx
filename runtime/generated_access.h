@@ -22,10 +22,12 @@ struct Fault : std::runtime_error {
 class Scope {
   struct Binding { Memory::Allocation handle; uint32_t size; };
   struct Call { uint32_t address; PPCFunc* function; };
+  struct Loan { uint32_t base,address,size; const void* owner; };
   Memory& memory_;
   rex::memory::Memory& sdk_;
   std::vector<Binding> bindings_;
   std::vector<Call> calls_;
+  std::vector<Loan> loans_;
   Scope* previous_;
   inline static thread_local Scope* current_=nullptr;
  public:
@@ -38,6 +40,7 @@ class Scope {
     const uint64_t low=allocation.guest_address(),high=low+size;
     for(const auto& b:bindings_)if(low<uint64_t(b.handle.guest_address())+b.size&&b.handle.guest_address()<high)
       throw Fault(Kind::memory);
+    for(auto b:loans_)if(low<uint64_t(b.address)+b.size&&b.address<high)throw Fault(Kind::memory);
     bindings_.push_back({allocation,size});
   }
   // Host-authored allowlist of original context/base fixtures ONLY. This does
@@ -46,6 +49,20 @@ class Scope {
     if(!address||(address&3)||!function||calls_.size()>=64)throw Fault(Kind::unsupported_call);
     for(auto c:calls_)if(c.address==address||c.function==function)throw Fault(Kind::unsupported_call);
     calls_.push_back({address,function});
+  }
+  // Trusted, non-owning host loan. Caller pins the allocation/owner identity and
+  // revokes before Exit/Release/Reset/Restore. Never accepts guest-supplied
+  // metadata. Used only for fresh original XThread fixtures, not title memory.
+  void lend(uint32_t allocation_base,const void* owner,uint32_t address,uint32_t size){
+    if(!owner||!allocation_base||!sdk_.LookupHeap(allocation_base)||address<allocation_base||!size||
+       uint64_t(address)+size>0x100000000ull||loans_.size()>=8)
+      throw Fault(Kind::memory);
+    const uint64_t end=uint64_t(address)+size;
+    for(auto b:loans_)if(address<uint64_t(b.address)+b.size&&b.address<end)
+      throw Fault(Kind::memory);
+    for(auto b:bindings_)if(address<uint64_t(b.handle.guest_address())+b.size&&b.handle.guest_address()<end)
+      throw Fault(Kind::memory);
+    loans_.push_back({allocation_base,address,size,owner});
   }
   static Scope& current(){if(!current_)throw Fault(Kind::unbound);return *current_;}
   void copy(uint32_t address,std::span<std::byte> bytes,bool write){
@@ -60,6 +77,12 @@ class Scope {
         if(result!=Result::ok)throw Fault(Kind::memory,result);
         return;
       }
+    }
+    for(auto b:loans_)if(address>=b.address&&uint64_t(address)+bytes.size()<=uint64_t(b.address)+b.size){
+      auto result=sdk_.LookupHeap(b.base)->CopyOwnedMemory(b.base,b.owner,address,
+          bytes.data(),bytes.size(),write?Memory::Access::write:Memory::Access::read);
+      if(result!=Result::ok)throw Fault(Kind::memory,result);
+      return;
     }
     throw Fault(Kind::memory,Result::ownership);
   }
