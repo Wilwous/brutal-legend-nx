@@ -1,6 +1,6 @@
-# Proposed architecture — Phase 12
+# Proposed architecture — Phase 13
 
-**Current Phase 12 gate (2026-10-22): VERIFIED PASS for bounded original synthetic macOS validation; private game-code execution NO-GO.** The seventeen-patch isolated SDK now uses owner-scoped transactional XEX mappings, load/continuation rollback, final UserModule header/processor cleanup and explicit retained image leases. All three original failure assertions pass unchanged across Debug/Release/ASan+UBSan; 323 core checks pass with no unexpected signals, timeouts or sanitizer findings. Required imports, actual XEX TLS, full ABI and private generated-memory mediation remain unresolved. [Phase 12 ownership graph, reproduction, evidence and next milestone](research/image-ownership-runtime-contracts.md).
+**Current Phase 13 gate (2026-10-22): VERIFIED in the bounded original synthetic macOS scope; private game-code execution NO-GO.** The eighteen-patch SDK validates actual XEX TLS metadata and pins module backing through final XThread PCR/TLS cleanup. An opt-in import adapter admits six value-only SDK signatures and denies the other 27 reviewed imports. All 362 core checks pass across Debug/Release/Sanitized with zero unexpected signals, timeouts or sanitizer findings. The 33-entry matrix retains 27 PARTIAL / six BLOCKED conformance classifications. Default title-process TLS and independently bound modules are tested separately; full guest dispatch, pointer contracts, ABI and private generated-memory mediation remain unresolved. [Phase 13 evidence, regressions and reproduction](research/xex-tls-import-admission.md).
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -16,6 +16,12 @@ flowchart TD
   G --> H[Independent Switch runtime and graphics tests: future]
   H --> I[Sanitized public findings]
 ```
+
+## XEX TLS and import admission
+
+XexModule validates bounded header metadata before continuation succeeds. XThread's default Create binds the executable module; explicit CreateWithModule supports original independent module scopes without replacing the global title process. Its retained image lease lasts through final TLS/PCR release. Scratch/TLS/PCR/native-create failure paths restore partial allocations and refuse success. Out-of-range process TLS free now returns the existing false result before bitmap mutation.
+
+The original host admission adapter checks a fresh image lease, actual XEX import membership, exact library/ordinal/name/type, supported signature, and matching XThread/PPCContext/PCR for TLS. Six reviewed value-only shims are callable; pointer/wait/handle/fatal/unknown contracts remain denied. This adapter is opt-in and is not wired into unchanged private generated game imports. Header-driven template copying and 64-slot title-process allocation are verified; arbitrary DLL TLS-index policy and title scheduling remain PARTIAL. [Ownership, policy and boundaries](research/xex-tls-import-admission.md).
 
 ## Binary selection and update boundary
 

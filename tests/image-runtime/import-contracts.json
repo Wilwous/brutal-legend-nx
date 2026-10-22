@@ -8,7 +8,37 @@
     "ownership": "borrows raw string, no retained owner",
     "thread_context": "global runtime; varargs need valid linkage area",
     "status": "PARTIAL",
-    "evidence": "Phase 9 null call"
+    "evidence": "Phase 9 null call",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 3,
+      "symbol": "__imp__DbgPrint",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "raw PPCContext r3",
+      "arguments": [
+        "format guest pointer",
+        "unverified variadic arguments"
+      ],
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": "format r3; variadic GPR/stack; not admitted",
+      "return": "r3 low 32 bits",
+      "preservation": "unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_strings.cpp",
+      "source_line": 32
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "ExGetXConfigSetting",
@@ -19,7 +49,74 @@
     "ownership": "borrows buffer/output; copies setting on success",
     "thread_context": "global runtime settings",
     "status": "PARTIAL",
-    "evidence": "Phase 12 invalid category/setting, short buffer, secured AV-region value"
+    "evidence": "Phase 12 invalid category/setting, short buffer, secured AV-region value",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 16,
+      "symbol": "__imp__ExGetXConfigSetting",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "u16",
+        "u16",
+        "mapped_void",
+        "u16",
+        "mapped_u16"
+      ],
+      "declaration": "u32 ExGetXConfigSetting_entry(u16 category, u16 setting, mapped_void buffer_ptr, u16 buffer_size, mapped_u16 required_size_ptr)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "u16",
+          "width_bits": 16
+        },
+        {
+          "argument": 2,
+          "location": "r4",
+          "sdk_type": "u16",
+          "width_bits": 16
+        },
+        {
+          "argument": 3,
+          "location": "r5",
+          "sdk_type": "mapped_void",
+          "width_bits": 32
+        },
+        {
+          "argument": 4,
+          "location": "r6",
+          "sdk_type": "u16",
+          "width_bits": 16
+        },
+        {
+          "argument": 5,
+          "location": "r7",
+          "sdk_type": "mapped_u16",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_xconfig.cpp",
+      "source_line": 130
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "HalReturnToFirmware",
@@ -30,7 +127,46 @@
     "ownership": "host process termination; no validated module cleanup",
     "thread_context": "global runtime/process",
     "status": "BLOCKED",
-    "evidence": "source only; not invoked"
+    "evidence": "source only; not invoked",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 40,
+      "symbol": "__imp__HalReturnToFirmware",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "void",
+      "arguments": [
+        "u32"
+      ],
+      "declaration": "void HalReturnToFirmware_entry(u32 routine)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "none",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_hal.cpp",
+      "source_line": 39
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "KeBugCheck",
@@ -41,7 +177,46 @@
     "ownership": "fatal host behavior; cleanup unverified",
     "thread_context": "runtime/debugger",
     "status": "BLOCKED",
-    "evidence": "source only; not invoked"
+    "evidence": "source only; not invoked",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 82,
+      "symbol": "__imp__KeBugCheck",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "void",
+      "arguments": [
+        "u32"
+      ],
+      "declaration": "void KeBugCheck_entry(u32 code)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "none",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_debug.cpp",
+      "source_line": 163
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "KeBugCheckEx",
@@ -52,7 +227,74 @@
     "ownership": "fatal host behavior; cleanup unverified",
     "thread_context": "runtime/debugger",
     "status": "BLOCKED",
-    "evidence": "source only; not invoked"
+    "evidence": "source only; not invoked",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 83,
+      "symbol": "__imp__KeBugCheckEx",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "void",
+      "arguments": [
+        "u32",
+        "u32",
+        "u32",
+        "u32",
+        "u32"
+      ],
+      "declaration": "void KeBugCheckEx_entry(u32 code, u32 param1, u32 param2, u32 param3, u32 param4)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 2,
+          "location": "r4",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 3,
+          "location": "r5",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 4,
+          "location": "r6",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 5,
+          "location": "r7",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "none",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_debug.cpp",
+      "source_line": 162
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "KeDelayExecutionThread",
@@ -63,7 +305,60 @@
     "ownership": "borrows interval; wait owns no module lease",
     "thread_context": "bound XThread; optional APC callback context",
     "status": "PARTIAL",
-    "evidence": "source only; no new blocking/APC fixture"
+    "evidence": "source only; no new blocking/APC fixture",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 90,
+      "symbol": "__imp__KeDelayExecutionThread",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "u32",
+        "u32",
+        "mapped_u64"
+      ],
+      "declaration": "u32 KeDelayExecutionThread_entry(u32 processor_mode, u32 alertable, mapped_u64 interval_ptr)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 2,
+          "location": "r4",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 3,
+          "location": "r5",
+          "sdk_type": "mapped_u64",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
+      "source_line": 1450
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "KeGetCurrentProcessType",
@@ -74,7 +369,37 @@
     "ownership": "reads current PCR/KTHREAD without acquiring module ownership",
     "thread_context": "bound XThread, ThreadState and valid r13/PCR",
     "status": "PARTIAL",
-    "evidence": "source only; not invoked in Phase 12"
+    "evidence": "source only; not invoked in Phase 12",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 102,
+      "symbol": "__imp__KeGetCurrentProcessType",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [],
+      "declaration": "u32 KeGetCurrentProcessType_entry()",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
+      "source_line": 1446
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "KeQueryPerformanceFrequency",
@@ -85,7 +410,37 @@
     "ownership": "no allocation",
     "thread_context": "global clock",
     "status": "PARTIAL",
-    "evidence": "Phase 12 positive result; exact Xbox frequency/width unverified"
+    "evidence": "Phase 12 positive result; exact Xbox frequency/width unverified; Phase 13 actual original XEX imports and scoped direct/indirect SDK calls",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 131,
+      "symbol": "__imp__KeQueryPerformanceFrequency",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [],
+      "declaration": "u32 KeQueryPerformanceFrequency_entry()",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
+      "source_line": 1448
+    },
+    "admission": {
+      "policy": "ADMIT_SCOPED",
+      "signature": "u32_void",
+      "reason": "value-only SDK signature; requires actual loaded XEX import membership and exact export identity; TLS additionally requires bound matching XThread/PCR"
+    }
   },
   {
     "name": "KeTlsAlloc",
@@ -96,7 +451,37 @@
     "ownership": "process TLS bitmap owns slot; per-thread block owns value storage",
     "thread_context": "bound XThread/PPC context/process TLS metadata",
     "status": "PARTIAL",
-    "evidence": "Phase 6 real slot lifecycle/exhaustion rerun"
+    "evidence": "Phase 6 real slot lifecycle/exhaustion rerun",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 338,
+      "symbol": "__imp__KeTlsAlloc",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [],
+      "declaration": "u32 KeTlsAlloc_entry()",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
+      "source_line": 1453
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "global process bitmap not configured by explicit per-module binding; denied; header-driven title-process path separately tested"
+    }
   },
   {
     "name": "KeTlsFree",
@@ -107,7 +492,46 @@
     "ownership": "releases process slot; does not own pointed-to allocation",
     "thread_context": "bound PPC context and process metadata",
     "status": "PARTIAL",
-    "evidence": "Phase 6 invalid/repeated/valid free rerun"
+    "evidence": "Phase 6 invalid/repeated/valid free rerun",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 339,
+      "symbol": "__imp__KeTlsFree",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "u32"
+      ],
+      "declaration": "u32 KeTlsFree_entry(u32 tls_index)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
+      "source_line": 1454
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "cross-thread clear and global process lifetime not generally admitted; selected header-driven title path only"
+    }
   },
   {
     "name": "KeTlsGetValue",
@@ -118,7 +542,46 @@
     "ownership": "borrows current TLS block; returned pointer has no retained owner",
     "thread_context": "bound XThread, initialized TLS",
     "status": "PARTIAL",
-    "evidence": "Phase 6 bounds/isolation and Phase 12 module-block lookup"
+    "evidence": "Phase 6 bounds/isolation and Phase 12 module-block lookup; Phase 13 actual original XEX imports and scoped direct/indirect SDK calls; actual header slots 0..63 with invalid 64/UINT32_MAX tests",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 340,
+      "symbol": "__imp__KeTlsGetValue",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "u32"
+      ],
+      "declaration": "u32 KeTlsGetValue_entry(u32 tls_index)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
+      "source_line": 1455
+    },
+    "admission": {
+      "policy": "ADMIT_SCOPED",
+      "signature": "u32_u32",
+      "reason": "value-only SDK signature; requires actual loaded XEX import membership and exact export identity; TLS additionally requires bound matching XThread/PCR"
+    }
   },
   {
     "name": "KeTlsSetValue",
@@ -129,7 +592,53 @@
     "ownership": "stores integer; no ownership transfer for pointer values",
     "thread_context": "bound XThread, initialized TLS",
     "status": "PARTIAL",
-    "evidence": "Phase 6 bounds plus Phase 12 binding, clear and rollback"
+    "evidence": "Phase 6 bounds plus Phase 12 binding, clear and rollback; Phase 13 actual original XEX imports and scoped direct/indirect SDK calls",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 341,
+      "symbol": "__imp__KeTlsSetValue",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "u32",
+        "u32"
+      ],
+      "declaration": "u32 KeTlsSetValue_entry(u32 tls_index, u32 tls_value)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 2,
+          "location": "r4",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
+      "source_line": 1456
+    },
+    "admission": {
+      "policy": "ADMIT_SCOPED",
+      "signature": "u32_u32_u32",
+      "reason": "value-only SDK signature; requires actual loaded XEX import membership and exact export identity; TLS additionally requires bound matching XThread/PCR"
+    }
   },
   {
     "name": "NtAllocateVirtualMemory",
@@ -140,7 +649,74 @@
     "ownership": "heap owns reservation; caller must release with matching contract",
     "thread_context": "global runtime memory; raw pointer marshalling",
     "status": "PARTIAL",
-    "evidence": "Phase 6 allocation lifecycle/errors rerun"
+    "evidence": "Phase 6 allocation lifecycle/errors rerun",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 204,
+      "symbol": "__imp__NtAllocateVirtualMemory",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "mapped_u32",
+        "mapped_u32",
+        "u32",
+        "u32",
+        "u32"
+      ],
+      "declaration": "u32 NtAllocateVirtualMemory_entry(mapped_u32 base_addr_ptr, mapped_u32 region_size_ptr, u32 alloc_type, u32 protect_bits, u32 debug_memory)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "mapped_u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 2,
+          "location": "r4",
+          "sdk_type": "mapped_u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 3,
+          "location": "r5",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 4,
+          "location": "r6",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 5,
+          "location": "r7",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_memory.cpp",
+      "source_line": 726
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "NtClose",
@@ -151,7 +727,46 @@
     "ownership": "releases one table handle reference; slot reuse not prevented",
     "thread_context": "global object table lock",
     "status": "PARTIAL",
-    "evidence": "Phase 9 valid/double/concurrent close rerun"
+    "evidence": "Phase 9 valid/double/concurrent close rerun",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 207,
+      "symbol": "__imp__NtClose",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "u32"
+      ],
+      "declaration": "u32 NtClose_entry(u32 handle)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_ob.cpp",
+      "source_line": 256
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "NtCreateEvent",
@@ -162,7 +777,67 @@
     "ownership": "returned handle owned by caller/table until NtClose",
     "thread_context": "global object table; no current XThread for unnamed creation",
     "status": "PARTIAL",
-    "evidence": "Phase 9 unnamed event/close rerun"
+    "evidence": "Phase 9 unnamed event/close rerun",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 209,
+      "symbol": "__imp__NtCreateEvent",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "mapped_u32",
+        "ppc_ptr_t<X_OBJECT_ATTRIBUTES>",
+        "u32",
+        "u32"
+      ],
+      "declaration": "u32 NtCreateEvent_entry(mapped_u32 handle_ptr, ppc_ptr_t<X_OBJECT_ATTRIBUTES> obj_attributes_ptr, u32 event_type, u32 initial_state)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "mapped_u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 2,
+          "location": "r4",
+          "sdk_type": "ppc_ptr_t<X_OBJECT_ATTRIBUTES>",
+          "width_bits": 32
+        },
+        {
+          "argument": 3,
+          "location": "r5",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 4,
+          "location": "r6",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
+      "source_line": 1461
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "NtFreeVirtualMemory",
@@ -173,7 +848,67 @@
     "ownership": "releases/decommits guest heap allocation; no module reference guard",
     "thread_context": "global runtime memory; raw pointer marshalling",
     "status": "PARTIAL",
-    "evidence": "Phase 6 lifecycle/errors rerun"
+    "evidence": "Phase 6 lifecycle/errors rerun",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 220,
+      "symbol": "__imp__NtFreeVirtualMemory",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "mapped_u32",
+        "mapped_u32",
+        "u32",
+        "u32"
+      ],
+      "declaration": "u32 NtFreeVirtualMemory_entry(mapped_u32 base_addr_ptr, mapped_u32 region_size_ptr, u32 free_type, u32 debug_memory)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "mapped_u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 2,
+          "location": "r4",
+          "sdk_type": "mapped_u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 3,
+          "location": "r5",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 4,
+          "location": "r6",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_memory.cpp",
+      "source_line": 728
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "NtQueryVirtualMemory",
@@ -184,7 +919,60 @@
     "ownership": "borrows output; no lifetime pin for queried reservation",
     "thread_context": "global runtime memory",
     "status": "PARTIAL",
-    "evidence": "Phase 9 error sentinels and RW region rerun"
+    "evidence": "Phase 9 error sentinels and RW region rerun",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 238,
+      "symbol": "__imp__NtQueryVirtualMemory",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "u32",
+        "ppc_ptr_t<X_MEMORY_BASIC_INFORMATION>",
+        "u32"
+      ],
+      "declaration": "u32 NtQueryVirtualMemory_entry(u32 base_address, ppc_ptr_t<X_MEMORY_BASIC_INFORMATION> memory_basic_information_ptr, u32 region_type)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 2,
+          "location": "r4",
+          "sdk_type": "ppc_ptr_t<X_MEMORY_BASIC_INFORMATION>",
+          "width_bits": 32
+        },
+        {
+          "argument": 3,
+          "location": "r5",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_memory.cpp",
+      "source_line": 729
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "NtWaitForSingleObjectEx",
@@ -195,7 +983,67 @@
     "ownership": "temporary object lookup reference; no module execution lease",
     "thread_context": "object table; valid waits may require XThread/APCs",
     "status": "PARTIAL",
-    "evidence": "Phase 9 invalid-handle refusal rerun; no unbounded wait"
+    "evidence": "Phase 9 invalid-handle refusal rerun; no unbounded wait",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 253,
+      "symbol": "__imp__NtWaitForSingleObjectEx",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "u32",
+        "u32",
+        "u32",
+        "mapped_u64"
+      ],
+      "declaration": "u32 NtWaitForSingleObjectEx_entry(u32 object_handle, u32 wait_mode, u32 alertable, mapped_u64 timeout_ptr)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 2,
+          "location": "r4",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 3,
+          "location": "r5",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 4,
+          "location": "r6",
+          "sdk_type": "mapped_u64",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
+      "source_line": 1476
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "RtlCompareMemoryUlong",
@@ -206,7 +1054,60 @@
     "ownership": "borrows raw endian-aware source array",
     "thread_context": "global memory; no current XThread",
     "status": "PARTIAL",
-    "evidence": "Phase 12 independent BE words including mismatch and alignment; Xbox return convention unverified"
+    "evidence": "Phase 12 independent BE words including mismatch and alignment; Xbox return convention unverified",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 283,
+      "symbol": "__imp__RtlCompareMemoryUlong",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "mapped_void",
+        "u32",
+        "u32"
+      ],
+      "declaration": "u32 RtlCompareMemoryUlong_entry(mapped_void source, u32 length, u32 pattern)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "mapped_void",
+          "width_bits": 32
+        },
+        {
+          "argument": 2,
+          "location": "r4",
+          "sdk_type": "u32",
+          "width_bits": 32
+        },
+        {
+          "argument": 3,
+          "location": "r5",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_rtl.cpp",
+      "source_line": 603
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "RtlEnterCriticalSection",
@@ -217,7 +1118,46 @@
     "ownership": "mutates caller-owned structure; waiter lifetime unverified",
     "thread_context": "bound current XThread; native atomic/wait paths",
     "status": "PARTIAL",
-    "evidence": "source only; generated atomics remain rejected"
+    "evidence": "source only; generated atomics remain rejected",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 293,
+      "symbol": "__imp__RtlEnterCriticalSection",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "void",
+      "arguments": [
+        "ppc_ptr_t<X_RTL_CRITICAL_SECTION>"
+      ],
+      "declaration": "void RtlEnterCriticalSection_entry(ppc_ptr_t<X_RTL_CRITICAL_SECTION> cs)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "ppc_ptr_t<X_RTL_CRITICAL_SECTION>",
+          "width_bits": 32
+        }
+      ],
+      "return": "none",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_rtl.cpp",
+      "source_line": 625
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "RtlImageXexHeaderField",
@@ -228,7 +1168,53 @@
     "ownership": "returns borrowed metadata address or immediate; no module retain",
     "thread_context": "global memory; caller must pin bounded header",
     "status": "PARTIAL",
-    "evidence": "Phase 12 original header immediate and missing key; malformed input untested"
+    "evidence": "Phase 12 original header immediate and missing key; malformed input untested",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 299,
+      "symbol": "__imp__RtlImageXexHeaderField",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "ppc_ptr_t<xex2_header>",
+        "u32"
+      ],
+      "declaration": "u32 RtlImageXexHeaderField_entry(ppc_ptr_t<xex2_header> xex_header, u32 field_dword)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "ppc_ptr_t<xex2_header>",
+          "width_bits": 32
+        },
+        {
+          "argument": 2,
+          "location": "r4",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_rtl.cpp",
+      "source_line": 620
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "RtlInitAnsiString",
@@ -239,7 +1225,53 @@
     "ownership": "output borrows source; never copies or retains string",
     "thread_context": "raw guest pointer marshalling",
     "status": "PARTIAL",
-    "evidence": "Phase 9 null and Phase 12 short owned string; unbounded input BLOCKED"
+    "evidence": "Phase 9 null and Phase 12 short owned string; unbounded input BLOCKED",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 300,
+      "symbol": "__imp__RtlInitAnsiString",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "void",
+      "arguments": [
+        "ppc_ptr_t<X_ANSI_STRING>",
+        "mapped_string"
+      ],
+      "declaration": "void RtlInitAnsiString_entry(ppc_ptr_t<X_ANSI_STRING> destination, mapped_string source)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "ppc_ptr_t<X_ANSI_STRING>",
+          "width_bits": 32
+        },
+        {
+          "argument": 2,
+          "location": "r4",
+          "sdk_type": "mapped_string",
+          "width_bits": 32
+        }
+      ],
+      "return": "none",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_rtl.cpp",
+      "source_line": 609
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "RtlInitializeCriticalSection",
@@ -250,7 +1282,46 @@
     "ownership": "caller owns structure; no native resource teardown established",
     "thread_context": "global memory; no current thread needed for initialization",
     "status": "PARTIAL",
-    "evidence": "Phase 12 selected initialized fields"
+    "evidence": "Phase 12 selected initialized fields",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 302,
+      "symbol": "__imp__RtlInitializeCriticalSection",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "void",
+      "arguments": [
+        "ppc_ptr_t<X_RTL_CRITICAL_SECTION>"
+      ],
+      "declaration": "void RtlInitializeCriticalSection_entry(ppc_ptr_t<X_RTL_CRITICAL_SECTION> cs)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "ppc_ptr_t<X_RTL_CRITICAL_SECTION>",
+          "width_bits": 32
+        }
+      ],
+      "return": "none",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_rtl.cpp",
+      "source_line": 621
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "RtlInitializeCriticalSectionAndSpinCount",
@@ -261,7 +1332,53 @@
     "ownership": "caller owns structure; no lifetime guarantee",
     "thread_context": "global memory for initialization",
     "status": "PARTIAL",
-    "evidence": "Phase 12 spin=257; extreme range remains unsupported/unfixed"
+    "evidence": "Phase 12 spin=257; extreme range remains unsupported/unfixed",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 303,
+      "symbol": "__imp__RtlInitializeCriticalSectionAndSpinCount",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "ppc_ptr_t<X_RTL_CRITICAL_SECTION>",
+        "u32"
+      ],
+      "declaration": "u32 RtlInitializeCriticalSectionAndSpinCount_entry(ppc_ptr_t<X_RTL_CRITICAL_SECTION> cs, u32 spin_count)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "ppc_ptr_t<X_RTL_CRITICAL_SECTION>",
+          "width_bits": 32
+        },
+        {
+          "argument": 2,
+          "location": "r4",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_rtl.cpp",
+      "source_line": 623
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "RtlLeaveCriticalSection",
@@ -272,7 +1389,46 @@
     "ownership": "does not free structure; requires ownership until waiters end",
     "thread_context": "bound current XThread; wait/event integration",
     "status": "PARTIAL",
-    "evidence": "source only; contention/wrong-owner unverified"
+    "evidence": "source only; contention/wrong-owner unverified",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 304,
+      "symbol": "__imp__RtlLeaveCriticalSection",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "void",
+      "arguments": [
+        "ppc_ptr_t<X_RTL_CRITICAL_SECTION>"
+      ],
+      "declaration": "void RtlLeaveCriticalSection_entry(ppc_ptr_t<X_RTL_CRITICAL_SECTION> cs)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "ppc_ptr_t<X_RTL_CRITICAL_SECTION>",
+          "width_bits": 32
+        }
+      ],
+      "return": "none",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_rtl.cpp",
+      "source_line": 628
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "RtlNtStatusToDosError",
@@ -283,7 +1439,46 @@
     "ownership": "pure translation; no ownership",
     "thread_context": "no current thread required",
     "status": "PARTIAL",
-    "evidence": "Phase 12 success, INVALID_HANDLE and unknown status"
+    "evidence": "Phase 12 success, INVALID_HANDLE and unknown status; Phase 13 actual original XEX imports and scoped direct/indirect SDK calls",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 309,
+      "symbol": "__imp__RtlNtStatusToDosError",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "u32"
+      ],
+      "declaration": "u32 RtlNtStatusToDosError_entry(u32 source_status)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_error.cpp",
+      "source_line": 1025
+    },
+    "admission": {
+      "policy": "ADMIT_SCOPED",
+      "signature": "u32_u32",
+      "reason": "value-only SDK signature; requires actual loaded XEX import membership and exact export identity; TLS additionally requires bound matching XThread/PCR"
+    }
   },
   {
     "name": "RtlRaiseException",
@@ -294,7 +1489,46 @@
     "ownership": "borrows exception record; cleanup/unwind unverified",
     "thread_context": "bound exception/runtime/debugger context",
     "status": "BLOCKED",
-    "evidence": "source only for this import; not invoked"
+    "evidence": "source only for this import; not invoked",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 310,
+      "symbol": "__imp__RtlRaiseException",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "void",
+      "arguments": [
+        "ppc_ptr_t<X_EXCEPTION_RECORD>"
+      ],
+      "declaration": "void RtlRaiseException_entry(ppc_ptr_t<X_EXCEPTION_RECORD> record)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "ppc_ptr_t<X_EXCEPTION_RECORD>",
+          "width_bits": 32
+        }
+      ],
+      "return": "none",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_debug.cpp",
+      "source_line": 161
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "XGetAVPack",
@@ -305,7 +1539,37 @@
     "ownership": "no allocation",
     "thread_context": "hard-coded runtime policy",
     "status": "PARTIAL",
-    "evidence": "Phase 12 constant; hardware/user policy UNKNOWN"
+    "evidence": "Phase 12 constant; hardware/user policy UNKNOWN; Phase 13 actual original XEX imports and scoped direct/indirect SDK calls",
+    "export_identity": {
+      "library": "xam.xex",
+      "ordinal": 971,
+      "symbol": "__imp__XGetAVPack",
+      "type": "kFunction",
+      "table": "src/kernel/xam/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [],
+      "declaration": "u32 XGetAVPack_entry()",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xam/xam_info.cpp",
+      "source_line": 361
+    },
+    "admission": {
+      "policy": "ADMIT_SCOPED",
+      "signature": "u32_void",
+      "reason": "value-only SDK signature; requires actual loaded XEX import membership and exact export identity; TLS additionally requires bound matching XThread/PCR"
+    }
   },
   {
     "name": "XGetLanguage",
@@ -316,7 +1580,37 @@
     "ownership": "no allocation",
     "thread_context": "hard-coded region policy",
     "status": "PARTIAL",
-    "evidence": "Phase 12 English result; user/title language policy UNKNOWN"
+    "evidence": "Phase 12 English result; user/title language policy UNKNOWN; Phase 13 actual original XEX imports and scoped direct/indirect SDK calls",
+    "export_identity": {
+      "library": "xam.xex",
+      "ordinal": 973,
+      "symbol": "__imp__XGetLanguage",
+      "type": "kFunction",
+      "table": "src/kernel/xam/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [],
+      "declaration": "u32 XGetLanguage_entry()",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xam/xam_info.cpp",
+      "source_line": 363
+    },
+    "admission": {
+      "policy": "ADMIT_SCOPED",
+      "signature": "u32_void",
+      "reason": "value-only SDK signature; requires actual loaded XEX import membership and exact export identity; TLS additionally requires bound matching XThread/PCR"
+    }
   },
   {
     "name": "XamLoaderTerminateTitle",
@@ -327,7 +1621,37 @@
     "ownership": "process/module/thread teardown effects unverified",
     "thread_context": "kernel state and title threads",
     "status": "BLOCKED",
-    "evidence": "source only; not invoked"
+    "evidence": "source only; not invoked",
+    "export_identity": {
+      "library": "xam.xex",
+      "ordinal": 425,
+      "symbol": "__imp__XamLoaderTerminateTitle",
+      "type": "kFunction",
+      "table": "src/kernel/xam/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "void",
+      "arguments": [],
+      "declaration": "void XamLoaderTerminateTitle_entry()",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [],
+      "return": "none",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xam/xam_info.cpp",
+      "source_line": 370
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "XamShowMessageBoxUIEx",
@@ -338,7 +1662,38 @@
     "ownership": "UNKNOWN async ownership/completion",
     "thread_context": "UNKNOWN title/UI/thread context",
     "status": "BLOCKED",
-    "evidence": "source-only stub; explicitly never admitted/called"
+    "evidence": "source-only stub; explicitly never admitted/called",
+    "export_identity": {
+      "library": "xam.xex",
+      "ordinal": 732,
+      "symbol": "__imp__XamShowMessageBoxUIEx",
+      "type": "kFunction",
+      "table": "src/kernel/xam/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "uint32_t",
+      "arguments": [],
+      "declaration": "uint32_t XamShowMessageBoxUIEx_entry()",
+      "xbox_contract_verified": false,
+      "xbox_arguments": "UNKNOWN; SDK empty declaration is a stub, not evidence of the actual Xbox signature"
+    },
+    "register_stack": {
+      "arguments": [],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xam/xam_ui.cpp",
+      "source_line": 574
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "XexCheckExecutablePrivilege",
@@ -349,7 +1704,46 @@
     "ownership": "temporary executable reference; no returned ownership",
     "thread_context": "kernel executable module; enforce bit 0..31 before any call",
     "status": "PARTIAL",
-    "evidence": "Phase 9 absent-module 0/6/31 rerun; invalid index BLOCKED"
+    "evidence": "Phase 9 absent-module 0/6/31 rerun; invalid index BLOCKED",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 404,
+      "symbol": "__imp__XexCheckExecutablePrivilege",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "u32"
+      ],
+      "declaration": "u32 XexCheckExecutablePrivilege_entry(u32 privilege)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_modules.cpp",
+      "source_line": 219
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   },
   {
     "name": "XexGetModuleHandle",
@@ -360,6 +1754,52 @@
     "ownership": "returned guest HMODULE borrows module lifetime; no RetainHandle",
     "thread_context": "kernel module registry; caller must pin module/string/output",
     "status": "PARTIAL",
-    "evidence": "Phase 9 missing/null name error; success lifetime NOT verified"
+    "evidence": "Phase 9 missing/null name error; success lifetime NOT verified",
+    "export_identity": {
+      "library": "xboxkrnl.exe",
+      "ordinal": 405,
+      "symbol": "__imp__XexGetModuleHandle",
+      "type": "kFunction",
+      "table": "src/kernel/xboxkrnl/export_table.inc"
+    },
+    "sdk_signature": {
+      "return": "u32",
+      "arguments": [
+        "mapped_string",
+        "mapped_u32"
+      ],
+      "declaration": "u32 XexGetModuleHandle_entry(mapped_string module_name, mapped_u32 hmodule_ptr)",
+      "xbox_contract_verified": false
+    },
+    "register_stack": {
+      "arguments": [
+        {
+          "argument": 1,
+          "location": "r3",
+          "sdk_type": "mapped_string",
+          "width_bits": 32
+        },
+        {
+          "argument": 2,
+          "location": "r4",
+          "sdk_type": "mapped_u32",
+          "width_bits": 32
+        }
+      ],
+      "return": "r3 low 32 bits",
+      "fpr": "none in SDK declaration",
+      "stack_arguments": "none in fixed SDK declaration; linkage/r1 ABI only selected original fixtures verified",
+      "preservation": "selected fixtures only; full Xbox ABI unverified"
+    },
+    "signature_evidence": {
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "source": "src/kernel/xboxkrnl/xboxkrnl_modules.cpp",
+      "source_line": 221
+    },
+    "admission": {
+      "policy": "DENY",
+      "signature": "unverified",
+      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+    }
   }
 ]

@@ -18,6 +18,11 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    "runtime/import_admission.h", "tools/sdk/tls-import-lock.json",
+    "patches/rexglue-sdk/0018-xex-tls-lifetime.patch",
+    "tests/tls-import/README.md", "tests/tls-import/run.py", "tests/tls-import/audit.py",
+    "tests/tls-import/contracts.cpp", "tests/tls-import/title-tls.cpp",
+    "tests/tls-import/catalog.h", "tests/tls-import/fixture.h", "tests/tls-import/allocation-failure.cpp",
     "README.md", "LICENSE", "VERSION", ".gitignore", ".gitattributes", "CONTRIBUTING.md",
     "SECURITY.md", "THIRD_PARTY_NOTICES.md", "tools/check_public_tree.py",
     ".github/workflows/research.yml", ".github/ISSUE_TEMPLATE/research.yml",
@@ -152,7 +157,7 @@ def check():
         except (ValueError, KeyError, TypeError) as exc:
             errors.append(f"reference snapshot invalid: {exc}")
 
-    for name in ["tools/sdk/lock.json", "tools/sdk/pre-entry-lock.json", "tools/sdk/entry-readiness-lock.json", "tools/sdk/instrumentation-lock.json", "tools/sdk/synthetic-lock.json", "tools/sdk/image-runtime-lock.json"]:
+    for name in ["tools/sdk/lock.json", "tools/sdk/pre-entry-lock.json", "tools/sdk/entry-readiness-lock.json", "tools/sdk/instrumentation-lock.json", "tools/sdk/synthetic-lock.json", "tools/sdk/image-runtime-lock.json", "tools/sdk/tls-import-lock.json"]:
         if name not in texts:
             continue
         try:

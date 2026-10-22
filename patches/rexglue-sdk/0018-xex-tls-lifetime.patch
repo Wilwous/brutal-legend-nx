@@ -1,0 +1,193 @@
+--- a/include/rex/system/xex_module.h
++++ b/include/rex/system/xex_module.h
+@@ -164,6 +164,9 @@
+   bool Load(const std::string_view name, const std::string_view path, const void* xex_addr,
+             size_t xex_length);
+   bool LoadContinue();
++  // Bounded host policy for the currently supported static TLS layout.
++  // Output is a copy, never a borrowed header pointer. No header => all zero.
++  bool ReadTlsInfo(xex2_opt_tls_info* out) const;
+   bool Unload();
+ 
+   bool ContainsAddress(uint32_t address) override;
+--- a/include/rex/system/xthread.h
++++ b/include/rex/system/xthread.h
+@@ -20,6 +20,7 @@
+ #include <rex/system/thread_state.h>
+ #include <rex/system/util/native_list.h>
+ #include <rex/system/xmutant.h>
++#include <rex/system/user_module.h>
+ #include <rex/system/xobject.h>
+ #include <rex/system/xsemaphore.h>
+ #include <rex/system/xtimer.h>
+@@ -338,6 +339,9 @@
+   void set_name(const std::string_view name);
+ 
+   X_STATUS Create();
++  // Explicit module binding for independently owned synthetic/thread scopes.
++  // The image stays pinned through final PCR/TLS reclamation.
++  X_STATUS CreateWithModule(object_ref<UserModule> module);
+   X_STATUS Exit(int exit_code);
+   X_STATUS Terminate(int exit_code);
+ 
+@@ -391,6 +395,11 @@
+   void AcquireMutantOnStartup(object_ref<XMutant> mutant) {
+     pending_mutant_acquires_.push_back(mutant);
+   }
++
++ private:
++  X_STATUS CreateInternal(const xex2_opt_tls_info& tls_info);
++  bool create_attempted_ = false;
++  std::optional<UserModule::ImageLease> tls_image_lease_;
+ 
+  protected:
+   bool AllocateStack(uint32_t size);
+--- a/src/system/kernel_state.cpp
++++ b/src/system/kernel_state.cpp
+@@ -401,6 +401,10 @@
+     REXSYS_ERROR("FreeTLS: failed to resolve current process");
+     return false;
+   }
++
++  // A bit outside this process's advertised slot storage is not allocated.
++  // Otherwise a zero bitmap word makes an out-of-range free report success.
++  if (slot >= uint32_t(process_ptr->tls_slot_size) / 4) return false;
+ 
+   auto globals = memory()->TranslateVirtual<KernelGuestGlobals*>(GetKernelGuestGlobals());
+   auto tls_lock = &globals->tls_lock;
+--- a/src/system/xex_module.cpp
++++ b/src/system/xex_module.cpp
+@@ -1013,6 +1013,25 @@
+   return false;
+ }
+ 
++bool XexModule::ReadTlsInfo(xex2_opt_tls_info* out) const {
++  std::lock_guard lock(lifecycle_mutex_);
++  if (!out) return false;
++  *out = {};
++  if (!loaded_) return false;
++  xex2_opt_tls_info* header = nullptr;
++  if (!GetOptHeader(XEX_HEADER_TLS_INFO, &header)) return true;
++  const uint64_t slots = header->slot_count, size = header->data_size;
++  const uint64_t raw_size = header->raw_data_size;
++  const uint32_t raw = header->raw_data_address;
++  // The process bitmap implements 256 slots. Larger layouts are unverified.
++  // A 1 MiB bound is an explicit host admission policy, not an Xbox limit.
++  if (!slots || slots > 256 || (slots & 3) || (size & 3) || (raw & 3) ||
++      raw_size > size || size + slots * 4 > 1024 * 1024 ||
++      (raw_size ? (!raw || !ImageContains(raw, raw_size)) : raw != 0)) return false;
++  *out = *header;
++  return true;
++}
++
+ bool XexModule::LoadContinue() {
+   std::lock_guard lock(lifecycle_mutex_);
+   if (!loaded_ || close_requested_) return false;
+@@ -1123,6 +1142,9 @@
+ 
+     page += desc.page_count;
+   }
++
++  xex2_opt_tls_info tls_info{};
++  if (!ReadTlsInfo(&tls_info)) return false;
+ 
+   // Populate binary introspection data
+   PopulateBinaryData();
+--- a/src/system/xthread.cpp
++++ b/src/system/xthread.cpp
+@@ -114,6 +114,7 @@
+   kernel_state_->memory()->SystemHeapFree(tls_static_address_);
+   kernel_state_->memory()->SystemHeapFree(pcr_address_);
+   FreeStack();
++  tls_image_lease_.reset();
+ 
+   if (thread_) {
+     // TODO(benvanik): platform kill
+@@ -339,6 +340,37 @@
+ }
+ 
+ X_STATUS XThread::Create() {
++  return CreateWithModule(kernel_state_->GetExecutableModule());
++}
++
++X_STATUS XThread::CreateWithModule(object_ref<UserModule> module) {
++  if (create_attempted_) return X_STATUS_UNSUCCESSFUL;
++  create_attempted_ = true;
++  xex2_opt_tls_info tls_info{};
++  if (module) {
++    auto lease = module->AcquireImageLease();
++    if (!lease || !module->xex_module()->ReadTlsInfo(&tls_info)) return X_STATUS_INVALID_PARAMETER;
++    tls_image_lease_.emplace(std::move(*lease));
++  }
++  X_STATUS status;
++  try { status = CreateInternal(tls_info); }
++  catch (const std::bad_alloc&) { status = X_STATUS_NO_MEMORY; }
++  if (status != X_STATUS_SUCCESS) {
++    // Late host exceptions after a native thread exists require a dedicated
++    // cancellation protocol. Never free a live/suspended callback context.
++    if (thread_) std::terminate();
++    thread_state_.reset();
++    memory()->SystemHeapFree(scratch_address_); scratch_address_ = 0;
++    memory()->SystemHeapFree(tls_static_address_); tls_static_address_ = 0;
++    tls_dynamic_address_ = tls_total_size_ = 0;
++    memory()->SystemHeapFree(pcr_address_); pcr_address_ = 0;
++    FreeStack();
++    tls_image_lease_.reset();
++  }
++  return status;
++}
++
++X_STATUS XThread::CreateInternal(const xex2_opt_tls_info& tls_info) {
+   // Thread kernel object.
+   if (!CreateNative<X_KTHREAD>()) {
+     REXSYS_WARN("Unable to allocate thread object");
+@@ -355,40 +387,17 @@
+   scratch_size_ = 4 * 16;
+   scratch_address_ = memory()->SystemHeapAlloc(scratch_size_);
+ 
+-  // Allocate TLS block.
+-  // Games will specify a certain number of 4b slots that each thread will get.
+-  xex2_opt_tls_info* tls_header = nullptr;
+-  auto module = kernel_state_->GetExecutableModule();
+-  if (module) {
+-    module->GetOptHeader(XEX_HEADER_TLS_INFO, &tls_header);
+-  }
+-
+-  const uint32_t kDefaultTlsSlotCount = 1024;
+-  uint32_t tls_slots = kDefaultTlsSlotCount;
+-  uint32_t tls_extended_size = 0;
+-  if (tls_header && tls_header->slot_count) {
+-    tls_slots = tls_header->slot_count;
+-    tls_extended_size = tls_header->data_size;
+-  }
+-
+-  // Allocate both the slots and the extended data.
+-  // Some TLS is compiled with the binary (declspec(thread)) vars. The game
+-  // will directly access those through 0(r13).
+-  uint32_t tls_slot_size = tls_slots * 4;
+-  tls_total_size_ = tls_slot_size + tls_extended_size;
++  if (!scratch_address_) return X_STATUS_NO_MEMORY;
++  const uint32_t tls_slots = tls_info.slot_count ? uint32_t(tls_info.slot_count) : 1024;
++  const uint32_t extended_size = tls_info.data_size;
++  // ReadTlsInfo has checked the wide sum before narrowing or allocation.
++  tls_total_size_ = uint32_t(uint64_t(tls_slots) * 4 + extended_size);
+   tls_static_address_ = memory()->SystemHeapAlloc(tls_total_size_);
+-  tls_dynamic_address_ = tls_static_address_ + tls_extended_size;
+-  if (!tls_static_address_) {
+-    REXSYS_WARN("Unable to allocate thread local storage block");
+-    return X_STATUS_NO_MEMORY;
+-  }
+-
+-  // Zero all of TLS.
++  if (!tls_static_address_) return X_STATUS_NO_MEMORY;
++  tls_dynamic_address_ = tls_static_address_ + extended_size;
+   memory()->Fill(tls_static_address_, tls_total_size_, 0);
+-  if (tls_extended_size) {
+-    // If game has extended data, copy in the default values.
+-    assert_not_zero(tls_header->raw_data_address);
+-    memory()->Copy(tls_static_address_, tls_header->raw_data_address, tls_header->raw_data_size);
++  if (tls_info.raw_data_size) {
++    memory()->Copy(tls_static_address_, tls_info.raw_data_address, tls_info.raw_data_size);
+   }
+ 
+   // Allocate thread state block from heap.

@@ -49,3 +49,7 @@ Use `--lock tools/sdk/synthetic-lock.json` in a fresh private workspace. The six
 ## Phase 12 image ownership SDK
 
 Use `image-runtime-lock.json` for the existing sixteen patches plus patch 0017. Historical locks remain unchanged. `--interposable-runtime` enables macOS ld `-interposable` only in the private fixture build, for verified child-local allocator failure injection. Default is off; no global install, environment change or page-protection bypass is performed. The build result records this option. Match every staged profile to its CLI and runtime hash. [Reproduction and scope](../../tests/image-runtime/README.md).
+
+## Phase 13 XEX TLS/import SDK
+
+Use `--lock tools/sdk/tls-import-lock.json` in a new private workspace for the eighteen-patch series. Patch 0018 validates actual XEX TLS sizes/template spans, binds XThread lifetime to an image lease, rolls back selected creation failures and rejects out-of-range process TLS free. It is not a full Xbox ABI or DLL TLS implementation. The original import adapter is a separate opt-in client. Use matching profiles and private `--interposable-runtime` only for child allocator tests. [Recipe](../../tests/tls-import/README.md) · [Evidence and limitations](../../docs/research/xex-tls-import-admission.md).

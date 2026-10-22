@@ -1,0 +1,191 @@
+{
+  "sdk_url": "https://github.com/rexglue/rexglue-sdk.git",
+  "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+  "sdk_tag": "v0.10.0",
+  "submodules": [
+    {
+      "path": "thirdparty/FFmpeg",
+      "commit": "0604b464c7cb4ebc94940cf1f324a3b26b87717c"
+    },
+    {
+      "path": "thirdparty/catch2",
+      "commit": "88abf9bf325c798c33f54f6b9220ef885b267f4f"
+    },
+    {
+      "path": "thirdparty/cli11",
+      "commit": "bfffd37e1f804ca4fae1caae106935791696b6a9"
+    },
+    {
+      "path": "thirdparty/fmt",
+      "commit": "407c905e45ad75fc29bf0f9bb7c5c2fd3475976f"
+    },
+    {
+      "path": "thirdparty/glslang",
+      "commit": "f4f1d8a352ca1908943aea2ad8c54b39b4879080"
+    },
+    {
+      "path": "thirdparty/imgui",
+      "commit": "6d910d5487d11ca567b61c7824b0c78c569d62f0"
+    },
+    {
+      "path": "thirdparty/inja",
+      "commit": "7d1b4600b68595085a949743331c2e5673f511ea"
+    },
+    {
+      "path": "thirdparty/libmspack",
+      "commit": "305907723a4e7ab2018e58040059ffb5e77db837"
+    },
+    {
+      "path": "thirdparty/moltenvk",
+      "commit": "db445ff2042d9ce348c439ad8451112f354b8d2a"
+    },
+    {
+      "path": "thirdparty/o1heap",
+      "commit": "388a73fd9007300e5130c5fe352d9ce3288b6dde"
+    },
+    {
+      "path": "thirdparty/sdl3",
+      "commit": "8bf3b7215ad9fc3deb583c6a3a37c6c67f2e24e4"
+    },
+    {
+      "path": "thirdparty/simde",
+      "commit": "71fd833d9666141edcd1d3c109a80e228303d8d7"
+    },
+    {
+      "path": "thirdparty/spdlog",
+      "commit": "79524ddd08a4ec981b7fea76afd08ee05f83755d"
+    },
+    {
+      "path": "thirdparty/spirv-headers",
+      "commit": "29981f65241605e08b0ede4cfeb999fe3b723c6a"
+    },
+    {
+      "path": "thirdparty/spirv-tools",
+      "commit": "9a49b0883b9b635689a85b5647dbfcb223268151"
+    },
+    {
+      "path": "thirdparty/tomlplusplus",
+      "commit": "30172438cee64926dc41fdd9c11fb3ba5b2ba9de"
+    },
+    {
+      "path": "thirdparty/tracy",
+      "commit": "05cceee0df3b8d7c6fa87e9638af311dbabc63cb"
+    },
+    {
+      "path": "thirdparty/utfcpp",
+      "commit": "63d64de49fd6b829f7c8694df5ab2ee625cb7134"
+    },
+    {
+      "path": "thirdparty/vulkan-headers",
+      "commit": "e3b1eec08173d6b825cd3ac88c885a63b621504a"
+    },
+    {
+      "path": "thirdparty/vulkan-loader",
+      "commit": "5f157b62e333c63260d05d81bf66faa216ab0fb8"
+    },
+    {
+      "path": "thirdparty/vulkan-memory-allocator",
+      "commit": "1d8f600fd424278486eade7ed3e877c99f0846b1"
+    },
+    {
+      "path": "thirdparty/xxHash",
+      "commit": "e626a72bc2321cd320e953a0ccf1584cad60f363"
+    }
+  ],
+  "cpm": {
+    "SPIRV-Cross": "adec7acbf41a988713cdb85f93f26c8ca5ea863e",
+    "cereal": "a56bad8bbb770ee266e930c95d37fff2a5be7fea"
+  },
+  "patches": [
+    {
+      "path": "patches/rexglue-sdk/0001-runtime-safety.patch",
+      "sha256": "79c5e7603003e49fb134e1a975e878a9e0be68ea44399ad724201f635a69baf1"
+    },
+    {
+      "path": "patches/rexglue-sdk/0002-host-fault-and-protect.patch",
+      "sha256": "9714dde0a25c71a850a639cc28f98000903d230130cbdeb95f5d591d72f918ef"
+    },
+    {
+      "path": "patches/rexglue-sdk/0003-ppc-callback-arguments.patch",
+      "sha256": "6467538eec5c06915cffd1b31fc25ace7dcac5cf5933e88379e8fea44df59d8a"
+    },
+    {
+      "path": "patches/rexglue-sdk/0004-initialization-failures.patch",
+      "sha256": "be9622810ec4573a1a7f3d5fc7620bdfde871ba8a246e7a3843aabcc293fab3b"
+    },
+    {
+      "path": "patches/rexglue-sdk/0005-signal-diagnostics.patch",
+      "sha256": "668fad7e7e758e78f2d574b180b4408a494a4a5d4dd416954e6bc2413731e46a"
+    },
+    {
+      "path": "patches/rexglue-sdk/0006-darwin-signal-context.patch",
+      "sha256": "40488babd9d9c96bafebfb67ef3392a4c037e9522dc715463e857e2872fa2d29"
+    },
+    {
+      "path": "patches/rexglue-sdk/0007-defined-pe-header-offset.patch",
+      "sha256": "0f7320dbef8bad76fd56450805f29d83ada0cd6833217294aecd2b8a77496b95"
+    },
+    {
+      "path": "patches/rexglue-sdk/0008-xdbf-byte-parser.patch",
+      "sha256": "a082354dd6b338e31f69d00fe068b67e2a43339dc13ef0622468eab037bb58d6"
+    },
+    {
+      "path": "patches/rexglue-sdk/0009-guest-memory-ownership.patch",
+      "sha256": "583e043408a3637bd62ec2fc0930439f267dbd3875c9453c2b898dcebeadf38f"
+    },
+    {
+      "path": "patches/rexglue-sdk/0010-allocation-and-exception-failures.patch",
+      "sha256": "14ffef99113f4768cd480e729a54890b39e5df4607f5ca40e2eb262b20399617"
+    },
+    {
+      "path": "patches/rexglue-sdk/0011-checked-allocation-ownership.patch",
+      "sha256": "3ced5682c7765ae00c416c2c30f9365de9b6f93a9de35329da8d8e79e5c23797"
+    },
+    {
+      "path": "patches/rexglue-sdk/0012-checked-guest-copy.patch",
+      "sha256": "fe6f7bfcb6295a0d7ea6b62d1f54e58e04f8781f46967ce57a61eb8fba68d386"
+    },
+    {
+      "path": "patches/rexglue-sdk/0013-closed-handle-failure.patch",
+      "sha256": "a87bb01cd821cc4a1f3c80c5f6228516a6079e6a6db2edd1df51286893e616fa"
+    },
+    {
+      "path": "patches/rexglue-sdk/0014-generated-access-seam.patch",
+      "sha256": "f8ed6e72f78ad51fd351385844ec89e58bf0cc046b20a2cc8d727a7e7e85cb6b"
+    },
+    {
+      "path": "patches/rexglue-sdk/0015-checked-virtual-stack-copy.patch",
+      "sha256": "13f05875c19283ec0e92720aa83cbe3eba9baac6daef867c1149ffe1b8aadbd7"
+    },
+    {
+      "path": "patches/rexglue-sdk/0016-xthread-owned-exit.patch",
+      "sha256": "9193025087740cf6a5523657d90a402f73306d86f07ef3001e43d7f47257f9b0"
+    },
+    {
+      "path": "patches/rexglue-sdk/0017-xex-transaction-ownership.patch",
+      "sha256": "11fa38298253ea8a9fa3edefa43ccf21ceb26cb924eb4fb99ed9d08776d32bc4"
+    },
+    {
+      "path": "patches/rexglue-sdk/0018-xex-tls-lifetime.patch",
+      "sha256": "d131bd2fbb647ad095455de525ddd433114499fb69696c8a637639a70e1b8737"
+    }
+  ],
+  "tools": {
+    "cmake": {
+      "version": "3.31.6",
+      "filename": "cmake-3.31.6-py3-none-macosx_10_10_universal2.whl",
+      "sha256": "da9d4fd9abd571fd016ddb27da0428b10277010b23bb21e3678f8b9e96e1686e"
+    },
+    "ninja": {
+      "version": "1.11.1.4",
+      "filename": "ninja-1.11.1.4-py3-none-macosx_10_9_universal2.whl",
+      "sha256": "b33923c8da88e8da20b6053e38deb433f53656441614207e01d283ad02c5e8e7",
+      "binary_version": "1.11.1.git.kitware.jobserver-1"
+    }
+  },
+  "cpm_bootstrap": {
+    "version": "0.40.8",
+    "url": "https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.40.8/CPM.cmake",
+    "sha256": "78ba32abdf798bc616bab7c73aac32a17bbd7b06ad9e26a6add69de8f3ae4791"
+  }
+}

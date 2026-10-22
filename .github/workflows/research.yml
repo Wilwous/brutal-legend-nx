@@ -24,6 +24,8 @@ jobs:
         run: python3 tests/instrumentation/test_audit.py
       - name: Check original synthetic module encoding
         run: python3 tests/synthetic/test_fixture.py
+      - name: Check original import matrix, fixture catalog and scoped policy
+        run: python3 tests/tls-import/audit.py --matrix-only
       - name: Check monotonic watchdog and process group cleanup
         run: python3 tests/ppc/test_watchdog.py
 
