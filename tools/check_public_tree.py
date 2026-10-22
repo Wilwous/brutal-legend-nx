@@ -67,6 +67,19 @@ EXACT = {
     "tests/synthetic/lifetime.cpp", "tests/synthetic/create-failure.cpp",
     "tests/synthetic/reference-probe.cpp", "tests/synthetic/reference-trace.py",
     "patches/rexglue-sdk/0016-xthread-owned-exit.patch",
+    "tools/sdk/image-runtime-lock.json",
+    "patches/rexglue-sdk/0017-xex-transaction-ownership.patch",
+    "tests/image-runtime/ownership.cpp", "tests/image-runtime/allocation-failure.cpp",
+    "tests/image-runtime/README.md",
+    "tests/image-runtime/run.py",
+    "tests/image-runtime/audit.py",
+    "tests/image-runtime/owned-module.h",
+    "tests/image-runtime/thread-tls.h",
+    "tests/image-runtime/contracts.cpp",
+    "tests/image-runtime/imports.cpp",
+    "tests/image-runtime/xex.cpp",
+    "tests/image-runtime/xex-fixture.h",
+    "tests/image-runtime/import-contracts.json",
     "tests/vmx128/compare_evidence.py",
     "tests/vmx128/run.py", "tests/vmx128/emit_fixture.cpp", "tests/vmx128/README.md",
 }
@@ -139,7 +152,7 @@ def check():
         except (ValueError, KeyError, TypeError) as exc:
             errors.append(f"reference snapshot invalid: {exc}")
 
-    for name in ["tools/sdk/lock.json", "tools/sdk/pre-entry-lock.json", "tools/sdk/entry-readiness-lock.json", "tools/sdk/instrumentation-lock.json", "tools/sdk/synthetic-lock.json"]:
+    for name in ["tools/sdk/lock.json", "tools/sdk/pre-entry-lock.json", "tools/sdk/entry-readiness-lock.json", "tools/sdk/instrumentation-lock.json", "tools/sdk/synthetic-lock.json", "tools/sdk/image-runtime-lock.json"]:
         if name not in texts:
             continue
         try:

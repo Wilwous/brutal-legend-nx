@@ -1,4 +1,6 @@
-# Research roadmap — Phase 10
+# Research roadmap — Phase 12
+
+**Current Phase 12 gate (2026-10-22): VERIFIED PASS for bounded original synthetic macOS validation; private game-code execution NO-GO.** The seventeen-patch isolated SDK now uses owner-scoped transactional XEX mappings, load/continuation rollback, final UserModule header/processor cleanup and explicit retained image leases. All three original failure assertions pass unchanged across Debug/Release/ASan+UBSan; 323 core checks pass with no unexpected signals, timeouts or sanitizer findings. Required imports, actual XEX TLS, full ABI and private generated-memory mediation remain unresolved. [Phase 12 ownership graph, reproduction, evidence and next milestone](research/image-ownership-runtime-contracts.md).
 
 ## Completed
 
@@ -36,9 +38,13 @@ Original decoder→builder→template fixtures validate an opt-in checked-memory
 
 The actual pinned raw-test CLI generates nine original functions / 36 instructions; unchanged output executes through the checked seam and real patched runtime. An original fixture loader validates section/relocation/entry policy. Two real guest XThreads exercise their native stack, PCR/r13 and TLS with explicit scope loans. A narrow SDK correction permits checked ordinary virtual 64-KiB stack copies; physical/XEX/fetch remain refused. Unsupported operations and call targets fail explicitly. **Recovery completed:** a read-only debugger trace confirms the stranded local Exit reference on Mac. The owned SDK exit boundary now unwinds scopes before native lease release; all original teardown assertions and fourteen additional lifetime groups pass unchanged in meaning across Debug/Release/Sanitized. Native factory failures roll back process/lease/callback resources, and foreign asynchronous termination explicitly refuses unsafe work. All 263 core checks pass; historical failures remain private evidence. This is not production XEX loading or title startup. [Reproduction, regressions and limitations](research/synthetic-execution.md).
 
-## Next exact task: R2l / Phase 12 — synthetic XEX/image and required-import admission (private execution NO-GO)
+## R2l / Phase 12 — transactional image ownership and runtime contracts (completed in measured scope)
 
-Validate original synthetic executable-container/image ownership, supported relocation and executable-target policy, then independently establish the precise ABI/TOC/TLS and required-import contracts for a proposed scope. Define safe cooperative title stop; forced foreign termination is refused on Mac. Preserve fail-closed atomics, partial vectors, typed-vector signatures and guest exceptions. APC/fiber/catch-all interactions and non-Mac exit behavior remain unverified. A separate readiness review must precede any private generated-code execution experiment; synthetic execution does not authorize it.
+Preserved the fifteen-file initial work and unchanged original failure assertions. Patch 0017 replaces whole-heap Reset with exclusive tagged reservation/commit/rollback, reclaims failed image/metadata stages and gives UserModule a single header/processor owner. Explicit retained image leases refuse unsafe unload and close new admission; no live object is forcibly deleted. The actual SDK passes independent-image/collision, ten rollback stages, two allocator injections, reload, copied-reference metadata, active lease and concurrent-image fixtures. All 323 core checks pass on the coherent Debug/Release/Sanitized SDK. Existing import/ABI/TLS/unsupported-operation limits remain; no proprietary code is executed. [Full Phase 12 report](research/image-ownership-runtime-contracts.md).
+
+## Next exact task: R2m / Phase 13 — original XEX TLS and checked import/signature admission
+
+Validate real header-driven TLS sizes/template copying/rollback through original XEX metadata and real XThreads; define image references/leases during creation, callbacks and cooperative stop. Establish a fail-closed allowlist for independently verified imports/signatures and enumerate remaining raw memory paths. The 33 reviewed imports remain 27 PARTIAL/six BLOCKED. Typed-vector ABI, atomics/partial vectors, MMIO/fetch and guest exceptions retain their refusals. Private game execution remains NO-GO until a separate scope-specific review passes. No game entry, graphics/audio or Switch work is authorized by Phase 12 success.
 
 The following previous mediation/entry gates remain requirements beyond the tested subset:
 

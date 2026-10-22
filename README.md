@@ -1,6 +1,6 @@
 # Brütal Legend NX
 
-**Wilwous · v0.0.11-synthetic-execution · Xbox 360 → Nintendo Switch / Atmosphère**
+**Wilwous · v0.0.12-image-runtime-contracts · Xbox 360 → Nintendo Switch / Atmosphère**
 
 Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Legend using static PowerPC recompilation and a homebrew runtime.
 
@@ -8,7 +8,7 @@ Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Le
 
 ## Current status
 
-Phase 11 synthetic execution and lifetime recovery: **2026-10-22**, following `v0.0.10-memory-instrumentation` (`48237fb`).
+Phase 12 transactional XEX ownership recovery: **2026-10-22**, following `v0.0.11-synthetic-execution` (`090594a`).
 
 - **VERIFIED:** the supplied directory contains a LIVE Games on Demand/SVOD package with 33 data fragments, three DLC packages and one title-update package. It contains no standalone ISO.
 - **VERIFIED:** full GOD hash-tree verification and private extraction succeeded. The base has 284 files totaling 5,544,498,100 bytes. All 38 source game files retained their SHA-256, size and modification time.
@@ -27,10 +27,10 @@ Phase 11 synthetic execution and lifetime recovery: **2026-10-22**, following `v
 - **VERIFIED limited scope:** Phase 9 verified original owner-checked copies on its 4-KiB virtual heap, with cross-page, endian, MMIO/host-page padding and selected concurrent fixtures. NtClose now rejects already closed handles using the existing status.
 - **PARTIAL / BLOCKED:** none of the 791,353 lexical generated load/store sites is mediated. The direct entry closure has 33 imports and 21 unresolved indirect sites; fetch permissions, unsafe pointer imports, exceptions and typed-vector ABI prevent entry readiness.
 - **VERIFIED selected instrumentation:** original PPC words use the fourteen-patch SDK decoder/builders/templates and an opt-in checked scalar/finite-FP/full-vector memory backend. Atomic/partial-vector operations and unsupported calls fail explicitly; the default mode is retained. No private generated output is changed or executed.
-- **VERIFIED synthetic pipeline:** the actual pinned CLI generates an original nine-function PPC module; unchanged output executes through the checked memory layer and real patched SDK, including native XThread stack/PCR/TLS. A separate original fixture loader tests section/relocation/entry policy; XEX loading and normal title startup remain unverified.
+- **VERIFIED synthetic pipeline:** the actual pinned CLI generates an original nine-function PPC module; unchanged output executes through the checked memory layer and real patched SDK, including native XThread stack/PCR/TLS. A separate original fixture loader tests section/relocation/entry policy; normal title startup remains unverified.
 - **UNKNOWN:** runtime correctness, shaders, decoded audio-bank format, game memory budget and stock-clock performance.
 
-**Verdict: Phase 11 synthetic scope PASS; overall port feasibility PARTIAL; Phase 12 NO-GO for proprietary execution.** SDK thread lifetime and PCR/TLS reclamation are corrected on Mac, with 263 core checks passing across Debug/Release/Sanitized. [Synthetic execution evidence and limits](docs/research/synthetic-execution.md). [Generated-memory instrumentation and evidence](docs/research/generated-memory-instrumentation.md). [Guest memory, entry contracts and regression results](docs/research/guest-memory-entry-readiness.md). [Pre-entry safety results and commands](docs/research/pre-entry-safety.md). The Phase 3 mechanical pass stands; [Phase 6 PPC/fault results and limits](docs/research/ppc-execution.md) do not establish game execution. [VMX validation](docs/research/vmx128-validation.md) · [Complete runtime audit](docs/research/runtime-audit.md). [Phase 3 results, commands and timing caveat](docs/research/rexglue-analysis.md) · [Binary findings](docs/research/xbox360-analysis.md) · [Feasibility and blockers](docs/feasibility.md)
+**Verdict: Phase 12 bounded synthetic scope PASS; overall port feasibility PARTIAL; private game-code execution NO-GO.** The real SDK now uses transactional owned XEX mappings and final UserModule metadata cleanup. All three original ownership failures pass unchanged across Debug/Release/Sanitized, with 323 core passes and no unexpected native signals, timeouts or sanitizer findings. Explicit retained image leases defer reclamation; title TLS, required import/ABI contracts and private generated-memory mediation remain unresolved. [Image ownership recovery and limits](docs/research/image-ownership-runtime-contracts.md). [Synthetic execution evidence and limits](docs/research/synthetic-execution.md). [Generated-memory instrumentation and evidence](docs/research/generated-memory-instrumentation.md). [Guest memory, entry contracts and regression results](docs/research/guest-memory-entry-readiness.md). [Pre-entry safety results and commands](docs/research/pre-entry-safety.md). The Phase 3 mechanical pass stands; [Phase 6 PPC/fault results and limits](docs/research/ppc-execution.md) do not establish game execution. [VMX validation](docs/research/vmx128-validation.md) · [Complete runtime audit](docs/research/runtime-audit.md). [Phase 3 results, commands and timing caveat](docs/research/rexglue-analysis.md) · [Binary findings](docs/research/xbox360-analysis.md) · [Feasibility and blockers](docs/feasibility.md)
 
 ## Technical approach
 
@@ -52,7 +52,7 @@ The first architecture candidate is ReXGlue plus reviewed Horizon adaptations an
 | Runtime execution, shaders, audio and hardware | Not validated |
 | Game build or distribution | Not started |
 
-Next: original synthetic XEX/image ownership and required-import/ABI/TOC/TLS/executable-target admission, with safe cooperative title stop, before a separate private-execution review; continue independent Xbox numeric research. [Roadmap](docs/roadmap.md).
+Next: Phase 13 original XEX-header TLS initialization and checked import/signature admission, with explicit image lifetime and cooperative stop contracts, before a separate private-execution review; continue independent Xbox numeric research. [Roadmap](docs/roadmap.md).
 
 ## Game files and compatibility
 
@@ -68,7 +68,7 @@ No game build command or installation package exists. The repository contains re
 python3 tools/check_public_tree.py
 ```
 
-[Isolated SDK build](tools/sdk/README.md) and [instrumentation fixture commands](tests/instrumentation/README.md) reproduce the current milestone with the explicit Phase 10 lock; all dependencies, outputs and diagnostics remain private. [Phase 6 commands](tests/ppc/README.md) retain historical hybrid tests.
+[Isolated SDK build](tools/sdk/README.md) and [image/runtime fixture commands](tests/image-runtime/README.md) reproduce the current milestone with the explicit Phase 12 image-runtime lock; all dependencies, outputs and diagnostics remain private. [Phase 6 commands](tests/ppc/README.md) retain historical hybrid tests.
 
 CI checks public contents/links, watchdog process-group cleanup, and builds/runs the original dependency-free memory/TLS components at O0/O2 and with sanitizers. It never fetches game data or the SDK, invokes codegen, builds the game or publishes releases. Overclocking is not a baseline requirement; no FPS or resolution is predicted.
 

@@ -1,0 +1,900 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2026 Wilwous; upstream notices retained.
+# Owner-scoped XEX load/retry/rollback, UserModule metadata and explicit leases.
+--- a/include/rex/system/user_module.h
++++ b/include/rex/system/user_module.h
+@@ -11,6 +11,8 @@
+  */
+ 
+ #include <string>
++#include <mutex>
++#include <optional>
+ 
+ #include <rex/system/util/xex2_info.h>
+ #include <rex/system/xex_module.h>
+@@ -31,6 +33,20 @@
+ 
+ class UserModule : public XModule {
+  public:
++  // Explicit host admission. A lease retains this UserModule and pins image
++  // reservations; it does not validate guest ABI, dispatch or execute permission.
++  class ImageLease {
++    friend class UserModule;
++    object_ref<UserModule> owner_;
++    explicit ImageLease(object_ref<UserModule> owner) : owner_(std::move(owner)) {}
++   public:
++    ImageLease(const ImageLease&) = delete;
++    ImageLease& operator=(const ImageLease&) = delete;
++    ImageLease(ImageLease&&) = default;
++    ImageLease& operator=(ImageLease&&) = delete;
++    ~ImageLease();
++  };
++  std::optional<ImageLease> AcquireImageLease();
+   UserModule(KernelState* kernel_state);
+   ~UserModule() override;
+ 
+@@ -92,6 +108,7 @@
+                                         const std::string_view path);
+ 
+  private:
++  mutable std::recursive_mutex lifecycle_mutex_;
+   X_STATUS LoadXexContinue();
+ 
+   std::string name_;
+--- a/include/rex/system/xex_module.h
++++ b/include/rex/system/xex_module.h
+@@ -11,6 +11,7 @@
+  */
+ 
+ #include <string>
++#include <mutex>
+ #include <vector>
+ 
+ #include <rex/system/module.h>
+@@ -18,6 +19,7 @@
+ 
+ namespace rex::system {
+ class KernelState;
++class UserModule;
+ }  // namespace rex::system
+ 
+ namespace rex::runtime {
+@@ -63,13 +65,14 @@
+   XexModule(FunctionDispatcher* function_dispatcher, system::KernelState* kernel_state);
+   virtual ~XexModule();
+ 
+-  bool loaded() const { return loaded_; }
++  bool loaded() const { std::lock_guard lock(lifecycle_mutex_); return loaded_; }
+   const xex2_header* xex_header() const {
+-    return reinterpret_cast<const xex2_header*>(xex_header_mem_.data());
++    return xex_header_mem_.empty() ? nullptr : reinterpret_cast<const xex2_header*>(xex_header_mem_.data());
+   }
+   const SecurityInfoContext* xex_security_info() const { return &security_info_; }
+ 
+   uint32_t image_size() const override {
++    if (!loaded_ || xex_header_mem_.empty()) return 0;
+     assert_not_zero(base_address_);
+ 
+     // Calculate the new total size of the XEX image from its headers.
+@@ -167,7 +170,7 @@
+ 
+   const std::string& name() const override { return name_; }
+   bool is_executable() const override {
+-    return (xex_header()->module_flags & XEX_MODULE_TITLE) != 0;
++    return xex_header() && (xex_header()->module_flags & XEX_MODULE_TITLE) != 0;
+   }
+ 
+   bool is_valid_executable() const {
+@@ -180,7 +183,6 @@
+   }
+ 
+   bool is_patch() const {
+-    assert_not_null(xex_header());
+     if (!xex_header()) {
+       return false;
+     }
+@@ -189,6 +191,17 @@
+   }
+ 
+  private:
++  friend class rex::system::UserModule;
++  bool AcquireImageLease();
++  void ReleaseImageLease();
++  bool AllocateImage(uint32_t address, uint32_t size);
++  bool ReleaseImages();
++  bool ImageContains(uint32_t address, uint64_t size) const;
++  mutable std::recursive_mutex lifecycle_mutex_;
++  uint32_t image_leases_ = 0;
++  bool close_requested_ = false;
++  struct OwnedImage { uint32_t address, size; };
++  std::vector<OwnedImage> owned_images_;
+   void ReadSecurityInfo();
+ 
+   int ReadImage(const void* xex_addr, size_t xex_length, bool use_dev_key);
+--- a/include/rex/system/xmemory.h
++++ b/include/rex/system/xmemory.h
+@@ -225,6 +225,8 @@
+                        uint32_t* old_protect = nullptr);
+ 
+   // Opaque subsystem ownership; cleared on release/reset/new reservation.
++  // Exclusive owner-scoped reserve/commit transaction for trusted loaders.
++  bool AllocFixedOwned(uint32_t address, uint32_t size, const void* owner);
+   void SetAllocationOwner(uint32_t address, const void* owner);
+   bool ReleaseOwned(uint32_t address, const void* owner);
+ 
+--- a/src/system/user_module.cpp
++++ b/src/system/user_module.cpp
+@@ -29,11 +29,29 @@
+     : XModule(kernel_state, ModuleType::kUserModule) {}
+ 
+ UserModule::~UserModule() {
+-  Unload();
++  if (module_format_ == kModuleFormatXex && XFAILED(Unload())) std::terminate();
++  if (guest_xex_header_) {
++    if (!memory()->SystemHeapFreeOwned(guest_xex_header_, this)) std::terminate();
++    guest_xex_header_ = 0;
++  }
++  delete processor_module_;
++  processor_module_ = nullptr;
++}
++
++UserModule::ImageLease::~ImageLease() {
++  if (owner_) owner_->xex_module()->ReleaseImageLease();
++}
++
++std::optional<UserModule::ImageLease> UserModule::AcquireImageLease() {
++  std::lock_guard lock(lifecycle_mutex_);
++  if (module_format_ != kModuleFormatXex || !processor_module_ ||
++      !xex_module()->AcquireImageLease()) return std::nullopt;
++  return ImageLease(retain_object(this));
+ }
+ 
+ uint32_t UserModule::title_id() const {
+-  if (module_format_ != kModuleFormatXex) {
++  std::lock_guard lock(lifecycle_mutex_);
++  if (module_format_ != kModuleFormatXex || !processor_module_ || !xex_module()->loaded()) {
+     return 0;
+   }
+   auto header = xex_header();
+@@ -49,6 +67,9 @@
+ }
+ 
+ X_STATUS UserModule::LoadFromFile(const std::string_view path) {
++  std::lock_guard lock(lifecycle_mutex_);
++  if (processor_module_) return X_STATUS_UNSUCCESSFUL;
++  auto attempt = [&]() -> X_STATUS {
+   X_STATUS result = X_STATUS_UNSUCCESSFUL;
+ 
+   // Resolve the file to open.
+@@ -110,6 +131,7 @@
+     REXSYS_DEBUG("Loading XEX patch from {}", patch_path);
+ 
+     auto patch_module = object_ref<UserModule>(new UserModule(kernel_state_));
++    struct HandleGuard { UserModule* module; ~HandleGuard() { module->ReleaseHandle(); } } patch_handle{patch_module.get()};
+     result = patch_module->LoadFromFile(patch_path);
+     if (!result) {
+       result = patch_module->xex_module()->ApplyPatch(xex_module());
+@@ -126,9 +148,27 @@
+   }
+ 
+   return LoadXexContinue();
++  };
++  X_STATUS result;
++  try { result = attempt(); }
++  catch (const std::bad_alloc&) { result = X_STATUS_NO_MEMORY; }
++  catch (const std::exception&) { result = X_STATUS_UNSUCCESSFUL; }
++  if (XFAILED(result)) {
++    if (module_format_ == kModuleFormatXex && XFAILED(Unload())) std::terminate();
++    if (guest_xex_header_) {
++      if (!memory()->SystemHeapFreeOwned(guest_xex_header_, this)) std::terminate();
++      guest_xex_header_ = 0;
++      memory()->TranslateVirtual<X_LDR_DATA_TABLE_ENTRY*>(hmodule_ptr_)->xex_header_base = 0;
++    }
++    delete processor_module_; processor_module_ = nullptr;
++    module_format_ = kModuleFormatUndefined;
++  }
++  return result;
+ }
+ 
+ X_STATUS UserModule::LoadFromMemory(const void* addr, const size_t length) {
++  std::lock_guard lock(lifecycle_mutex_);
++  if (processor_module_ || !addr || length < 4 || (uintptr_t(addr) & 3)) return X_STATUS_UNSUCCESSFUL;
+   auto* dispatcher = kernel_state_->function_dispatcher();
+ 
+   // Detect format by magic bytes
+@@ -146,22 +186,20 @@
+ 
+   if (module_format_ == kModuleFormatXex) {
+     // Create XexModule to parse and load the XEX image into guest memory
+-    auto xex_module = new runtime::XexModule(dispatcher, kernel_state_);
++    auto xex_module = std::make_unique<runtime::XexModule>(dispatcher, kernel_state_);
+     if (!xex_module->Load(name_, path_, addr, length)) {
+-      delete xex_module;
+       return X_STATUS_UNSUCCESSFUL;
+     }
+ 
+-    processor_module_ = xex_module;
++    processor_module_ = xex_module.release();
+ 
+     // Continue to LoadXexContinue (returns X_STATUS_PENDING per Xenia convention)
+     return X_STATUS_PENDING;
+ 
+   } else if (module_format_ == kModuleFormatElf) {
+     // Create ElfModule to parse and load the ELF image into guest memory
+-    auto elf_module = new runtime::ElfModule(dispatcher, kernel_state_);
++    auto elf_module = std::make_unique<runtime::ElfModule>(dispatcher, kernel_state_);
+     if (!elf_module->Load(name_, path_, addr, length)) {
+-      delete elf_module;
+       return X_STATUS_UNSUCCESSFUL;
+     }
+ 
+@@ -169,7 +207,7 @@
+     stack_size_ = 1024 * 1024;  // 1 MB default stack
+     is_dll_module_ = false;
+ 
+-    processor_module_ = elf_module;
++    processor_module_ = elf_module.release();
+     OnLoad();
+     return X_STATUS_SUCCESS;  // ELF doesn't need LoadXexContinue
+   }
+@@ -178,6 +216,7 @@
+ }
+ 
+ X_STATUS UserModule::LoadXexContinue() {
++  std::lock_guard lock(lifecycle_mutex_);
+   // LoadXexContinue: finishes loading XEX after a patch has been applied (or
+   // patch wasn't found)
+ 
+@@ -198,7 +237,8 @@
+   // Copy the xex2 header into guest memory.
+   auto header = this->xex_module()->xex_header();
+   auto security_header = this->xex_module()->xex_security_info();
+-  guest_xex_header_ = memory()->SystemHeapAlloc(header->header_size);
++  guest_xex_header_ = memory()->SystemHeapAlloc(header->header_size, 0x20, 0, this);
++  if (!guest_xex_header_) { xex_module()->Unload(); return X_STATUS_NO_MEMORY; }
+ 
+   uint8_t* xex_header_ptr = memory()->TranslateVirtual(guest_xex_header_);
+   std::memcpy(xex_header_ptr, header, header->header_size);
+@@ -223,6 +263,7 @@
+ }
+ 
+ X_STATUS UserModule::Unload() {
++  std::lock_guard lock(lifecycle_mutex_);
+   if (module_format_ == kModuleFormatXex && (!processor_module_ || !xex_module()->loaded())) {
+     // Quick abort.
+     return X_STATUS_SUCCESS;
+@@ -230,6 +271,9 @@
+ 
+   if (module_format_ == kModuleFormatXex && processor_module_ && xex_module()->Unload()) {
+     OnUnload();
++    entry_point_ = 0;
++    auto* ldr = memory()->TranslateVirtual<X_LDR_DATA_TABLE_ENTRY*>(hmodule_ptr_);
++    ldr->image_base = 0; ldr->entry_point = 0; ldr->full_image_size = 0;
+     return X_STATUS_SUCCESS;
+   }
+ 
+@@ -237,6 +281,8 @@
+ }
+ 
+ uint32_t UserModule::GetProcAddressByOrdinal(uint16_t ordinal, uint32_t caller_address) {
++  std::lock_guard lock(lifecycle_mutex_);
++  if (!processor_module_ || module_format_ != kModuleFormatXex || !xex_module()->loaded()) return 0;
+   uint32_t guest_addr = xex_module()->GetProcAddress(ordinal);
+   if (!guest_addr || !caller_address) {
+     return guest_addr;
+@@ -252,11 +298,15 @@
+ }
+ 
+ uint32_t UserModule::GetProcAddressByName(std::string_view name) {
++  std::lock_guard lock(lifecycle_mutex_);
++  if (!processor_module_ || module_format_ != kModuleFormatXex || !xex_module()->loaded()) return 0;
+   return xex_module()->GetProcAddress(name);
+ }
+ 
+ X_STATUS UserModule::GetSection(const std::string_view name, uint32_t* out_section_data,
+                                 uint32_t* out_section_size) {
++  std::lock_guard lock(lifecycle_mutex_);
++  if (!processor_module_ || module_format_ != kModuleFormatXex || !xex_module()->loaded()) return X_STATUS_NOT_FOUND;
+   xex2_opt_resource_info* resource_header = nullptr;
+   if (!runtime::XexModule::GetOptHeader(xex_header(), XEX_HEADER_RESOURCE_INFO, &resource_header)) {
+     // No resources.
+@@ -277,7 +327,9 @@
+ }
+ 
+ X_STATUS UserModule::GetOptHeader(xex2_header_keys key, void** out_ptr) {
++  std::lock_guard lock(lifecycle_mutex_);
+   assert_not_null(out_ptr);
++  if (!processor_module_ || module_format_ != kModuleFormatXex || !xex_module()->loaded()) return X_STATUS_NOT_FOUND;
+ 
+   if (module_format_ == kModuleFormatElf) {
+     // Quick die.
+@@ -293,6 +345,8 @@
+ }
+ 
+ X_STATUS UserModule::GetOptHeader(xex2_header_keys key, uint32_t* out_header_guest_ptr) {
++  std::lock_guard lock(lifecycle_mutex_);
++  if (!processor_module_ || module_format_ != kModuleFormatXex || !xex_module()->loaded() || !guest_xex_header_) return X_STATUS_NOT_FOUND;
+   if (module_format_ == kModuleFormatElf) {
+     // Quick die.
+     return X_STATUS_UNSUCCESSFUL;
+--- a/src/system/xex_module.cpp
++++ b/src/system/xex_module.cpp
+@@ -63,7 +63,53 @@
+ XexModule::XexModule(FunctionDispatcher* function_dispatcher, KernelState* kernel_state)
+     : Module(function_dispatcher), kernel_state_(kernel_state) {}
+ 
+-XexModule::~XexModule() {}
++XexModule::~XexModule() {
++  // A UserModule lease retains its legitimate object owner. Destruction with a
++  // live lease or stolen allocation is an ownership violation, never forced free.
++  if (!Unload()) std::terminate();
++}
++
++bool XexModule::AllocateImage(uint32_t address, uint32_t size) {
++  auto* heap = memory()->LookupHeap(address);
++  uint32_t rounded = 0;
++  if (!heap || heap->heap_type() != memory::HeapType::kGuestXex ||
++      !memory::CheckedAllocationRoundUp(size, heap->page_size(), rounded) ||
++      uint64_t(address) + rounded > 0x100000000ull) return false;
++  if (!heap->AllocFixedOwned(address, rounded, this)) return false;
++  try { owned_images_.push_back({address, rounded}); }
++  catch (...) { if (!heap->ReleaseOwned(address, this)) std::terminate(); throw; }
++  return true;
++}
++
++bool XexModule::ReleaseImages() {
++  while (!owned_images_.empty()) {
++    auto region = owned_images_.back();
++    if (!memory()->LookupHeap(region.address)->ReleaseOwned(region.address, this)) return false;
++    owned_images_.pop_back();
++  }
++  return true;
++}
++
++bool XexModule::ImageContains(uint32_t address, uint64_t size) const {
++  if (!size) return false;
++  for (auto region : owned_images_)
++    if (address >= region.address && size <= uint64_t(region.size) &&
++        uint64_t(address) - region.address <= uint64_t(region.size) - size) return true;
++  return false;
++}
++
++bool XexModule::AcquireImageLease() {
++  std::lock_guard lock(lifecycle_mutex_);
++  if (!loaded_ || !finished_load_ || close_requested_) return false;
++  ++image_leases_;
++  return true;
++}
++
++void XexModule::ReleaseImageLease() {
++  std::lock_guard lock(lifecycle_mutex_);
++  assert_true(image_leases_ != 0);
++  --image_leases_;
++}
+ 
+ bool XexModule::GetOptHeader(const xex2_header* header, xex2_header_keys key, void** out_ptr) {
+   assert_not_null(header);
+@@ -97,7 +143,8 @@
+ }
+ 
+ bool XexModule::GetOptHeader(xex2_header_keys key, void** out_ptr) const {
+-  return XexModule::GetOptHeader(xex_header(), key, out_ptr);
++  std::lock_guard lock(lifecycle_mutex_);
++  return !xex_header_mem_.empty() && XexModule::GetOptHeader(xex_header(), key, out_ptr);
+ }
+ 
+ const void* XexModule::GetSecurityInfo(const xex2_header* header) {
+@@ -114,6 +161,8 @@
+ }
+ 
+ uint32_t XexModule::GetProcAddress(uint16_t ordinal) const {
++  std::lock_guard lock(lifecycle_mutex_);
++  if (!loaded_ || !finished_load_) return 0;
+   // First: Check the xex2 export table.
+   if (xex_security_info()->export_table) {
+     auto export_table =
+@@ -151,6 +200,8 @@
+ }
+ 
+ uint32_t XexModule::GetProcAddress(const std::string_view name) const {
++  std::lock_guard lock(lifecycle_mutex_);
++  if (!loaded_ || !finished_load_) return 0;
+   assert_not_zero(base_address_);
+ 
+   xex2_opt_data_directory* pe_export_directory = 0;
+@@ -187,11 +238,19 @@
+ }
+ 
+ int XexModule::ApplyPatch(XexModule* module) {
++  if (!module || module == this) return 1;
++  std::scoped_lock lock(lifecycle_mutex_, module->lifecycle_mutex_);
++  if (!loaded_ || !module->loaded_ || module->finished_load_ ||
++      module->image_leases_ || module->close_requested_) return 1;
+   if (!is_patch()) {
+     // This isn't a XEX2 patch.
+     return 1;
+   }
+ 
++  struct Rollback {
++    XexModule* target; bool committed = false;
++    ~Rollback() { if (!committed && !target->Unload()) std::terminate(); }
++  } transaction{module};
+   // Grab the delta descriptor and get to work.
+   xex2_opt_delta_patch_descriptor* patch_header = nullptr;
+   GetOptHeader(XEX_HEADER_DELTA_PATCH_DESCRIPTOR, reinterpret_cast<void**>(&patch_header));
+@@ -293,13 +352,7 @@
+     uint32_t size_delta = new_image_size - original_image_size;
+     uint32_t addr_new_mem = module->base_address_ + original_image_size;
+ 
+-    bool alloc_result =
+-        memory()
+-            ->LookupHeap(addr_new_mem)
+-            ->AllocFixed(
+-                addr_new_mem, size_delta, 4096,
+-                rex::memory::kMemoryAllocationReserve | rex::memory::kMemoryAllocationCommit,
+-                rex::memory::kMemoryProtectRead | rex::memory::kMemoryProtectWrite);
++    bool alloc_result = module->AllocateImage(addr_new_mem, size_delta);
+ 
+     if (!alloc_result) {
+       REXLOG_ERROR("Unable to allocate XEX memory at {:08X}-{:08X}.", addr_new_mem, size_delta);
+@@ -442,6 +495,7 @@
+   if (free_input) {
+     free((void*)input_buffer);
+   }
++  transaction.committed = result_code == 0;
+   return result_code;
+ }
+ 
+@@ -460,7 +514,7 @@
+     return 0;
+   }
+ 
+-  memory()->LookupHeap(base_address_)->Reset();
++  if (!ReleaseImages()) return 1;  // Retry releases only this attempt's reservations.
+ 
+   aes_decrypt_buffer(use_dev_key ? xe_xex2_devkit_key : xe_xex2_retail_key,
+                      reinterpret_cast<const uint8_t*>(xex_security_info()->aes_key), 16,
+@@ -499,12 +553,7 @@
+   const uint32_t exe_length = static_cast<uint32_t>(xex_length - xex_header()->header_size);
+ 
+   uint32_t uncompressed_size = exe_length;
+-  bool alloc_result =
+-      memory()
+-          ->LookupHeap(base_address_)
+-          ->AllocFixed(base_address_, uncompressed_size, 4096,
+-                       rex::memory::kMemoryAllocationReserve | rex::memory::kMemoryAllocationCommit,
+-                       rex::memory::kMemoryProtectRead | rex::memory::kMemoryProtectWrite);
++  bool alloc_result = AllocateImage(base_address_, uncompressed_size);
+   if (!alloc_result) {
+     REXLOG_ERROR("Unable to allocate XEX memory at {:08X}-{:08X}.", base_address_,
+                  uncompressed_size);
+@@ -514,6 +563,7 @@
+   std::memset(buffer, 0, uncompressed_size);
+ 
+   const uint8_t* p = (const uint8_t*)xex_addr + xex_header()->header_size;
++  if (opt_file_format_info()->encryption_type == XEX_ENCRYPTION_NORMAL && (exe_length & 15)) return 1;
+ 
+   switch (opt_file_format_info()->encryption_type) {
+     case XEX_ENCRYPTION_NONE:
+@@ -550,6 +600,7 @@
+   for (uint32_t n = 0; n < block_count; n++) {
+     const uint32_t data_size = comp_info.blocks[n].data_size;
+     const uint32_t zero_size = comp_info.blocks[n].zero_size;
++    if (uint64_t(data_size) + zero_size > UINT32_MAX - uncompressed_size) return 1;
+     uncompressed_size += data_size + zero_size;
+   }
+ 
+@@ -560,14 +611,13 @@
+     xex2_page_descriptor desc;
+     desc.value = rex::byte_swap(xex_security_info()->page_descriptors[i].value);
+ 
++    if (uint64_t(desc.page_count) * heap->page_size() > UINT32_MAX - total_size) return 1;
+     total_size += desc.page_count * heap->page_size();
+   }
+ 
++  if (uncompressed_size > total_size) return 1;
+   // Allocate in-place the XEX memory.
+-  bool alloc_result =
+-      heap->AllocFixed(base_address_, total_size, 4096,
+-                       rex::memory::kMemoryAllocationReserve | rex::memory::kMemoryAllocationCommit,
+-                       rex::memory::kMemoryProtectRead | rex::memory::kMemoryProtectWrite);
++  bool alloc_result = AllocateImage(base_address_, total_size);
+   if (!alloc_result) {
+     REXLOG_ERROR("Unable to allocate XEX memory at {:08X}-{:08X}.", base_address_,
+                  uncompressed_size);
+@@ -586,6 +636,9 @@
+     const uint32_t data_size = comp_info.blocks[n].data_size;
+     const uint32_t zero_size = comp_info.blocks[n].zero_size;
+ 
++    if (uint64_t(p - source_buffer) + data_size > exe_length ||
++        uint64_t(d - buffer) + data_size + zero_size > total_size ||
++        (opt_file_format_info()->encryption_type == XEX_ENCRYPTION_NORMAL && (data_size & 15))) return 1;
+     switch (opt_file_format_info()->encryption_type) {
+       case XEX_ENCRYPTION_NONE:
+         if (data_size > uncompressed_size - (d - buffer)) {
+@@ -632,6 +685,7 @@
+   //    Nb block uint8_ts
+   // - decompress block contents
+ 
++  std::unique_ptr<uint8_t, decltype(&free)> owned_input(nullptr, &free), owned_compressed(nullptr, &free);
+   uint8_t* compress_buffer = NULL;
+   const uint8_t* p = NULL;
+   uint8_t* d = NULL;
+@@ -650,6 +704,9 @@
+       // TODO: a way to do without a copy/alloc?
+       free_input = true;
+       input_buffer = (const uint8_t*)calloc(1, exe_length);
++      owned_input.reset(const_cast<uint8_t*>(input_buffer));
++      if (!input_buffer) return 1;
++      if (exe_length & 15) return 1;
+       aes_decrypt_buffer(session_key_, exe_buffer, exe_length, (uint8_t*)input_buffer, exe_length);
+       break;
+     default:
+@@ -661,6 +718,8 @@
+   const xex2_compressed_block_info* cur_block = &compression_info->normal.first_block;
+ 
+   compress_buffer = (uint8_t*)calloc(1, exe_length);
++  owned_compressed.reset(compress_buffer);
++  if (!compress_buffer) return 1;
+ 
+   p = input_buffer;
+   d = compress_buffer;
+@@ -670,6 +729,7 @@
+ 
+   uint8_t block_calced_digest[0x14];
+   while (cur_block->block_size) {
++    if (uint64_t(p - input_buffer) + cur_block->block_size > input_size || cur_block->block_size < 26) { result_code = 1; break; }
+     const uint8_t* pnext = p + cur_block->block_size;
+     const auto* next_block = (const xex2_compressed_block_info*)p;
+ 
+@@ -687,17 +747,20 @@
+     p += 20;
+ 
+     while (true) {
++      if (pnext - p < 2) { result_code = 1; break; }
+       const size_t chunk_size = (p[0] << 8) | p[1];
+       p += 2;
+       if (!chunk_size) {
+         break;
+       }
+ 
++      if (size_t(pnext - p) < chunk_size || uint64_t(d - compress_buffer) + chunk_size > exe_length) { result_code = 1; break; }
+       memcpy(d, p, chunk_size);
+       p += chunk_size;
+       d += chunk_size;
+     }
+ 
++    if (result_code) break;
+     p = pnext;
+     cur_block = next_block;
+   }
+@@ -706,13 +769,7 @@
+     uint32_t uncompressed_size = image_size();
+ 
+     // Allocate in-place the XEX memory.
+-    bool alloc_result =
+-        memory()
+-            ->LookupHeap(base_address_)
+-            ->AllocFixed(
+-                base_address_, uncompressed_size, 4096,
+-                rex::memory::kMemoryAllocationReserve | rex::memory::kMemoryAllocationCommit,
+-                rex::memory::kMemoryProtectRead | rex::memory::kMemoryProtectWrite);
++    bool alloc_result = AllocateImage(base_address_, uncompressed_size);
+ 
+     if (alloc_result) {
+       uint8_t* buffer = memory()->TranslateVirtual(base_address_);
+@@ -728,12 +785,6 @@
+     }
+   }
+ 
+-  if (compress_buffer) {
+-    free((void*)compress_buffer);
+-  }
+-  if (free_input) {
+-    free((void*)input_buffer);
+-  }
+   return result_code;
+ }
+ 
+@@ -741,6 +792,7 @@
+   const uint8_t* p = memory()->TranslateVirtual(base_address_);
+ 
+   // Verify DOS signature (MZ).
++  if (!ImageContains(base_address_, sizeof(IMAGE_DOS_HEADER))) return 1;
+   auto doshdr = reinterpret_cast<const IMAGE_DOS_HEADER*>(p);
+   if (doshdr->e_magic != IMAGE_DOS_SIGNATURE) {
+     REXLOG_ERROR("PE signature mismatch; likely bad decryption/decompression");
+@@ -748,6 +800,8 @@
+   }
+ 
+   // Move to the NT header offset from the DOS header.
++  if ((doshdr->e_lfanew & 3) || uint64_t(base_address_) + doshdr->e_lfanew > UINT32_MAX ||
++      !ImageContains(base_address_ + doshdr->e_lfanew, sizeof(IMAGE_NT_HEADERS32))) return 1;
+   p += doshdr->e_lfanew;
+ 
+   // Verify NT signature (PE\0\0).
+@@ -801,11 +855,15 @@
+   ((PIMAGE_SECTION_HEADER)((uint8_t*)ntheader + offsetof1(IMAGE_NT_HEADERS, OptionalHeader) + \
+                            ((PIMAGE_NT_HEADERS)(ntheader))->FileHeader.SizeOfOptionalHeader))
+ 
++  if (!ImageContains(base_address_ + doshdr->e_lfanew,
++       sizeof(IMAGE_NT_HEADERS32) + uint64_t(filehdr->NumberOfSections) * sizeof(IMAGE_SECTION_HEADER))) return 1;
+   // Quick scan to determine bounds of sections.
+   size_t upper_address = 0;
+   const IMAGE_SECTION_HEADER* sechdr = IMAGE_FIRST_SECTION1(nthdr);
+   for (size_t n = 0; n < filehdr->NumberOfSections; n++, sechdr++) {
+-    const size_t physical_address = opthdr->ImageBase + sechdr->VirtualAddress;
++    if (uint64_t(base_address_) + sechdr->VirtualAddress > UINT32_MAX ||
++        !ImageContains(base_address_ + sechdr->VirtualAddress, sechdr->Misc.VirtualSize)) return 1;
++    const size_t physical_address = uint64_t(base_address_) + sechdr->VirtualAddress;
+     upper_address = std::max(upper_address, physical_address + sechdr->Misc.VirtualSize);
+   }
+ 
+@@ -865,6 +923,10 @@
+ 
+ bool XexModule::Load(const std::string_view name, const std::string_view path, const void* xex_addr,
+                      size_t xex_length) {
++  std::lock_guard lock(lifecycle_mutex_);
++  if (loaded_ || !xex_addr || (uintptr_t(xex_addr) & 3) || xex_length < 24) return false;
++  close_requested_ = false;
++  auto attempt = [&]() -> bool {
+   auto src_header = reinterpret_cast<const xex2_header*>(xex_addr);
+ 
+   if (src_header->magic == kXEX1Signature) {
+@@ -875,9 +937,14 @@
+     return false;
+   }
+ 
+-  assert_false(loaded_);
+   loaded_ = true;
+ 
++  const uint64_t header_size = src_header->header_size;
++  if (header_size < 24 || header_size > xex_length || xex_length - header_size > UINT32_MAX ||
++      uint32_t(src_header->header_count) > (header_size - 24) / 8) return false;
++  const uint64_t security_offset = src_header->security_offset;
++  const uint64_t fixed_security = xex_format_ == kFormatXex2 ? offsetof(xex2_security_info, page_descriptors) : offsetof(xex1_security_info, page_descriptors);
++  if ((security_offset & 3) || security_offset > header_size || fixed_security > header_size - security_offset) return false;
+   // Read in XEX headers
+   xex_header_mem_.resize(src_header->header_size);
+   std::memcpy(xex_header_mem_.data(), src_header, src_header->header_size);
+@@ -886,6 +953,16 @@
+   ReadSecurityInfo();
+ 
+   auto sec_header = xex_security_info();
++  if (sec_header->page_descriptor_count > (header_size - security_offset - fixed_security) / sizeof(xex2_page_descriptor)) return false;
++  for (uint32_t i = 0; i < src_header->header_count; ++i) {
++    const auto& opt = src_header->headers[i];
++    uint32_t count = uint32_t(opt.key) & 255;
++    if (count <= 1) continue;
++    uint64_t offset = opt.offset;
++    if ((offset & 3) || offset > header_size || 4 > header_size - offset) return false;
++    uint64_t bytes = count == 255 ? uint32_t(*reinterpret_cast<const be<uint32_t>*>(static_cast<const uint8_t*>(xex_addr) + offset)) : uint64_t(count) * 4;
++    if (bytes < 4 || bytes > header_size - offset) return false;
++  }
+ 
+   // Try setting our base_address based on XEX_HEADER_IMAGE_BASE_ADDRESS, fall
+   // back to xex_security_info otherwise
+@@ -898,8 +975,22 @@
+   name_ = name;
+   path_ = path;
+ 
+-  uint8_t* data = memory()->TranslateVirtual(base_address_);
+-
++  auto* heap = memory()->LookupHeap(base_address_);
++  if (!heap || heap->heap_type() != memory::HeapType::kGuestXex) return false;
++  uint64_t extent = 0;
++  for (uint32_t i = 0; i < sec_header->page_descriptor_count; ++i) {
++    xex2_page_descriptor desc; desc.value = rex::byte_swap(sec_header->page_descriptors[i].value);
++    extent += uint64_t(desc.page_count) * heap->page_size();
++    if (!desc.page_count || desc.info < XEX_SECTION_CODE || desc.info > XEX_SECTION_READONLY_DATA ||
++        extent > UINT32_MAX || uint64_t(base_address_) + extent > 0x100000000ull) return false;
++  }
++
++  auto* format = opt_file_format_info();
++  if (!format || format->info_size < 8 ||
++      (format->encryption_type != XEX_ENCRYPTION_NONE && format->encryption_type != XEX_ENCRYPTION_NORMAL) ||
++      format->compression_type > XEX_COMPRESSION_NORMAL ||
++      (format->compression_type == XEX_COMPRESSION_BASIC && ((format->info_size - 8) & 7)) ||
++      (format->compression_type == XEX_COMPRESSION_NORMAL && format->info_size < 36)) return false;
+   // Load in the XEX basefile
+   // We'll try using both XEX2 keys to see if any give a valid PE
+   int result_code = ReadImage(xex_addr, xex_length, false);
+@@ -916,18 +1007,17 @@
+   // Note: caller will have to call LoadContinue once it's determined whether a
+   // patch file exists or not!
+   return true;
++  };
++  try { if (attempt()) return true; } catch (const std::exception& e) { REXLOG_ERROR("XEX load failed: {}", e.what()); }
++  if (!Unload()) std::terminate();
++  return false;
+ }
+ 
+ bool XexModule::LoadContinue() {
+-  // Second part of image load
+-  // Split from Load() so that we can patch the XEX before loading this data
+-  assert_false(finished_load_);
+-  if (finished_load_) {
+-    return true;
+-  }
+-
+-  finished_load_ = true;
+-
++  std::lock_guard lock(lifecycle_mutex_);
++  if (!loaded_ || close_requested_) return false;
++  if (finished_load_) return true;
++  auto attempt = [&]() -> bool {
+   if (ReadPEHeaders()) {
+     REXLOG_ERROR("Failed to load XEX PE headers!");
+     return false;
+@@ -976,6 +1066,7 @@
+   if (opt_import_libraries) {
+     // FIXME: Don't know if 32 is the actual limit, but haven't seen more than
+     // 2.
++    if (opt_import_libraries->size < 12 || opt_import_libraries->string_table.size > opt_import_libraries->size - 12 || opt_import_libraries->string_table.count > 32) return false;
+     const char* string_table[32];
+     std::memset(string_table, 0, sizeof(string_table));
+ 
+@@ -987,7 +1078,9 @@
+       const char* str = &opt_import_libraries->string_table.data[i];
+ 
+       string_table[o] = str;
+-      i += std::strlen(str) + 1;
++      const void* terminator = std::memchr(str, 0, opt_import_libraries->string_table.size - i);
++      if (!terminator) return false;
++      i += static_cast<const char*>(terminator) - str + 1;
+ 
+       // Padding
+       if ((i % 4) != 0) {
+@@ -998,15 +1091,14 @@
+     auto library_data = reinterpret_cast<uint8_t*>(opt_import_libraries);
+     uint32_t library_offset = opt_import_libraries->string_table.size + 12;
+     while (library_offset < opt_import_libraries->size) {
++      if ((library_offset & 3) || opt_import_libraries->size - library_offset < offsetof(xex2_import_library, import_table)) return false;
+       auto library = reinterpret_cast<xex2_import_library*>(library_data + library_offset);
+-      if (!library->size) {
+-        break;
+-      }
++      if (library->size < offsetof(xex2_import_library, import_table) || library->size > opt_import_libraries->size - library_offset ||
++          library->count > (library->size - offsetof(xex2_import_library, import_table)) / 4) return false;
+       size_t library_name_index = library->name_index & 0xFF;
+-      assert_true(library_name_index < opt_import_libraries->string_table.count);
+-      assert_not_null(string_table[library_name_index]);
++      if (library_name_index >= opt_import_libraries->string_table.count || !string_table[library_name_index]) return false;
+       auto library_name = std::string(string_table[library_name_index]);
+-      SetupLibraryImports(library_name, library);
++      if (!SetupLibraryImports(library_name, library)) return false;
+       library_offset += library->size;
+     }
+   }
+@@ -1022,10 +1114,10 @@
+     switch (desc.info) {
+       case XEX_SECTION_CODE:
+       case XEX_SECTION_READONLY_DATA:
+-        heap->Protect(address, size, memory::kMemoryProtectRead);
++        if (!ImageContains(address, size) || !heap->Protect(address, size, memory::kMemoryProtectRead)) return false;
+         break;
+       case XEX_SECTION_DATA:
+-        heap->Protect(address, size, memory::kMemoryProtectRead | memory::kMemoryProtectWrite);
++        if (!ImageContains(address, size) || !heap->Protect(address, size, memory::kMemoryProtectRead | memory::kMemoryProtectWrite)) return false;
+         break;
+     }
+ 
+@@ -1036,23 +1128,24 @@
+   PopulateBinaryData();
+ 
+   return true;
++  };
++  try { if (attempt()) { finished_load_ = true; return true; } }
++  catch (const std::exception& e) { REXLOG_ERROR("XEX continuation failed: {}", e.what()); }
++  if (!Unload()) std::terminate();
++  return false;
+ }
+ 
+ bool XexModule::Unload() {
+-  if (!loaded_) {
+-    return true;
+-  }
+-  loaded_ = false;
+-
+-  // If this isn't a patch, just deallocate the memory occupied by the exe
+-  if (!is_patch()) {
+-    assert_not_zero(base_address_);
+-
+-    memory()->LookupHeap(base_address_)->Release(base_address_);
+-  }
+-
+-  xex_header_mem_.resize(0);
+-
++  std::lock_guard lock(lifecycle_mutex_);
++  close_requested_ = true;
++  if (image_leases_ || !ReleaseImages()) return false;
++  loaded_ = finished_load_ = false;
++  xex_header_mem_.clear(); xexp_data_mem_.clear();
++  security_info_ = {}; import_libs_.clear(); pe_sections_.clear();
++  binary_sections_.clear(); binary_symbols_.clear(); opt_alternate_title_ids_.clear();
++  base_address_ = low_address_ = high_address_ = 0;
++  exception_dir_rva_ = exception_dir_size_ = pe_time_date_stamp_ = 0;
++  xex_format_ = kFormatUnknown; close_requested_ = false;
+   return true;
+ }
+ 
+@@ -1083,6 +1176,7 @@
+     if (!record_addr)
+       continue;
+ 
++    if ((record_addr & 3) || !ImageContains(record_addr, 4)) return false;
+     auto record_slot = memory()->TranslateVirtual<rex::be<uint32_t>*>(record_addr);
+     uint32_t record_value = *record_slot;
+ 
+@@ -1092,6 +1186,7 @@
+     auto& import_info = import_map[ordinal];
+     import_info.ordinal = ordinal;
+ 
++    if (record_type > 1) return false;
+     if (record_type == 0) {
+       // Variable import - value_address is where the variable value is stored
+       import_info.value_address = record_addr;
+@@ -1106,14 +1201,12 @@
+             REXLOG_DEBUG("Patched variable import {}:{:#x} ({}) -> {:#x}", base_name, ordinal,
+                          kernel_export->name, kernel_export->variable_ptr);
+           } else {
+-            // write garbage value if we don't have it implemented
+-            *record_slot = 0xD000BEEF | (kernel_export->ordinal & 0xFFF) << 16;
+-            REXLOG_WARN("Variable import {}:{:#x} ({}) not implemented", base_name, ordinal,
+-                        kernel_export->name);
++            return false; // Unsupported variable imports must never report success.
+           }
+-        }
+-      }
++        } else if (!kernel_export) return false;
++      } else return false;
+     } else if (record_type == 1) {
++      if (!export_resolver || !export_resolver->GetExportByOrdinal(base_name, ordinal)) return false;
+       // Thunk import - thunk_address is the function pointer location
+       // This is the address we need for function table registration
+       import_info.thunk_address = record_addr;
+@@ -1140,7 +1233,8 @@
+ }
+ 
+ bool XexModule::ContainsAddress(uint32_t address) {
+-  return address >= low_address_ && address < high_address_;
++  std::lock_guard lock(lifecycle_mutex_);
++  return loaded_ && finished_load_ && address >= low_address_ && address < high_address_;
+ }
+ 
+ // Binary introspection implementation
+--- a/src/system/xmemory.cpp
++++ b/src/system/xmemory.cpp
+@@ -1711,6 +1711,32 @@
+   return true;
+ }
+ 
++bool BaseHeap::AllocFixedOwned(uint32_t address, uint32_t size, const void* owner) {
++  uint32_t rounded = 0;
++  if (heap_type_ != HeapType::kGuestXex || !owner || address < heap_base_ || (address % page_size_) ||
++      !CheckedAllocationRoundUp(size, page_size_, rounded) ||
++      uint64_t(address) + rounded > uint64_t(heap_base_) + heap_size_) return false;
++  auto global_lock = rex::thread::global_critical_region::AcquireDirect();
++  std::lock_guard<std::recursive_mutex> lock(heap_mutex_);
++  const uint32_t first = (address - heap_base_) >> page_size_shift_;
++  const uint32_t count = rounded >> page_size_shift_;
++  for (uint32_t i = 0; i < count; ++i) if (page_table_[first+i].state) return false;
++  // Both locks stay held through reserve, tagging, commit and rollback. Even a
++  // failed host permission reconciliation may have changed the page table, so
++  // unwind only the range proved empty above; never touch a foreign reservation.
++  try {
++    if (AllocFixed(address, rounded, page_size_, kMemoryAllocationReserve, 3)) {
++      SetAllocationOwner(address, owner);
++      if (AllocFixed(address, rounded, page_size_, kMemoryAllocationCommit, 3)) return true;
++    }
++  } catch (...) {
++    if (page_table_[first].state && !Release(address)) std::terminate();
++    throw;
++  }
++  if (page_table_[first].state && !Release(address)) std::terminate();
++  return false;
++}
++
+ void BaseHeap::SetAllocationOwner(uint32_t address, const void* owner) {
+   std::lock_guard<std::recursive_mutex> lock(heap_mutex_);
+   if (owner) allocation_owners_[address] = owner;

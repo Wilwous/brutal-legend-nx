@@ -25,6 +25,7 @@ def main():
     ap.add_argument('--cmake',required=True,type=Path)
     ap.add_argument('--ninja',required=True,type=Path)
     ap.add_argument('--source-cache',type=Path,help='Optional explicit pinned git checkout for local clone and submodule object reuse')
+    ap.add_argument('--interposable-runtime',action='store_true',help='macOS fixture SDK only: link replaceable symbols for child-local allocator failure injection')
     ap.add_argument('--jobs',type=int,choices=[1,2],default=2)
     ap.add_argument('--profiles',nargs='+',choices=['Debug','Release','Sanitized'],default=['Debug','Release','Sanitized'])
     ap.add_argument('--clean',action='store_true',help='Remove only owned build/staging output, retaining pinned source/cache')
@@ -96,6 +97,8 @@ def main():
           '-DCMAKE_CONFIGURATION_TYPES=Debug;Release;Sanitized','-DREXGLUE_ENABLE_TRACY=OFF','-DREXGLUE_ENABLE_PERF_COUNTERS=OFF',
           '-DCMAKE_INSTALL_PREFIX='+str(work/'unused-install'),'-DCPM_SOURCE_CACHE='+str(work/'cpm-cache'),
           '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON']
+    if a.interposable_runtime:args+=['-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-interposable']
+    else:args+=['-DCMAKE_SHARED_LINKER_FLAGS=']
     for lang in ['C','CXX','OBJC','OBJCXX']:args+=['-DCMAKE_'+lang+'_FLAGS_SANITIZED='+san]
     for kind in ['EXE','SHARED','MODULE']:args+=['-DCMAKE_'+kind+'_LINKER_FLAGS_SANITIZED=-fsanitize=address,undefined']
     records.append(command(args,work,'configure',180,env))
@@ -115,7 +118,7 @@ def main():
         print(json.dumps({'profile':profile,'seconds':rec['seconds'],'peak_rss_bytes':rec['peak_rss_bytes']}),flush=True)
     result={'revision':LOCK['sdk_revision'],'versions':versions,'submodules':LOCK['submodules'],'cpm':cpm_sources,
             'patches':LOCK['patches'],'records':records,'profiles':profiles,'clean':a.clean,
-            'targets':['rexruntime','rexcodegen','rexglue'],'gpu_plugin_built':False,
+            'targets':['rexruntime','rexcodegen','rexglue'],'gpu_plugin_built':False,'interposable_test_linkage':a.interposable_runtime,
             'uninstrumented':['system frameworks','handwritten assembly; sanitizer passes cannot instrument assembly']}
     (work/('clean-build-results.json' if a.clean else 'build-results.json')).write_text(json.dumps(result,indent=2)+'\n')
 

@@ -1,4 +1,6 @@
-# Proposed architecture — Phase 11
+# Proposed architecture — Phase 12
+
+**Current Phase 12 gate (2026-10-22): VERIFIED PASS for bounded original synthetic macOS validation; private game-code execution NO-GO.** The seventeen-patch isolated SDK now uses owner-scoped transactional XEX mappings, load/continuation rollback, final UserModule header/processor cleanup and explicit retained image leases. All three original failure assertions pass unchanged across Debug/Release/ASan+UBSan; 323 core checks pass with no unexpected signals, timeouts or sanitizer findings. Required imports, actual XEX TLS, full ABI and private generated-memory mediation remain unresolved. [Phase 12 ownership graph, reproduction, evidence and next milestone](research/image-ownership-runtime-contracts.md).
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 

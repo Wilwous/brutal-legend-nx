@@ -45,3 +45,7 @@ Use `--lock tools/sdk/instrumentation-lock.json` for the fourteen-patch series i
 ## Phase 11 lock
 
 Use `--lock tools/sdk/synthetic-lock.json` in a fresh private workspace. The sixteen-patch series adds checked ordinary virtual 64-KiB stack copies and a Mac owned thread-exit boundary with balanced creation-failure ownership. Foreign asynchronous termination explicitly fails before state mutation. Physical/XEX heaps and fetch remain refused. Run one builder, wait for all profiles, then use each matching `sdk/out/mac-arm64/$PROFILE/rexglue` (`rexglued` for Debug) with its staged runtime. [Synthetic module recipe](../../tests/synthetic/README.md). No earlier SDK workspace or global installation is changed.
+
+## Phase 12 image ownership SDK
+
+Use `image-runtime-lock.json` for the existing sixteen patches plus patch 0017. Historical locks remain unchanged. `--interposable-runtime` enables macOS ld `-interposable` only in the private fixture build, for verified child-local allocator failure injection. Default is off; no global install, environment change or page-protection bypass is performed. The build result records this option. Match every staged profile to its CLI and runtime hash. [Reproduction and scope](../../tests/image-runtime/README.md).
