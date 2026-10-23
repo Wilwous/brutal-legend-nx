@@ -26,6 +26,8 @@ jobs:
         run: python3 tests/synthetic/test_fixture.py
       - name: Check original generated caller encoding
         run: python3 tests/generated-dispatch/test_fixture.py
+      - name: Check original XEX layout and relocation encoding
+        run: python3 tests/xex-binding/test_fixture.py
       - name: Check original import matrix, fixture catalog and scoped policy
         run: python3 tests/tls-import/audit.py --matrix-only
       - name: Check monotonic watchdog and process group cleanup

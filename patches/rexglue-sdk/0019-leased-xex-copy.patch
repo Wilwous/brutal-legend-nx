@@ -1,0 +1,131 @@
+diff --git a/include/rex/system/user_module.h b/include/rex/system/user_module.h
+--- a/include/rex/system/user_module.h
++++ b/include/rex/system/user_module.h
+@@ -45,6 +45,10 @@
+     ImageLease(ImageLease&&) = default;
+     ImageLease& operator=(ImageLease&&) = delete;
+     ~ImageLease();
++    uint32_t image_base() const;
++    uint32_t image_size() const;
++    memory::CheckedMemoryResult CopyMemory(uint32_t address, void* host_buffer,
++        uint64_t length, memory::CheckedMemoryAccess access) const;
+   };
+   std::optional<ImageLease> AcquireImageLease();
+   UserModule(KernelState* kernel_state);
+diff --git a/include/rex/system/xex_module.h b/include/rex/system/xex_module.h
+--- a/include/rex/system/xex_module.h
++++ b/include/rex/system/xex_module.h
+@@ -167,6 +167,9 @@
+   // Bounded host policy for the currently supported static TLS layout.
+   // Output is a copy, never a borrowed header pointer. No header => all zero.
+   bool ReadTlsInfo(xex2_opt_tls_info* out) const;
++  // Caller must hold UserModule::ImageLease. Never exposes guest backing.
++  memory::CheckedMemoryResult CopyImageMemory(uint32_t address, void* host_buffer,
++      uint64_t length, memory::CheckedMemoryAccess access);
+   bool Unload();
+ 
+   bool ContainsAddress(uint32_t address) override;
+diff --git a/include/rex/system/xmemory.h b/include/rex/system/xmemory.h
+--- a/include/rex/system/xmemory.h
++++ b/include/rex/system/xmemory.h
+@@ -234,6 +234,9 @@
+   // must uniquely identify this reservation lifetime. No guest host pointer escapes.
+   CheckedMemoryResult CopyOwnedMemory(uint32_t allocation_base, const void* owner,
+       uint32_t address, void* host_buffer, uint64_t length, CheckedMemoryAccess access);
++  // Separate trusted image API; ordinary virtual copies still reject XEX.
++  CheckedMemoryResult CopyOwnedImageMemory(uint32_t allocation_base, const void* owner,
++      uint32_t address, void* host_buffer, uint64_t length, CheckedMemoryAccess access);
+ 
+   // Queries information about the given region of pages.
+   bool QueryRegionInfo(uint32_t base_address, HeapAllocationInfo* out_info);
+@@ -300,6 +303,8 @@
+   rex::thread::global_critical_region global_critical_region_;
+   std::recursive_mutex heap_mutex_;
+   std::vector<PageEntry> page_table_;
++  CheckedMemoryResult CopyOwnedMemoryImpl(uint32_t allocation_base, const void* owner,
++      uint32_t address, void* host_buffer, uint64_t length, CheckedMemoryAccess access, bool image);
+   std::unordered_map<uint32_t, const void*> allocation_owners_;
+ };
+ 
+diff --git a/src/system/user_module.cpp b/src/system/user_module.cpp
+--- a/src/system/user_module.cpp
++++ b/src/system/user_module.cpp
+@@ -36,6 +36,18 @@
+   }
+   delete processor_module_;
+   processor_module_ = nullptr;
++}
++
++uint32_t UserModule::ImageLease::image_base() const {
++  return owner_ ? owner_->xex_module()->base_address() : 0;
++}
++uint32_t UserModule::ImageLease::image_size() const {
++  return owner_ ? owner_->xex_module()->image_size() : 0;
++}
++memory::CheckedMemoryResult UserModule::ImageLease::CopyMemory(uint32_t address, void* host_buffer,
++    uint64_t length, memory::CheckedMemoryAccess access) const {
++  if (!owner_) return memory::CheckedMemoryResult::ownership;
++  return owner_->xex_module()->CopyImageMemory(address,host_buffer,length,access);
+ }
+ 
+ UserModule::ImageLease::~ImageLease() {
+diff --git a/src/system/xex_module.cpp b/src/system/xex_module.cpp
+--- a/src/system/xex_module.cpp
++++ b/src/system/xex_module.cpp
+@@ -1013,6 +1013,29 @@
+   return false;
+ }
+ 
++memory::CheckedMemoryResult XexModule::CopyImageMemory(uint32_t address, void* host_buffer,
++    uint64_t length, memory::CheckedMemoryAccess access) {
++  std::lock_guard lock(lifecycle_mutex_);
++  if (!loaded_ || !finished_load_ || !image_leases_ || !length || length>65536 ||
++      length>0x100000000ull-address) return memory::CheckedMemoryResult::invalid_range;
++  // Require one declared PE section, including its byte bounds and flags.
++  unsigned section_matches=0;
++  for (const auto& section:pe_sections_) {
++    const uint64_t low=uint64_t(section.address);
++    if (address>=low && uint64_t(address)+length<=low+section.size) {
++      const uint32_t flags=section.flags;
++      if (!(flags&0x40000000u) || (access==memory::CheckedMemoryAccess::write && !(flags&0x80000000u)))
++        return memory::CheckedMemoryResult::protection;
++      ++section_matches;
++    }
++  }
++  if (section_matches!=1) return memory::CheckedMemoryResult::invalid_range;
++  for (auto image:owned_images_) if (address>=image.address &&
++      uint64_t(address)+length<=uint64_t(image.address)+image.size)
++    return memory()->LookupHeap(image.address)->CopyOwnedImageMemory(image.address,this,address,host_buffer,length,access);
++  return memory::CheckedMemoryResult::ownership;
++}
++
+ bool XexModule::ReadTlsInfo(xex2_opt_tls_info* out) const {
+   std::lock_guard lock(lifecycle_mutex_);
+   if (!out) return false;
+diff --git a/src/system/xmemory.cpp b/src/system/xmemory.cpp
+--- a/src/system/xmemory.cpp
++++ b/src/system/xmemory.cpp
+@@ -1754,6 +1754,14 @@
+ 
+ CheckedMemoryResult BaseHeap::CopyOwnedMemory(uint32_t allocation_base, const void* owner,
+     uint32_t address, void* host_buffer, uint64_t length, CheckedMemoryAccess access) {
++  return CopyOwnedMemoryImpl(allocation_base,owner,address,host_buffer,length,access,false);
++}
++CheckedMemoryResult BaseHeap::CopyOwnedImageMemory(uint32_t allocation_base, const void* owner,
++    uint32_t address, void* host_buffer, uint64_t length, CheckedMemoryAccess access) {
++  return CopyOwnedMemoryImpl(allocation_base,owner,address,host_buffer,length,access,true);
++}
++CheckedMemoryResult BaseHeap::CopyOwnedMemoryImpl(uint32_t allocation_base, const void* owner,
++    uint32_t address, void* host_buffer, uint64_t length, CheckedMemoryAccess access, bool image) {
+   // Trusted host buffers only, disjoint from guest mappings. Runtime teardown,
+   // Reset/Restore and MMIO registration must be quiescent for this API.
+   // 64 KiB bounds both the copy and exact (possibly masked) MMIO scan.
+@@ -1773,7 +1781,7 @@
+   // Ordinary virtual 64-KiB allocations include real XThread stacks. The same
+   // locked owner/extent/commit/protection checks apply at their native page size.
+   // Physical aliases and XEX remain unsupported; execute is still not inferred.
+-  if (heap_type_ != HeapType::kGuestVirtual ||
++  if ((image ? heap_type_ != HeapType::kGuestXex : heap_type_ != HeapType::kGuestVirtual) ||
+       (page_size_ != 4096 && page_size_ != 65536))
+     return CheckedMemoryResult::unsupported_heap;
+   if (address < heap_base_ || end > uint64_t(heap_base_) + heap_size_)

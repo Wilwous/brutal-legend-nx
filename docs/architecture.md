@@ -1,6 +1,6 @@
-# Proposed architecture — Phase 15
+# Proposed architecture — Phase 16
 
-**Current Phase 15 gate (2026-10-23): VERIFIED for the exact original generated PPC execution scope; automatic XEX/codegen binding remains PARTIAL.** Actual ReXGlue output executes checked memory → direct/indirect admission → three pointer adapters → real SDK → generated result branch and cleanup. All 30 reachable generated memory sites are checked; 440 core checks pass across Debug/Release/Sanitized with zero final unexpected signals, timeouts or sanitizer findings. Six scalar and three pointer signatures remain scoped; 24 imports remain denied. Broader synthetic integration is CONDITIONAL GO; private game execution is NO-GO. Full ABI, guest exceptions and private generated-memory mediation remain unresolved. [Phase 15 evidence, reproduction and limits](research/generated-ppc-end-to-end-dispatch.md).
+**Current Phase 16 gate (2026-10-23): VERIFIED for the exact original fixed-base synthetic XEX/codegen binding.** A single workflow constructs two XEX images, runs production ReXGlue codegen without function hints, compiles unchanged emitted C++, binds actual image/TLS/import metadata and executes through the real patched SDK. All 35 reachable memory sites per image are checked. All 476 core checks pass across Debug/Release/Sanitized with zero final unexpected signals, timeouts or sanitizer findings. General relocation, full ABI and title integration remain PARTIAL; 24 imports remain denied. Further synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 16 scope, failures, measurements and reproduction](research/synthetic-xex-binding.md).
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -17,7 +17,13 @@ flowchart TD
   H --> I[Sanitized public findings]
 ```
 
-## Generated PPC import caller
+## Fixed-base synthetic XEX binding
+
+Production codegen now consumes original XEX images whose PDATA supplies function discovery. XexBinding compares actual loaded image/entry/sections/code/TLS/import metadata with the emitted PPCImageInfo and mappings before admission. Compiler-only namespacing permits two fixed-base products in one fixture executable without changing guest addresses. Patch 0019 adds a separate leased, owner/section/page-checked image-copy path; the original virtual-copy path still rejects XEX and fetch remains unsupported. Generated RO/RW image references use this new path, while pointer imports retain their original opaque-buffer capability contracts.
+
+The single workflow reconstructs all SDK patches and historical controls, then tests three profiles and the prior suites. Native harness startup, fixed-base construction and cooperative/fail-stop lifetime policy remain explicit boundaries. General DLL relocation, image-backed SDK pointer adapters, arbitrary native isolation and Horizon behavior remain unverified. [Contracts and measured coverage](research/synthetic-xex-binding.md).
+
+## Phase 15 generated PPC import caller (historical)
 
 The original Phase 15 raw-test program is decoded/emitted by the pinned CLI and compiled unchanged. Its generated entry and scalar callee mediate all 30 reachable guest-memory sites, prepare pointer and stack arguments, execute scalar/full-vector/TLS operations and branch on actual SDK results. A narrow thread-local GeneratedImports seam routes explicit original gate identities through the existing admission and copy adapters; unregistered targets have no fallback. Actual XEX loading supplies image/import/TLS metadata. Host-authored rebasing/registration and caller setup remain an explicit PARTIAL boundary rather than automatic XEX codegen integration.
 

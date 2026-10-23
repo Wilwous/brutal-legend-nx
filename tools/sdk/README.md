@@ -53,3 +53,7 @@ Use `image-runtime-lock.json` for the existing sixteen patches plus patch 0017. 
 ## Phase 13 XEX TLS/import SDK
 
 Use `--lock tools/sdk/tls-import-lock.json` in a new private workspace for the eighteen-patch series. Patch 0018 validates actual XEX TLS sizes/template spans, binds XThread lifetime to an image lease, rolls back selected creation failures and rejects out-of-range process TLS free. It is not a full Xbox ABI or DLL TLS implementation. The original import adapter is a separate opt-in client. Use matching profiles and private `--interposable-runtime` only for child allocator tests. [Recipe](../../tests/tls-import/README.md) · [Evidence and limitations](../../docs/research/xex-tls-import-admission.md).
+
+## Phase 16 leased image copy SDK
+
+Use `--lock tools/sdk/xex-binding-lock.json` in a new private workspace for the existing eighteen patches plus 0019. The separate image-copy path validates a retained image lease, exact owned reservation, declared PE section bounds/flags and locked page permissions before copying. Ordinary virtual-copy behavior still refuses XEX, physical aliases and instruction fetch. This is no global permission bypass or full native sandbox. [Single-command production-codegen workflow](../../tests/xex-binding/README.md).

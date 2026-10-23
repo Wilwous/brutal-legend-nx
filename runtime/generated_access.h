@@ -3,6 +3,7 @@
 #pragma once
 // Opt-in from the pinned generated PCH, never a permissive fallback.
 #include "sdk_checked_memory.h"
+#include <rex/system/user_module.h>
 #include <algorithm>
 #include <concepts>
 #include <string_view>
@@ -28,6 +29,8 @@ class Scope {
   std::vector<Binding> bindings_;
   std::vector<Call> calls_;
   std::vector<Loan> loans_;
+  struct Image { const rex::system::UserModule::ImageLease* lease;uint32_t base,size; };
+  std::vector<Image> images_;
   Scope* previous_;
   inline static thread_local Scope* current_=nullptr;
  public:
@@ -66,6 +69,14 @@ class Scope {
       throw Fault(Kind::memory);
     loans_.push_back({allocation_base,address,size,owner});
   }
+  // Borrow an immovable live lease for the entire Scope. The SDK checks image
+  // ownership, PE section bounds/flags and locked page permissions per copy.
+  void lend_image(const rex::system::UserModule::ImageLease& lease){
+    const auto base=lease.image_base(),size=lease.image_size();
+    if(!base||!size||uint64_t(base)+size>0x100000000ull||images_.size()>=4)throw Fault(Kind::memory);
+    for(auto i:images_)if(base<uint64_t(i.base)+i.size&&i.base<uint64_t(base)+size)throw Fault(Kind::memory);
+    images_.push_back({&lease,base,size});
+  }
   static Scope& current(){if(!current_)throw Fault(Kind::unbound);return *current_;}
   void copy(uint32_t address,std::span<std::byte> bytes,bool write){
     if(write)++statistics.writes;else ++statistics.reads;
@@ -73,6 +84,11 @@ class Scope {
     for(uint64_t a=address;a<uint64_t(address)+bytes.size();++a)
       if((a>=0x7f000000ull&&a<0x80000000ull)||sdk_.LookupVirtualMappedRange(uint32_t(a)))
         throw Fault(Kind::mmio,Result::mmio);
+    for(auto image:images_)if(address>=image.base&&uint64_t(address)+bytes.size()<=uint64_t(image.base)+image.size){
+      auto result=image.lease->CopyMemory(address,bytes.data(),bytes.size(),write?Memory::Access::write:Memory::Access::read);
+      if(result!=Result::ok)throw Fault(Kind::memory,result);
+      ++statistics.completed;return;
+    }
     for(const auto& b:bindings_){
       auto start=b.handle.guest_address();
       if(address>=start&&uint64_t(address)+bytes.size()<=uint64_t(start)+b.size){

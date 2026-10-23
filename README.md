@@ -1,6 +1,6 @@
 # Brütal Legend NX
 
-**Wilwous · v0.0.15-generated-ppc-dispatch · Xbox 360 → Nintendo Switch / Atmosphère**
+**Wilwous · v0.0.16-synthetic-xex-binding · Xbox 360 → Nintendo Switch / Atmosphère**
 
 Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Legend using static PowerPC recompilation and a homebrew runtime.
 
@@ -8,9 +8,9 @@ Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Le
 
 ## Current status
 
-Phase 15 generated PPC caller and end-to-end dispatch: **2026-10-23**, following `v0.0.14-pointer-import-dispatch` (`963a613`).
+Phase 16 synthetic XEX binding and reproducible codegen: **2026-10-23**, following `v0.0.15-generated-ppc-dispatch` and its README follow-up.
 
-**VERIFIED scoped synthetic execution:** actual ReXGlue output executes all 30 reachable checked-memory sites and three real SDK pointer imports; 440 core checks pass across Debug/Release/Sanitized. Automatic XEX/codegen binding remains PARTIAL. Broader original synthetic integration is CONDITIONAL GO; private game execution remains NO-GO. [Phase 15 evidence and reproduction](docs/research/generated-ppc-end-to-end-dispatch.md).
+**VERIFIED fixed synthetic scope:** a single workflow constructs two original XEX images, runs actual production ReXGlue codegen, compiles unchanged output and binds image/TLS/three SDK imports automatically. All 35 reachable memory sites per image are checked; 476 core checks pass across Debug/Release/Sanitized. General relocation and title integration remain PARTIAL. [Phase 16 evidence and reproduction](docs/research/synthetic-xex-binding.md).
 
 - **VERIFIED:** the supplied directory contains a LIVE Games on Demand/SVOD package with 33 data fragments, three DLC packages and one title-update package. It contains no standalone ISO.
 - **VERIFIED:** full GOD hash-tree verification and private extraction succeeded. The base has 284 files totaling 5,544,498,100 bytes. All 38 source game files retained their SHA-256, size and modification time.
@@ -25,14 +25,14 @@ Phase 15 generated PPC caller and end-to-end dispatch: **2026-10-23**, following
 - **VERIFIED limited contracts:** 13 real SDK exports called with PPCContext; selected register, memory, actual XThread/PCR/r13 and TLS tests pass. Phase 7 integrates these checks into a clean rebuilt SDK; complete Xbox ABI remains PARTIAL.
 - **VERIFIED:** all 261 baseline runtime functions audited by source: 7 IMPLEMENTED, 184 PARTIAL, 61 STUB, 9 UNKNOWN. Baseline STFS false-success and selected exception stubs now have explicit failure paths; STFS functionality and guest exception semantics remain unresolved.
 - **VERIFIED:** Phase 8 built the coherent isolated SDK with eleven ordered patches. Bounded XDBF decoding, checked allocation arithmetic and owner-checked XamFree pass 191 core checks plus six watchdog checks; the saved allocation SIGBUS is retained as a corrected failure history.
-- **PARTIAL / BLOCKED:** selected XamAlloc and exception paths now fail explicitly at the host boundary. Xbox error values, typed vectors, complete guest exceptions and unchecked raw access to guest-page slack remain unresolved. No guest entry ran.
+- **PARTIAL / BLOCKED:** selected XamAlloc and exception paths now fail explicitly at the host boundary. Xbox error values, typed vectors, complete guest exceptions and unchecked raw access to guest-page slack remain unresolved. No game entry ran.
 - **VERIFIED limited scope:** Phase 9 verified original owner-checked copies on its 4-KiB virtual heap, with cross-page, endian, MMIO/host-page padding and selected concurrent fixtures. NtClose now rejects already closed handles using the existing status.
 - **PARTIAL / BLOCKED:** none of the 791,353 lexical generated load/store sites is mediated. The direct entry closure has 33 imports and 21 unresolved indirect sites; fetch permissions, unsafe pointer imports, exceptions and typed-vector ABI prevent entry readiness.
 - **VERIFIED selected instrumentation:** original PPC words use the fourteen-patch SDK decoder/builders/templates and an opt-in checked scalar/finite-FP/full-vector memory backend. Atomic/partial-vector operations and unsupported calls fail explicitly; the default mode is retained. No private generated output is changed or executed.
 - **VERIFIED synthetic pipeline:** the actual pinned CLI generates an original nine-function PPC module; unchanged output executes through the checked memory layer and real patched SDK, including native XThread stack/PCR/TLS. A separate original fixture loader tests section/relocation/entry policy; normal title startup remains unverified.
 - **UNKNOWN:** runtime correctness, shaders, decoded audio-bank format, game memory budget and stock-clock performance.
 
-**Verdict: Phase 15 verified in the exact original generated synthetic scope; overall port feasibility PARTIAL; private game-code execution NO-GO.** Actual generated PPC traverses checked memory, explicit import admission, three pointer adapters, real SDK implementations and cleanup. All 30 reachable generated memory sites are checked and 440 core checks pass across Debug/Release/Sanitized. Automatic XEX/codegen binding, full ABI, guest exceptions and private generated-memory mediation remain unresolved. Six scalar and three pointer-scoped signatures are admitted; 24 remain denied. [Phase 15 evidence and limits](docs/research/generated-ppc-end-to-end-dispatch.md). [Historical Phase 14 pointer contracts](docs/research/pointer-import-synthetic-dispatch.md). [Feasibility and blockers](docs/feasibility.md).
+**Verdict: Phase 16 verified in the exact original fixed-base synthetic scope; overall port feasibility PARTIAL; private game-code execution NO-GO.** Two generated image products execute with checked image data, actual XEX-header TLS, automatic import binding, real SDK results and tested cleanup. Six scalar and three pointer-scoped signatures remain admitted by policy; 24 imports remain denied. Full ABI, guest exceptions, private generated-memory mediation and Switch runtime integration remain unresolved. [Phase 16 evidence and limits](docs/research/synthetic-xex-binding.md). [Feasibility and blockers](docs/feasibility.md).
 
 ## Technical approach
 
@@ -51,10 +51,10 @@ The first architecture candidate is ReXGlue plus reviewed Horizon adaptations an
 | Minimal compiler check | Two generated partitions compiled on Mac; complete link and execution untested |
 | VMX / runtime source audit | Baseline imports classified; source alias/TLS/STFS corrections tested |
 | Standalone memory/TLS foundation | Implemented/tested; selected real PPC export/PCR/TLS calls pass; coherent SDK integrated; full ABI and title launch remain unproven |
-| Runtime execution, shaders, audio and hardware | Not validated |
+| Game runtime execution, shaders, audio and hardware | Not validated |
 | Game build or distribution | Not started |
 
-Next: Phase 16 original-image relocation/import binding and checked image-data capabilities, with bounded ownership/failure tests and scoped mediation-overhead measurements. Broader synthetic integration is CONDITIONAL GO; private game execution remains NO-GO. Continue independent Xbox numeric research. [Roadmap](docs/roadmap.md).
+Next: Phase 17 original image-backed pointer contracts, cooperative-stop/failure lifetimes and safe copy batching. Further synthetic integration is CONDITIONAL GO; private game execution remains NO-GO. [Roadmap](docs/roadmap.md).
 
 ## Game files and compatibility
 
@@ -70,7 +70,7 @@ No game build command or installation package exists. The repository contains re
 python3 tools/check_public_tree.py
 ```
 
-[Isolated SDK build](tools/sdk/README.md) and [image/runtime fixture commands](tests/image-runtime/README.md) reproduce the current milestone with the explicit Phase 12 image-runtime lock; all dependencies, outputs and diagnostics remain private. [Phase 6 commands](tests/ppc/README.md) retain historical hybrid tests.
+[Single-command Phase 16 workflow](tests/xex-binding/README.md) reproduces the current milestone with the nineteen-patch XEX-binding lock, actual codegen and three-profile regressions. [Isolated SDK build](tools/sdk/README.md) keeps dependencies, outputs and diagnostics private. [Phase 6 commands](tests/ppc/README.md) retain historical hybrid tests.
 
 CI checks public contents/links, watchdog process-group cleanup, and builds/runs the original dependency-free memory/TLS components at O0/O2 and with sanitizers. It never fetches game data or the SDK, invokes codegen, builds the game or publishes releases. Overclocking is not a baseline requirement; no FPS or resolution is predicted.
 
