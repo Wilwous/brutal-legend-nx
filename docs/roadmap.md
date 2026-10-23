@@ -1,6 +1,6 @@
-# Research roadmap — Phase 13
+# Research roadmap — Phase 14
 
-**Current Phase 13 gate (2026-10-22): VERIFIED in the bounded original synthetic macOS scope; private game-code execution NO-GO.** The eighteen-patch SDK validates actual XEX TLS metadata and pins module backing through final XThread PCR/TLS cleanup. An opt-in import adapter admits six value-only SDK signatures and denies the other 27 reviewed imports. All 362 core checks pass across Debug/Release/Sanitized with zero unexpected signals, timeouts or sanitizer findings. The 33-entry matrix retains 27 PARTIAL / six BLOCKED conformance classifications. Default title-process TLS and independently bound modules are tested separately; full guest dispatch, pointer contracts, ABI and private generated-memory mediation remain unresolved. [Phase 13 evidence, regressions and reproduction](research/xex-tls-import-admission.md).
+**Current Phase 14 gate (2026-10-23): VERIFIED for the listed host-driven synthetic import path; private game-code execution NO-GO.** Three capability-bound copy adapters now cover IN words, OUT memory information and INOUT critical-section initialization through actual XEX metadata, header TLS, admission and SDK implementations. Six scalar and three pointer-scoped signatures are admitted; 24 matrix entries remain denied. All 401 core checks pass across Debug/Release/Sanitized with zero unexpected signals, timeouts or sanitizer findings. Full conformance labels remain 27 PARTIAL / six BLOCKED. Emitted guest callers, full ABI, exceptions and private generated-memory mediation remain unresolved. [Phase 14 contracts, evidence, regressions and reproduction](research/pointer-import-synthetic-dispatch.md).
 
 ## Completed
 
@@ -46,9 +46,13 @@ Preserved the fifteen-file initial work and unchanged original failure assertion
 
 Actual XEX-header templates initialize real independent-module and default title-process XThreads. Bounded metadata validation, retained image lifetime, rollback and process-slot bounds are covered by original fixtures. Six value-only import signatures have explicit identity/membership/context admission; the 27 remaining imports are refused. GPR64/FPR/stack/callback/raw-vector regression evidence remains a selected ABI subset. The matrix retains 27 PARTIAL / six BLOCKED implementation contracts. No proprietary execution occurs. [Full scope, measurements and gate](research/xex-tls-import-admission.md).
 
-## Next exact task: R2n / Phase 14 — checked pointer-import contracts and complete synthetic dispatch
+## R2n / Phase 14 — checked pointer imports and host-driven synthetic dispatch
 
-Build original pointer-import adapters with retained buffer ownership, bounded output initialization, error propagation and concurrent-release tests. Require every import and memory access in one complete original synthetic dispatch path to use the checked boundary. Keep process-wide DLL TLS-index integration, typed vectors, title TOC/stop, guest exceptions, atomic/partial-vector/MMIO/fetch limitations explicit. Private game-code execution remains NO-GO pending a separate exact-scope review.
+Three capability-bound IN/OUT/INOUT adapters execute the listed real XEX/TLS/import/SDK path with bounded snapshots, private scratch, output validation and retained ownership. Active module unload and allocation-release attempts, cross-page failures, callback reentrancy/errors and repeated/concurrent XThreads are covered. SDK patches/locks remain unchanged. The shared matrix now admits six scalar and three pointer-scoped signatures while denying 24; full Xbox conformance remains partial. No proprietary code or guest XEX entry executes. [Results, reproduction and limits](research/pointer-import-synthetic-dispatch.md).
+
+## Next exact task: R2o / Phase 15 — emitted caller integration and access accounting
+
+Route an independently authored, actually emitted PPC caller through the checked pointer admission boundary and mediated module data accesses. Account for every call/access and reject unknown dynamic targets. Extend reachable import contracts only with independent failure/lifetime evidence. Preserve typed-vector, atomic/partial-vector/MMIO/fetch, guest exception, title TOC/stop and DLL TLS-index limitations. Private game-code execution remains NO-GO pending a separate exact-scope review.
 
 The following entry-readiness acceptance gate remains open:
 

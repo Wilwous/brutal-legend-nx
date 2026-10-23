@@ -12,7 +12,7 @@ def audit(source=None):
  rows=json.loads((ROOT/'tests/image-runtime/import-contracts.json').read_text())
  if len(rows)!=33 or len({r['name'] for r in rows})!=33:raise RuntimeError('matrix size/duplicate')
  catalog=(ROOT/'tests/tls-import/catalog.h').read_text();policy=(ROOT/'runtime/import_admission.h').read_text()
- records=[];admitted=0
+ records=[];admitted=0;pointer=0
  for row in rows:
   identity=row['export_identity'];table=source/identity['table'] if source else None;text=table.read_text() if table else ''
   module='xam' if identity['library']=='xam.xex' else 'xboxkrnl'
@@ -28,10 +28,13 @@ def audit(source=None):
   if row['admission']['policy']=='ADMIT_SCOPED':
    admitted+=1
    if token not in policy:raise RuntimeError('missing scoped policy '+row['name'])
+  elif row['admission']['policy']=='ADMIT_POINTER_SCOPED':
+   pointer+=1
+   if token not in policy or not row.get('pointer_contract'):raise RuntimeError('missing pointer policy '+row['name'])
   elif '"'+row['name']+'",' in policy:raise RuntimeError('denied import in policy')
   records.append({'name':row['name'],'source_sha256':hashlib.sha256(src.read_bytes()).hexdigest() if src else None,'policy':row['admission']['policy']})
- if admitted!=6 or len(re.findall(r'\{"(?:xboxkrnl.exe|xam.xex)",',policy))!=6:raise RuntimeError('policy size drift')
- return {'matrix_entries':33,'admitted_scoped':6,'denied':27,'xbox_contract_certified':False,'records':records}
+ if admitted!=6 or pointer!=3 or len(re.findall(r'\{"(?:xboxkrnl.exe|xam.xex)",',policy))!=9:raise RuntimeError('policy size drift')
+ return {'matrix_entries':33,'admitted_scoped':6,'admitted_pointer_scoped':3,'denied':24,'xbox_contract_certified':False,'records':records}
 
 if __name__=='__main__':
  import argparse

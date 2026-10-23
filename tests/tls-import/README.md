@@ -37,3 +37,9 @@ All Phase 5–12 regression recipes still apply with matching Phase 13 SDK profi
 Typed-vector argument, return and mixed signatures must continue failing their
 existing negative compilation tests. Never run a private game-code loader or
 pass game paths to these fixtures.
+
+Phase 14 adds three explicit capability-scoped pointer overloads to the adapter.
+This historical suite still exercises the six scalar signatures and 27 refusals
+under scalar-only shapes; it does not admit pointer calls implicitly. The current
+matrix audit counts six scalar, three pointer and 24 denied contracts. See the
+[Phase 14 pointer tests](../pointer-import/README.md) for the separate scope.

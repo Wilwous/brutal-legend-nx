@@ -18,6 +18,8 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    "runtime/pointer_imports.h", "tests/pointer-import/README.md",
+    "tests/pointer-import/run.py", "tests/pointer-import/contracts.cpp",
     "runtime/import_admission.h", "tools/sdk/tls-import-lock.json",
     "patches/rexglue-sdk/0018-xex-tls-lifetime.patch",
     "tests/tls-import/README.md", "tests/tls-import/run.py", "tests/tls-import/audit.py",

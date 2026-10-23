@@ -53,7 +53,7 @@ def main():
  if not rec['exit_code'] and not rec['timeout']:
   if len(passed)!=1:failures.append('title-tls:missing-oracle')
   else:checks+=passed
- sources=[p for p in (ROOT/'tests/tls-import').glob('*') if p.is_file()]+[ROOT/'runtime/import_admission.h',ROOT/'tests/image-runtime/xex-fixture.h',ROOT/'tests/synthetic/create-failure.cpp']
+ sources=[p for p in (ROOT/'tests/tls-import').glob('*') if p.is_file()]+[ROOT/'runtime/import_admission.h',ROOT/'runtime/pointer_imports.h',ROOT/'runtime/sdk_checked_memory.h',ROOT/'tests/image-runtime/xex-fixture.h',ROOT/'tests/synthetic/create-failure.cpp']
  result={'sdk':meta,'records':records,'checks':checks,'passed_groups':len(checks),'failed_groups':failures,'game_loaded':False,'fixture_sources_sha256':{str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}}
  (work/'results.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps({k:v for k,v in result.items() if k not in ['sdk','records','fixture_sources_sha256']},indent=2));return bool(failures)
 if __name__=='__main__':sys.exit(main())

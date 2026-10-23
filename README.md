@@ -1,6 +1,6 @@
 # Brütal Legend NX
 
-**Wilwous · v0.0.13-tls-import-admission · Xbox 360 → Nintendo Switch / Atmosphère**
+**Wilwous · v0.0.14-pointer-import-dispatch · Xbox 360 → Nintendo Switch / Atmosphère**
 
 Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Legend using static PowerPC recompilation and a homebrew runtime.
 
@@ -8,7 +8,7 @@ Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Le
 
 ## Current status
 
-Phase 13 XEX TLS and import admission: **2026-10-22**, following `v0.0.12-image-runtime-contracts` (`6fe55df`).
+Phase 14 pointer adapters and synthetic dispatch: **2026-10-23**, following `v0.0.13-tls-import-admission` (`fc8e58a`).
 
 - **VERIFIED:** the supplied directory contains a LIVE Games on Demand/SVOD package with 33 data fragments, three DLC packages and one title-update package. It contains no standalone ISO.
 - **VERIFIED:** full GOD hash-tree verification and private extraction succeeded. The base has 284 files totaling 5,544,498,100 bytes. All 38 source game files retained their SHA-256, size and modification time.
@@ -30,7 +30,7 @@ Phase 13 XEX TLS and import admission: **2026-10-22**, following `v0.0.12-image-
 - **VERIFIED synthetic pipeline:** the actual pinned CLI generates an original nine-function PPC module; unchanged output executes through the checked memory layer and real patched SDK, including native XThread stack/PCR/TLS. A separate original fixture loader tests section/relocation/entry policy; normal title startup remains unverified.
 - **UNKNOWN:** runtime correctness, shaders, decoded audio-bank format, game memory budget and stock-clock performance.
 
-**Verdict: Phase 13 bounded synthetic scope verified; overall port feasibility PARTIAL; private game-code execution NO-GO.** Actual original XEX metadata initializes per-thread TLS and the title-process bitmap in the rebuilt SDK. Module leases protect TLS creation/lifetime; invalid slot free refuses success. Six scoped value-only import signatures are admitted; 27 remain denied. All 362 core checks pass across Debug/Release/Sanitized; no unexpected signals, timeouts or sanitizer findings occur. Full ABI, pointer contracts, guest exceptions and private generated-memory mediation remain unresolved. [Phase 13 evidence and limits](docs/research/xex-tls-import-admission.md). [Phase 12 ownership](docs/research/image-ownership-runtime-contracts.md). [Synthetic generation/execution](docs/research/synthetic-execution.md). [Feasibility and blockers](docs/feasibility.md).
+**Verdict: Phase 14 verified in the listed host-driven synthetic scope; overall port feasibility PARTIAL; private game-code execution NO-GO.** Three explicit pointer contracts now traverse real XEX loading, header TLS, admission, checked copies and actual SDK implementations. Six scalar and three pointer-scoped signatures are admitted; 24 remain denied. All 401 core checks pass across Debug/Release/Sanitized with zero unexpected signals, timeouts or sanitizer findings. Guest entry/emitted caller integration, full ABI, exceptions and private generated-memory mediation remain unresolved. [Phase 14 evidence and limits](docs/research/pointer-import-synthetic-dispatch.md). [Phase 13 TLS/admission](docs/research/xex-tls-import-admission.md). [Phase 12 ownership](docs/research/image-ownership-runtime-contracts.md). [Feasibility and blockers](docs/feasibility.md).
 
 ## Technical approach
 

@@ -919,7 +919,7 @@
     "ownership": "borrows output; no lifetime pin for queried reservation",
     "thread_context": "global runtime memory",
     "status": "PARTIAL",
-    "evidence": "Phase 9 error sentinels and RW region rerun",
+    "evidence": "Phase 9 error sentinels and RW region rerun; Phase 14 original header-TLS XThread direct/indirect copy-adapted SDK calls, cross-page/error/ownership regressions",
     "export_identity": {
       "library": "xboxkrnl.exe",
       "ordinal": 238,
@@ -969,9 +969,24 @@
       "source_line": 729
     },
     "admission": {
-      "policy": "DENY",
-      "signature": "unverified",
-      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+      "policy": "ADMIT_POINTER_SCOPED",
+      "signature": "u32_address_out28_u32",
+      "reason": "requires explicit same-manager opaque allocation binding, matching XThread/PCR, actual XEX import and exact export identity; no scalar or raw-pointer fallback"
+    },
+    "pointer_contract": {
+      "direction": "OUT",
+      "size": "28 bytes",
+      "alignment": 4,
+      "range": "live opaque SdkCheckedMemory allocation in 0x10000000..0x1fffffff; exact requested extent, 4-KiB guest pages; u64 address/length checked before narrowing",
+      "permissions": "RW; OUT also requires read for bounded preflight",
+      "ownership": "caller retains token; facade operations/releases serialized for call; SDK uses private owner-tagged scratch; synchronous, nonretaining shim only",
+      "nullability": "nonnull",
+      "endianness": "seven BE u32 fields; SDK INVALID_PARAMETER leaves caller buffer unchanged",
+      "errors": "host refusal before unsafe invocation; SDK return validated; no fabricated Xbox statuses",
+      "output_initialization": "OUT scratch zeroed; guest commits only on verified SDK success. INOUT starts with bounded original bytes. Error or exception commits nothing.",
+      "context": "same Runtime/Memory, current matching XThread/PPCContext/PCR; fresh module ImageLease per call",
+      "limitations": "unmediated raw SDK writes are outside facade exclusion; final locked full-span write detects release/decommit/protection changes. Reset/Restore/MMIO changes require quiescence.",
+      "query_target": "must lie inside the same live allocation; region type 0 or >=3 for actual SDK INVALID_PARAMETER propagation; types 1/2 unverified and rejected"
     }
   },
   {
@@ -1054,7 +1069,7 @@
     "ownership": "borrows raw endian-aware source array",
     "thread_context": "global memory; no current XThread",
     "status": "PARTIAL",
-    "evidence": "Phase 12 independent BE words including mismatch and alignment; Xbox return convention unverified",
+    "evidence": "Phase 12 independent BE words including mismatch and alignment; Xbox return convention unverified; Phase 14 original header-TLS XThread direct/indirect copy-adapted SDK calls, cross-page/error/ownership regressions",
     "export_identity": {
       "library": "xboxkrnl.exe",
       "ordinal": 283,
@@ -1104,9 +1119,23 @@
       "source_line": 603
     },
     "admission": {
-      "policy": "DENY",
-      "signature": "unverified",
-      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+      "policy": "ADMIT_POINTER_SCOPED",
+      "signature": "u32_in_words_u32_u32",
+      "reason": "requires explicit same-manager opaque allocation binding, matching XThread/PCR, actual XEX import and exact export identity; no scalar or raw-pointer fallback"
+    },
+    "pointer_contract": {
+      "direction": "IN",
+      "size": "4..65536 bytes, multiple of 4",
+      "alignment": 4,
+      "range": "live opaque SdkCheckedMemory allocation in 0x10000000..0x1fffffff; exact requested extent, 4-KiB guest pages; u64 address/length checked before narrowing",
+      "permissions": "R; OUT also requires read for bounded preflight",
+      "ownership": "caller retains token; facade operations/releases serialized for call; SDK uses private owner-tagged scratch; synchronous, nonretaining shim only",
+      "nullability": "nonnull; zero length rejected",
+      "endianness": "BE u32 words; SDK counts matches, not Xbox byte-count certification",
+      "errors": "host refusal before unsafe invocation; SDK return validated; no fabricated Xbox statuses",
+      "output_initialization": "OUT scratch zeroed; guest commits only on verified SDK success. INOUT starts with bounded original bytes. Error or exception commits nothing.",
+      "context": "same Runtime/Memory, current matching XThread/PPCContext/PCR; fresh module ImageLease per call",
+      "limitations": "unmediated raw SDK writes are outside facade exclusion; final locked full-span write detects release/decommit/protection changes. Reset/Restore/MMIO changes require quiescence."
     }
   },
   {
@@ -1282,7 +1311,7 @@
     "ownership": "caller owns structure; no native resource teardown established",
     "thread_context": "global memory; no current thread needed for initialization",
     "status": "PARTIAL",
-    "evidence": "Phase 12 selected initialized fields",
+    "evidence": "Phase 12 selected initialized fields; Phase 14 original header-TLS XThread direct/indirect copy-adapted SDK calls, cross-page/error/ownership regressions",
     "export_identity": {
       "library": "xboxkrnl.exe",
       "ordinal": 302,
@@ -1318,9 +1347,23 @@
       "source_line": 621
     },
     "admission": {
-      "policy": "DENY",
-      "signature": "unverified",
-      "reason": "contract remains unverified, pointer/lifetime/wait/fatal effects unsupported, or SDK stub; deny before invocation"
+      "policy": "ADMIT_POINTER_SCOPED",
+      "signature": "void_inout28",
+      "reason": "requires explicit same-manager opaque allocation binding, matching XThread/PCR, actual XEX import and exact export identity; no scalar or raw-pointer fallback"
+    },
+    "pointer_contract": {
+      "direction": "INOUT",
+      "size": "28 bytes",
+      "alignment": 4,
+      "range": "live opaque SdkCheckedMemory allocation in 0x10000000..0x1fffffff; exact requested extent, 4-KiB guest pages; u64 address/length checked before narrowing",
+      "permissions": "RW; OUT also requires read for bounded preflight",
+      "ownership": "caller retains token; facade operations/releases serialized for call; SDK uses private owner-tagged scratch; synchronous, nonretaining shim only",
+      "nullability": "nonnull",
+      "endianness": "partial field initialization; untouched bytes preserved",
+      "errors": "host refusal before unsafe invocation; SDK return validated; no fabricated Xbox statuses",
+      "output_initialization": "OUT scratch zeroed; guest commits only on verified SDK success. INOUT starts with bounded original bytes. Error or exception commits nothing.",
+      "context": "same Runtime/Memory, current matching XThread/PPCContext/PCR; fresh module ImageLease per call",
+      "limitations": "unmediated raw SDK writes are outside facade exclusion; final locked full-span write detects release/decommit/protection changes. Reset/Restore/MMIO changes require quiescence."
     }
   },
   {

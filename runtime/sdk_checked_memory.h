@@ -9,12 +9,22 @@
 #include <span>
 #include <stdexcept>
 #include <vector>
+#include <algorithm>
+#include <functional>
+#include <type_traits>
 
+namespace brutal::imports { class PointerBinding; }
 namespace brutal::foundation {
 // Original host adapter. SDK and MMIO configuration must outlive this object.
 // Reset/Restore/teardown and MMIO registration require quiescence. Guest page
 // policy is configured by trusted SDK setup, never inferred from host mappings.
 class SdkCheckedMemory {
+  friend class brutal::imports::PointerBinding;
+  static inline thread_local const SdkCheckedMemory* active_transaction_=nullptr;
+  struct TransactionMarker {
+    explicit TransactionMarker(const SdkCheckedMemory* manager) { active_transaction_=manager; }
+    ~TransactionMarker(){active_transaction_=nullptr;}
+  };
   struct Record { uint32_t address, size; bool live = true; };
  public:
   using Result = rex::memory::CheckedMemoryResult;
@@ -36,6 +46,7 @@ class SdkCheckedMemory {
       memory_.LookupHeap(record->address)->ReleaseOwned(record->address,record.get());
   }
   Allocation allocate(uint32_t size, bool commit = true) {
+    if (active_transaction_) throw std::logic_error("reentrant checked allocation");
     if (!size || size > 1024*1024) throw std::invalid_argument("checked allocation range");
     std::lock_guard lock(mutex_);
     if (records_.size()>=4096) throw std::bad_alloc(); // Bound lifetime-token storage.
@@ -56,6 +67,7 @@ class SdkCheckedMemory {
     return handle;
   }
   Result release(const Allocation& handle) {
+    if (active_transaction_) return Result::ownership;
     std::lock_guard lock(mutex_);
     if (!valid(handle)) return Result::ownership;
     auto& r = *handle.record_;
@@ -64,6 +76,70 @@ class SdkCheckedMemory {
     r.live = false;
     return Result::ok;
   }
+  // Non-blocking release is suitable for diagnostics/reentrant host callers.
+  // Busy is a host policy result, never an invented Xbox status code.
+  enum class ReleaseAttempt { released, busy, invalid };
+  ReleaseAttempt try_release(const Allocation& handle) {
+    // std::mutex::try_lock requires that this thread does not own it.
+    if (active_transaction_==this) return ReleaseAttempt::busy;
+    std::unique_lock lock(mutex_,std::try_to_lock);
+    if (!lock.owns_lock()) return ReleaseAttempt::busy;
+    if (!valid(handle)) return ReleaseAttempt::invalid;
+    auto& r=*handle.record_;
+    if (!memory_.LookupHeap(r.address)->ReleaseOwned(r.address,handle.record_.get()))
+      return ReleaseAttempt::invalid;
+    r.live=false;
+    return ReleaseAttempt::released;
+  }
+  bool uses(const rex::memory::Memory& memory) const { return &memory_==&memory; }
+  class BufferError : public std::runtime_error {
+   public:
+    Result result;
+    explicit BufferError(Result value):std::runtime_error("checked buffer refused"),result(value){}
+  };
+  // Trusted, synchronous host callback only: its temporary span must not escape.
+  // No guest backing pointer is exposed. Ordinary facade accesses/releases are
+  // serialized; raw SDK mutations are detected by the final checked full copy.
+  // Reset/Restore/MMIO changes still require quiescence, as for all facade calls.
+ private:
+  template<class F> bool with_buffer(const Allocation& h,uint64_t address,uint64_t length,
+                                    bool output,bool preserve_input,F&& callback) {
+    static_assert(std::is_same_v<std::invoke_result_t<F,std::span<std::byte>>,bool>);
+    if (active_transaction_) throw std::logic_error("nested checked pointer transaction");
+    std::unique_lock lock(mutex_);
+    TransactionMarker transaction(this);
+    if (!valid(h)) throw BufferError(Result::ownership);
+    const auto& r=*h.record_;
+    if (!address || address>UINT32_MAX || !length || length>65536 ||
+        length>0x100000000ull-address || address<r.address ||
+        address-r.address>r.size || length>r.size-(address-r.address))
+      throw BufferError(Result::invalid_range);
+    std::vector<std::byte> bytes(size_t(length),std::byte{});
+    const auto offset=address-r.address;
+    auto status=transfer_locked(h,offset,bytes.data(),length,Access::read);
+    if (status!=Result::ok) throw BufferError(status);
+    if (output) {
+      // Non-mutating permission preflight. Final CopyOwnedMemory independently
+      // checks all pages under SDK locks before any output byte is committed.
+      auto* heap=memory_.LookupHeap(r.address);
+      for (uint64_t at=address;at<address+length;) {
+        rex::memory::HeapAllocationInfo info{};
+        if (!heap->QueryRegionInfo(uint32_t(at),&info) ||
+            !(info.state&rex::memory::kMemoryAllocationCommit) ||
+            !(info.protect&(rex::memory::kMemoryProtectWrite|rex::memory::kMemoryProtectWriteCombine)))
+          throw BufferError(Result::protection);
+        at=std::min(address+length,(at/4096+1)*4096);
+      }
+    }
+    if (!preserve_input) std::fill(bytes.begin(),bytes.end(),std::byte{});
+    const bool commit=std::invoke(std::forward<F>(callback),std::span<std::byte>(bytes));
+    if (output && commit) {
+      status=transfer_locked(h,offset,bytes.data(),length,Access::write);
+      if (status!=Result::ok) throw BufferError(status);
+    }
+    return commit;
+  }
+ public:
   Result read(const Allocation& h, uint64_t offset, std::span<std::byte> output) {
     return transfer(h,offset,output.data(),output.size(),Access::read);
   }
@@ -90,11 +166,19 @@ class SdkCheckedMemory {
     return result;
   }
  private:
+  bool contains_locked(const Allocation& h,uint64_t address,uint64_t size) const {
+    return valid(h)&&address>=h.record_->address&&address<=UINT32_MAX&&size&&
+      address-h.record_->address<=h.record_->size&&size<=h.record_->size-(address-h.record_->address);
+  }
   bool valid(const Allocation& h) const {
     return h.manager_==this && h.record_ && h.record_->live;
   }
   Result transfer(const Allocation& h,uint64_t offset,void* buffer,uint64_t length,Access access) {
+    if (active_transaction_) return Result::ownership;
     std::lock_guard lock(mutex_);
+    return transfer_locked(h,offset,buffer,length,access);
+  }
+  Result transfer_locked(const Allocation& h,uint64_t offset,void* buffer,uint64_t length,Access access) {
     if (!valid(h)) return Result::ownership;
     const auto& r=*h.record_;
     // Subtraction first prevents both host-width and guest-width overflow.

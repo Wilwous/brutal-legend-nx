@@ -1,6 +1,6 @@
-# Proposed architecture — Phase 13
+# Proposed architecture — Phase 14
 
-**Current Phase 13 gate (2026-10-22): VERIFIED in the bounded original synthetic macOS scope; private game-code execution NO-GO.** The eighteen-patch SDK validates actual XEX TLS metadata and pins module backing through final XThread PCR/TLS cleanup. An opt-in import adapter admits six value-only SDK signatures and denies the other 27 reviewed imports. All 362 core checks pass across Debug/Release/Sanitized with zero unexpected signals, timeouts or sanitizer findings. The 33-entry matrix retains 27 PARTIAL / six BLOCKED conformance classifications. Default title-process TLS and independently bound modules are tested separately; full guest dispatch, pointer contracts, ABI and private generated-memory mediation remain unresolved. [Phase 13 evidence, regressions and reproduction](research/xex-tls-import-admission.md).
+**Current Phase 14 gate (2026-10-23): VERIFIED for the listed host-driven synthetic import path; private game-code execution NO-GO.** Three capability-bound copy adapters now cover IN words, OUT memory information and INOUT critical-section initialization through actual XEX metadata, header TLS, admission and SDK implementations. Six scalar and three pointer-scoped signatures are admitted; 24 matrix entries remain denied. All 401 core checks pass across Debug/Release/Sanitized with zero unexpected signals, timeouts or sanitizer findings. Full conformance labels remain 27 PARTIAL / six BLOCKED. Emitted guest callers, full ABI, exceptions and private generated-memory mediation remain unresolved. [Phase 14 contracts, evidence, regressions and reproduction](research/pointer-import-synthetic-dispatch.md).
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -17,11 +17,17 @@ flowchart TD
   H --> I[Sanitized public findings]
 ```
 
+## Checked pointer import dispatch
+
+The opt-in admission boundary now has three explicit PointerBinding signatures. Actual SDK implementations receive private, owner-tagged scratch addresses; guest buffers are read and committed only through bounded owner/page/protection checks. Facade operations serialize through the call, with explicit nonblocking busy release and guarded callback reentrancy. Final full-span validation refuses external release/protection changes without partial output or false success. Module leases cover each call separately from thread-TLS image ownership.
+
+The listed host-driven path uses real synthetic XEX loading, header TLS, import records, direct/indirect admission, copy adapters, SDK shims and cleanup. Its native XThread driver does not execute XEX entry instructions. This is not transparent instrumentation of private generated callers or a native sandbox. IN snapshot semantics, same-owner query targets and nonretaining synchronous imports define the verified scope. [Contracts, concurrency, ABI and limitations](research/pointer-import-synthetic-dispatch.md).
+
 ## XEX TLS and import admission
 
 XexModule validates bounded header metadata before continuation succeeds. XThread's default Create binds the executable module; explicit CreateWithModule supports original independent module scopes without replacing the global title process. Its retained image lease lasts through final TLS/PCR release. Scratch/TLS/PCR/native-create failure paths restore partial allocations and refuse success. Out-of-range process TLS free now returns the existing false result before bitmap mutation.
 
-The original host admission adapter checks a fresh image lease, actual XEX import membership, exact library/ordinal/name/type, supported signature, and matching XThread/PPCContext/PCR for TLS. Six reviewed value-only shims are callable; pointer/wait/handle/fatal/unknown contracts remain denied. This adapter is opt-in and is not wired into unchanged private generated game imports. Header-driven template copying and 64-slot title-process allocation are verified; arbitrary DLL TLS-index policy and title scheduling remain PARTIAL. [Ownership, policy and boundaries](research/xex-tls-import-admission.md).
+The original host admission adapter checks a fresh image lease, actual XEX import membership, exact library/ordinal/name/type, supported signature, and matching XThread/PPCContext/PCR for TLS. Six reviewed value-only shims remain callable without a pointer binding. Phase 14 adds three explicit pointer-scoped overloads; other pointer/wait/handle/fatal/unknown contracts remain denied. This adapter is opt-in and is not wired into unchanged private generated game imports. Header-driven template copying and 64-slot title-process allocation are verified; arbitrary DLL TLS-index policy and title scheduling remain PARTIAL. [Ownership, policy and boundaries](research/xex-tls-import-admission.md).
 
 ## Binary selection and update boundary
 
