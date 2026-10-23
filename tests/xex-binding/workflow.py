@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (c) 2026 Wilwous
-"""Bounded three-profile Phase 5-17 workflow; all products stay private."""
+"""Bounded three-profile Phase 5-18 workflow; all products stay private."""
 import argparse,hashlib,json,os,subprocess,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'tools/sdk'))
@@ -49,7 +49,7 @@ def main():
   sdk=sdkwork/'staged'/profile;meta=json.loads((sdk/'fixture-sdk.json').read_text());san=['--sanitize'] if profile=='Sanitized' else [];cli=source/'out/mac-arm64'/profile/('rexglued' if profile=='Debug' else 'rexglue')
   for name in changed:
    if name.startswith('include/') and (source/name).read_bytes()!=(sdk/name).read_bytes():raise RuntimeError('staged header mismatch')
-  suites=[('shutdown','tests/image-pointer-shutdown/run.py',['--rexglue',str(cli)]),('binding','tests/xex-binding/run.py',['--rexglue',str(cli)]),('generated','tests/generated-dispatch/run.py',['--rexglue',str(cli)]),('pointer','tests/pointer-import/run.py',[]),('tls-import','tests/tls-import/run.py',['--source',str(source)]),('image','tests/image-runtime/run.py',['--rexglue',str(cli)]),('synthetic','tests/synthetic/run.py',['--rexglue',str(cli)]),('instrument','tests/instrumentation/run.py',['--source',str(source)]),('guest','tests/guest-memory/run.py',[]),('unified','tests/unified/run.py',['--source',str(source),'--pre-entry']),('pre-entry','tests/pre-entry/run.py',[])]
+  suites=[('loops','tests/generated-loop-stop/run.py',['--rexglue',str(cli)]),('shutdown','tests/image-pointer-shutdown/run.py',['--rexglue',str(cli)]),('binding','tests/xex-binding/run.py',['--rexglue',str(cli)]),('generated','tests/generated-dispatch/run.py',['--rexglue',str(cli)]),('pointer','tests/pointer-import/run.py',[]),('tls-import','tests/tls-import/run.py',['--source',str(source)]),('image','tests/image-runtime/run.py',['--rexglue',str(cli)]),('synthetic','tests/synthetic/run.py',['--rexglue',str(cli)]),('instrument','tests/instrumentation/run.py',['--source',str(source)]),('guest','tests/guest-memory/run.py',[]),('unified','tests/unified/run.py',['--source',str(source),'--pre-entry']),('pre-entry','tests/pre-entry/run.py',[])]
   ordinary=faults=0
   for name,script,extra in suites:
    output=work/(name+'-'+profile)
@@ -66,7 +66,7 @@ def main():
    try:execute(cmd,label+'-'+profile,180)
    except RuntimeError:failures.append([profile,label])
   profiles[profile]={'ordinary_pass':ordinary,'expected_fault_recovery_pass':faults}
- for label,cmd,budget in [('watchdog',['python3',str(ROOT/'tests/ppc/test_watchdog.py')],60),('static-entry',['python3',str(ROOT/'tests/guest-memory/test_audit.py')],60),('static-instrumentation',['python3',str(ROOT/'tests/instrumentation/test_audit.py')],60),('encoding-old',['python3',str(ROOT/'tests/synthetic/test_fixture.py')],60),('encoding-caller',['python3',str(ROOT/'tests/generated-dispatch/test_fixture.py')],60),('encoding-xex',['python3',str(ROOT/'tests/xex-binding/test_fixture.py')],60),('source-audit',['python3',str(ROOT/'tests/image-runtime/audit.py'),'--source',str(source),'--output',str(work/'import-source-audit.json')],30),('signature-audit',['python3',str(ROOT/'tests/tls-import/audit.py'),'--source',str(source)],30),('reference',['python3',str(ROOT/'tests/synthetic/reference-trace.py'),'--sdk',str(sdkwork/'staged/Debug'),'--workdir',str(work/'reference')],120)]:
+ for label,cmd,budget in [('watchdog',['python3',str(ROOT/'tests/ppc/test_watchdog.py')],60),('static-entry',['python3',str(ROOT/'tests/guest-memory/test_audit.py')],60),('static-instrumentation',['python3',str(ROOT/'tests/instrumentation/test_audit.py')],60),('encoding-old',['python3',str(ROOT/'tests/synthetic/test_fixture.py')],60),('encoding-caller',['python3',str(ROOT/'tests/generated-dispatch/test_fixture.py')],60),('encoding-xex',['python3',str(ROOT/'tests/xex-binding/test_fixture.py')],60),('encoding-loops',['python3',str(ROOT/'tests/generated-loop-stop/test_fixture.py')],60),('source-audit',['python3',str(ROOT/'tests/image-runtime/audit.py'),'--source',str(source),'--output',str(work/'import-source-audit.json')],30),('signature-audit',['python3',str(ROOT/'tests/tls-import/audit.py'),'--source',str(source)],30),('reference',['python3',str(ROOT/'tests/synthetic/reference-trace.py'),'--sdk',str(sdkwork/'staged/Debug'),'--workdir',str(work/'reference')],120)]:
   try:execute(cmd,label,budget)
   except RuntimeError:failures.append(['controls',label])
  result={'profiles':profiles,'failed_suites':failures,'records':records,'sdk_build_versions':build['versions'],'patch_lock_sha256':hashlib.sha256((ROOT/'tools/sdk/xex-binding-lock.json').read_bytes()).hexdigest(),'game_code_executed':False}

@@ -1,6 +1,6 @@
-# Research roadmap — Phase 17
+# Research roadmap — Phase 18
 
-**Current Phase 17 gate (2026-10-23): VERIFIED for the explicit original image-pointer and cooperative-stop scope.** All 518 core checks pass across Debug/Release/ASan+UBSan, with zero final unexpected signals, timeouts or sanitizer findings. The nineteen-patch SDK is unchanged. Generated synthetic callers use three reviewed image-pointer adapters; birth/call leases and final-owner cleanup cover stop, callback errors and concurrent callers. Host scheduling/general cancellation remains PARTIAL; 24 imports remain denied. Broader synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 17 evidence and reproduction](research/image-backed-pointer-shutdown.md).
+**Current Phase 18 gate (2026-10-23): VERIFIED for the explicit original generated-loop scope.** All 575 core checks pass across Debug/Release/ASan+UBSan. Production midasm hooks cover 6/6 scoped backward branches and run inside generated PPC, including the infinite loop. All six backedge sites are observed in every profile; final unexpected signals, timeouts and sanitizer findings are zero. The nineteen-patch SDK is unchanged. General CFG policy, guest unwind and title integration remain PARTIAL; 24 imports remain denied. Broader synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 18 evidence and reproduction](research/generated-loop-stop-boundaries.md).
 
 ## Completed
 
@@ -62,11 +62,15 @@ Completed in the fixed synthetic scope: two original XEX products drive actual p
 
 Original generated XEX callers use all three existing pointer contracts with leased image capabilities, RO/RW permissions, full-span bounds and output rollback. Active call, capability, TLS/PCR, XThread and image ownership remain pinned through cooperative completion, actual join and final reclamation. Concurrent callers, eight repeated cycles, callback errors and fail-stop join behavior are tested on the unchanged nineteen-patch SDK. Scheduling and safe-boundary placement remain host-authored. [Evidence, exact scope and regressions](research/image-backed-pointer-shutdown.md).
 
-## Next exact task: R2r / Phase 18 — bounded generated-loop stop boundaries
+## R2r / Phase 18 — generated loop stop boundaries
 
-**CONDITIONAL GO for original synthetic work:** author a bounded PPC loop with explicit stop-poll import contract, generate it through the actual pipeline, and prove request-to-boundary behavior without interrupting active imports. Exercise multiple callers, closed admission, callback failures, register preservation and exact final-owner cleanup. Keep unsupported signatures and memory paths denied; justify any new import separately. No private title execution or general cancellation implementation is authorized by this readiness result.
+The original nine-function XEX uses actual production midasm hooks at all six backward branches and explicit whole-instruction safe points. Finite/infinite/nested/memory/import loops, concurrent requests, active unload and checkpoint/lease cleanup execute through unchanged generated C++ and the real SDK. The finite unhooked benchmark retains checked memory. General guest cancellation and arbitrary-title instrumentation remain unverified. [Coverage, overhead and regressions](research/generated-loop-stop-boundaries.md).
 
-**NO-GO for private game execution:** 24 denied imports, uninstrumented private memory, atomics/partial vectors/MMIO/fetch, typed-vector ABI, guest exceptions, general relocation, title TOC/TLS/import/stop and Nintendo Switch runtime gaps remain.
+## Next exact task: R2s / Phase 19 — CFG stop-policy and site identity validation
+
+**CONDITIONAL GO for original synthetic work:** derive and negatively test safe-point policy from a broader bounded CFG, including supported forward joins and callee boundaries. Compare indexed site identities against the current validated PC lookup while retaining every required safe point, memory/import admission and final-owner cleanup. Require complete scoped loop coverage and independent timing evidence before selecting an optimization. Do not infer generic title cancellation or guest unwind from these fixtures.
+
+**NO-GO for private execution:** 24 denied imports, uninstrumented private generated memory, atomics/partial vectors/MMIO/fetch, typed-vector ABI, guest exceptions, relocation/title TOC/TLS/import/stop contracts and Horizon remain unresolved.
 
 The following entry-readiness acceptance gate remains open:
 

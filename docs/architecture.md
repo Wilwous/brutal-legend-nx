@@ -1,6 +1,6 @@
-# Proposed architecture — Phase 17
+# Proposed architecture — Phase 18
 
-**Current Phase 17 gate (2026-10-23): VERIFIED for the explicit original image-pointer and cooperative-stop scope.** All 518 core checks pass across Debug/Release/ASan+UBSan, with zero final unexpected signals, timeouts or sanitizer findings. The nineteen-patch SDK is unchanged. Generated synthetic callers use three reviewed image-pointer adapters; birth/call leases and final-owner cleanup cover stop, callback errors and concurrent callers. Host scheduling/general cancellation remains PARTIAL; 24 imports remain denied. Broader synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 17 evidence and reproduction](research/image-backed-pointer-shutdown.md).
+**Current Phase 18 gate (2026-10-23): VERIFIED for the explicit original generated-loop scope.** All 575 core checks pass across Debug/Release/ASan+UBSan. Production midasm hooks cover 6/6 scoped backward branches and run inside generated PPC, including the infinite loop. All six backedge sites are observed in every profile; final unexpected signals, timeouts and sanitizer findings are zero. The nineteen-patch SDK is unchanged. General CFG policy, guest unwind and title integration remain PARTIAL; 24 imports remain denied. Broader synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 18 evidence and reproduction](research/generated-loop-stop-boundaries.md).
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -23,11 +23,17 @@ Production codegen now consumes original XEX images whose PDATA supplies functio
 
 The single workflow reconstructs all SDK patches and historical controls, then tests three profiles and the prior suites. Native harness startup, fixed-base construction and cooperative/fail-stop lifetime policy remain explicit boundaries. General DLL relocation, arbitrary native isolation, title cancellation and Horizon behavior remain unverified. [Contracts and measured coverage](research/synthetic-xex-binding.md).
 
-## Image pointer and cooperative-stop scope
+## Generated stop boundaries
+
+The original encoder produces a nine-function XEX with finite, infinite, nested, checked-memory and SDK-call loops. Existing production midasm_hook configuration emits checks before whole PPC instructions, including all six backward branches, function entries, memory operations and pre/post-call boundaries. Independent PPC/emitted-C++ auditing refuses missing coverage before execution. Generated C++ is not manually edited, and the pinned nineteen-patch SDK remains unchanged.
+
+GeneratedStop validates the current context and allowed PC, consumes an idempotent thread-safe request and throws a private typed host completion signal. Ordinary C++ scopes unwind to the matching execution boundary; the host restores its PPC checkpoint for native cleanup. Active imports finish before the post-call point. Join/final-owner reclamation still precede unload. The unhooked benchmark admits only a count-bounded memory loop with equivalent checked inputs. General CFG policy, guest unwind, interruptible SDK instructions and title cancellation remain unsupported or unverified. [Coverage, ownership and measured costs](research/generated-loop-stop-boundaries.md).
+
+## Image pointer and cooperative-stop scope (Phase 17)
 
 An explicit Image-tagged PointerBinding retains a birth image lease and obtains a fresh lease for every import. Exact import-module identity, single-section bounds, page/PE permissions and wide-integer checks precede the actual SDK call. RO IN succeeds; RO OUT/INOUT fails. Snapshot/scratch/readback/final checked commit preserve the original three synchronous contracts and reject callback reentry. Failure rolls back only that import's output. A retained capability prevents image replacement until released; closing admission refuses new calls.
 
-The original CooperativeStop state machine places a safe boundary after the bounded synthetic body/import completes. It does not interrupt generated instructions or synchronous imports. Real SDK Exit and native join precede final XThread/TLS/PCR and module reclamation. Observer-driven races, concurrent callers, failed initialization, callback errors and expected join fail-stop remain bounded by external watchdogs. Host scheduling is PARTIAL; arbitrary guest cancellation and guest exception unwind are unsupported. [Exact ownership and measured limits](research/image-backed-pointer-shutdown.md).
+The original CooperativeStop state machine places a safe boundary after the bounded synthetic body/import completes. The Phase 17 path does not interrupt generated instructions or synchronous imports; Phase 18 adds checks inside original generated execution. Real SDK Exit and native join precede final XThread/TLS/PCR and module reclamation. Observer-driven races, concurrent callers, failed initialization, callback errors and expected join fail-stop remain bounded by external watchdogs. Host scheduling is PARTIAL; arbitrary guest cancellation and guest exception unwind are unsupported. [Exact ownership and measured limits](research/image-backed-pointer-shutdown.md).
 
 ## Phase 15 generated PPC import caller (historical)
 

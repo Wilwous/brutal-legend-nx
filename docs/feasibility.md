@@ -1,6 +1,6 @@
-# Feasibility — Phase 17
+# Feasibility — Phase 18
 
-**Current Phase 17 gate (2026-10-23): VERIFIED for the explicit original image-pointer and cooperative-stop scope.** All 518 core checks pass across Debug/Release/ASan+UBSan, with zero final unexpected signals, timeouts or sanitizer findings. The nineteen-patch SDK is unchanged. Generated synthetic callers use three reviewed image-pointer adapters; birth/call leases and final-owner cleanup cover stop, callback errors and concurrent callers. Host scheduling/general cancellation remains PARTIAL; 24 imports remain denied. Broader synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 17 evidence and reproduction](research/image-backed-pointer-shutdown.md).
+**Current Phase 18 gate (2026-10-23): VERIFIED for the explicit original generated-loop scope.** All 575 core checks pass across Debug/Release/ASan+UBSan. Production midasm hooks cover 6/6 scoped backward branches and run inside generated PPC, including the infinite loop. All six backedge sites are observed in every profile; final unexpected signals, timeouts and sanitizer findings are zero. The nineteen-patch SDK is unchanged. General CFG policy, guest unwind and title integration remain PARTIAL; 24 imports remain denied. Broader synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 18 evidence and reproduction](research/generated-loop-stop-boundaries.md).
 
 Historical baseline assessment: **2026-10-22 · v0.0.11-synthetic-execution**. Phase 11 passed its original synthetic Mac scope; overall port feasibility remains PARTIAL and proprietary execution remains NO-GO. The Phase 3 configuration-assisted analysis/generation PASS stands.
 
@@ -25,7 +25,13 @@ Extraction, XEX loading, configured analysis and private C++ emission are verifi
 | Host toolchain | VERIFIED for limited checks | Pinned macOS ARM64 CLI completed emission; two partitions compile to objects; full compiler/link closure UNKNOWN |
 | Target build/deployment | UNKNOWN | Private game C++ exists; no complete host game binary, ARM64 Horizon build, NRO or hardware test |
 
-## Phase 17 readiness
+## Phase 18 readiness
+
+Production-generated original PPC now observes requests inside finite/infinite/nested loops, at function entry, memory boundaries and after completed imports. All six scoped backward branches are instrumented. The typed host completion signal preserves ordinary C++ cleanup and existing image/pointer/TLS ownership; it does not implement guest unwind. The finite unhooked benchmark retains checked memory and is excluded from cancellation coverage.
+
+**CONDITIONAL GO** for broader original synthetic CFG/site-policy work. **NO-GO** for private execution: 24 denied imports, unchecked private memory, atomics/partials/MMIO/fetch, typed vectors, guest exceptions, relocation/title contracts and Horizon remain gates. [Exact scope and final regression measurements](research/generated-loop-stop-boundaries.md).
+
+## Phase 17 readiness (historical)
 
 **VERIFIED bounded synthetic scope, 518 core checks passed:** actual production-generated XEX callers exercise image IN/OUT/INOUT adapters, checked memory, XEX TLS and real SDK shims. Birth/call leases prevent image replacement and release before final owners; cooperative requests are observed after a bounded body or supported host error boundary. Failed join remains process containment, not orderly reclamation.
 

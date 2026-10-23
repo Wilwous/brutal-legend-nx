@@ -18,6 +18,10 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    "runtime/generated_stop.h", "tests/generated-loop-stop/README.md",
+    "tests/generated-loop-stop/fixture.py", "tests/generated-loop-stop/audit.py",
+    "tests/generated-loop-stop/contracts.cpp", "tests/generated-loop-stop/run.py",
+    "tests/generated-loop-stop/test_fixture.py",
     "runtime/cooperative_stop.h", "tests/image-pointer-shutdown/README.md",
     "tests/image-pointer-shutdown/contracts.cpp", "tests/image-pointer-shutdown/run.py",
     "runtime/synthetic_xex_binding.h", "tools/sdk/xex-binding-lock.json",

@@ -8,6 +8,8 @@ namespace brutal::synthetic {
 struct ImageDescription {
  uint32_t base,entry,size,code_base;
  std::span<const uint8_t> code;
+ // Explicit trusted original-fixture policy; empty preserves the Phase 16 policy.
+ std::span<const uint32_t> functions{};
 };
 class XexBinding {
  using Module=rex::system::UserModule;
@@ -23,7 +25,8 @@ class XexBinding {
      ImageDescription description,size_t mapping_count,rex::runtime::ExportResolver& resolver)
      :module_(std::move(module)),lease_(module_?module_->AcquireImageLease():std::nullopt),description_(description){
   auto deny=[](){throw std::invalid_argument("synthetic XEX/code binding mismatch");};
-  if(!lease_||mapping_count!=7||!generated.func_mappings||generated.rexcrt_heap||generated.register_modules)deny();
+  const size_t native_count=description.functions.empty()?3:description.functions.size();
+  if(!native_count||native_count>32||!lease_||mapping_count!=native_count+4||!generated.func_mappings||generated.rexcrt_heap||generated.register_modules)deny();
   const auto& f=generated.codegen_flags;
   if(f.skip_lr||f.ctr_as_local||f.xer_as_local||f.reserved_as_local||f.skip_msr||f.cr_as_local||f.non_argument_as_local||f.non_volatile_as_local)deny();
   auto*x=module_->xex_module();
@@ -57,10 +60,12 @@ class XexBinding {
   for(size_t i=0;i<mapping_count-1;++i){auto fn=generated.func_mappings[i];bool imported=false;
    for(auto imp:imports_)if(imp.address==fn.guest)imported=true;
    if(imported)continue;
-   if(!fn.host||(fn.guest!=description.entry&&fn.guest!=description.code_base&&fn.guest!=description.code_base+184))deny();
+   bool allowed=description.functions.empty()?(fn.guest==description.entry||fn.guest==description.code_base||fn.guest==description.code_base+184):std::find(description.functions.begin(),description.functions.end(),fn.guest)!=description.functions.end();
+   if(!fn.host||!allowed||fn.guest<description.code_base||fn.guest-description.code_base>=description.code.size()||(fn.guest&3))deny();
    for(auto previous:functions_)if(previous.guest==fn.guest||previous.host==fn.host)deny();functions_.push_back(fn);
   }
-  if(functions_.size()!=3)deny();
+  if(functions_.size()!=native_count)deny();
+  if(!description.functions.empty())for(auto pc:description.functions){unsigned found=0;for(auto fn:functions_)found+=fn.guest==pc;if(found!=1)deny();}
  }
  XexBinding(const XexBinding&)=delete;XexBinding&operator=(const XexBinding&)=delete;
  uint32_t query_target()const{for(auto i:imports_)if(i.ordinal==0xee)return i.address;throw std::logic_error("query not bound");}
