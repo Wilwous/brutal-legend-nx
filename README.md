@@ -32,7 +32,7 @@ Phase 15 generated PPC caller and end-to-end dispatch: **2026-10-23**, following
 - **VERIFIED synthetic pipeline:** the actual pinned CLI generates an original nine-function PPC module; unchanged output executes through the checked memory layer and real patched SDK, including native XThread stack/PCR/TLS. A separate original fixture loader tests section/relocation/entry policy; normal title startup remains unverified.
 - **UNKNOWN:** runtime correctness, shaders, decoded audio-bank format, game memory budget and stock-clock performance.
 
-**Verdict: Phase 14 verified in the listed host-driven synthetic scope; overall port feasibility PARTIAL; private game-code execution NO-GO.** Three explicit pointer contracts now traverse real XEX loading, header TLS, admission, checked copies and actual SDK implementations. Six scalar and three pointer-scoped signatures are admitted; 24 remain denied. All 401 core checks pass across Debug/Release/Sanitized with zero unexpected signals, timeouts or sanitizer findings. Guest entry/emitted caller integration, full ABI, exceptions and private generated-memory mediation remain unresolved. [Phase 14 evidence and limits](docs/research/pointer-import-synthetic-dispatch.md). [Phase 13 TLS/admission](docs/research/xex-tls-import-admission.md). [Phase 12 ownership](docs/research/image-ownership-runtime-contracts.md). [Feasibility and blockers](docs/feasibility.md).
+**Verdict: Phase 15 verified in the exact original generated synthetic scope; overall port feasibility PARTIAL; private game-code execution NO-GO.** Actual generated PPC traverses checked memory, explicit import admission, three pointer adapters, real SDK implementations and cleanup. All 30 reachable generated memory sites are checked and 440 core checks pass across Debug/Release/Sanitized. Automatic XEX/codegen binding, full ABI, guest exceptions and private generated-memory mediation remain unresolved. Six scalar and three pointer-scoped signatures are admitted; 24 remain denied. [Phase 15 evidence and limits](docs/research/generated-ppc-end-to-end-dispatch.md). [Historical Phase 14 pointer contracts](docs/research/pointer-import-synthetic-dispatch.md). [Feasibility and blockers](docs/feasibility.md).
 
 ## Technical approach
 
@@ -54,7 +54,7 @@ The first architecture candidate is ReXGlue plus reviewed Horizon adaptations an
 | Runtime execution, shaders, audio and hardware | Not validated |
 | Game build or distribution | Not started |
 
-Next: Phase 13 original XEX-header TLS initialization and checked import/signature admission, with explicit image lifetime and cooperative stop contracts, before a separate private-execution review; continue independent Xbox numeric research. [Roadmap](docs/roadmap.md).
+Next: Phase 16 original-image relocation/import binding and checked image-data capabilities, with bounded ownership/failure tests and scoped mediation-overhead measurements. Broader synthetic integration is CONDITIONAL GO; private game execution remains NO-GO. Continue independent Xbox numeric research. [Roadmap](docs/roadmap.md).
 
 ## Game files and compatibility
 
