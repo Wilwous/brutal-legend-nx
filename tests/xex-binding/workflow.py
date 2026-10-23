@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (c) 2026 Wilwous
-"""Bounded three-profile Phase 5-16 workflow; all products stay private."""
+"""Bounded three-profile Phase 5-17 workflow; all products stay private."""
 import argparse,hashlib,json,os,subprocess,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'tools/sdk'))
@@ -49,7 +49,7 @@ def main():
   sdk=sdkwork/'staged'/profile;meta=json.loads((sdk/'fixture-sdk.json').read_text());san=['--sanitize'] if profile=='Sanitized' else [];cli=source/'out/mac-arm64'/profile/('rexglued' if profile=='Debug' else 'rexglue')
   for name in changed:
    if name.startswith('include/') and (source/name).read_bytes()!=(sdk/name).read_bytes():raise RuntimeError('staged header mismatch')
-  suites=[('binding','tests/xex-binding/run.py',['--rexglue',str(cli)]),('generated','tests/generated-dispatch/run.py',['--rexglue',str(cli)]),('pointer','tests/pointer-import/run.py',[]),('tls-import','tests/tls-import/run.py',['--source',str(source)]),('image','tests/image-runtime/run.py',['--rexglue',str(cli)]),('synthetic','tests/synthetic/run.py',['--rexglue',str(cli)]),('instrument','tests/instrumentation/run.py',['--source',str(source)]),('guest','tests/guest-memory/run.py',[]),('unified','tests/unified/run.py',['--source',str(source),'--pre-entry']),('pre-entry','tests/pre-entry/run.py',[])]
+  suites=[('shutdown','tests/image-pointer-shutdown/run.py',['--rexglue',str(cli)]),('binding','tests/xex-binding/run.py',['--rexglue',str(cli)]),('generated','tests/generated-dispatch/run.py',['--rexglue',str(cli)]),('pointer','tests/pointer-import/run.py',[]),('tls-import','tests/tls-import/run.py',['--source',str(source)]),('image','tests/image-runtime/run.py',['--rexglue',str(cli)]),('synthetic','tests/synthetic/run.py',['--rexglue',str(cli)]),('instrument','tests/instrumentation/run.py',['--source',str(source)]),('guest','tests/guest-memory/run.py',[]),('unified','tests/unified/run.py',['--source',str(source),'--pre-entry']),('pre-entry','tests/pre-entry/run.py',[])]
   ordinary=faults=0
   for name,script,extra in suites:
    output=work/(name+'-'+profile)

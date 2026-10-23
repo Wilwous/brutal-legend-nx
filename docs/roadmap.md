@@ -1,6 +1,6 @@
-# Research roadmap — Phase 16
+# Research roadmap — Phase 17
 
-**Current Phase 16 gate (2026-10-23): VERIFIED for the exact original fixed-base synthetic XEX/codegen binding.** A single workflow constructs two XEX images, runs production ReXGlue codegen without function hints, compiles unchanged emitted C++, binds actual image/TLS/import metadata and executes through the real patched SDK. All 35 reachable memory sites per image are checked. All 476 core checks pass across Debug/Release/Sanitized with zero final unexpected signals, timeouts or sanitizer findings. General relocation, full ABI and title integration remain PARTIAL; 24 imports remain denied. Further synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 16 scope, failures, measurements and reproduction](research/synthetic-xex-binding.md).
+**Current Phase 17 gate (2026-10-23): VERIFIED for the explicit original image-pointer and cooperative-stop scope.** All 518 core checks pass across Debug/Release/ASan+UBSan, with zero final unexpected signals, timeouts or sanitizer findings. The nineteen-patch SDK is unchanged. Generated synthetic callers use three reviewed image-pointer adapters; birth/call leases and final-owner cleanup cover stop, callback errors and concurrent callers. Host scheduling/general cancellation remains PARTIAL; 24 imports remain denied. Broader synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 17 evidence and reproduction](research/image-backed-pointer-shutdown.md).
 
 ## Completed
 
@@ -58,9 +58,15 @@ Completed in the explicit synthetic scope: actual pinned generation of eight ori
 
 Completed in the fixed synthetic scope: two original XEX products drive actual production codegen with PDATA and no manual function hints. Automatic binding validates image/code/section/TLS/import identity; unchanged emitted functions run at their actual guest addresses. Patch 0019 adds leased checked XEX memory copying without broadening ordinary virtual copies or fetch. All 35 reachable memory sites per image are checked; 476 core checks and the separate controls pass. Historical development failures and harness fail-stop limits remain documented. [Single-command workflow and evidence](research/synthetic-xex-binding.md).
 
-## Next exact task: R2q / Phase 17 — original image-backed pointer and stop contracts
+## R2q / Phase 17 — image-backed pointer contracts and cooperative shutdown
 
-**CONDITIONAL GO for further synthetic work:** define a checked image pointer view for a separately justified synchronous SDK import, test initialization/cooperative-stop failures and measure safe copy batching. Preserve ownership/admission and unsupported-operation refusals. General relocation, broader imports and title scheduling require independent evidence. **NO-GO for private game execution:** the 24 imports, private raw-memory paths, atomics/partial vectors/MMIO/fetch, typed-vector ABI, guest exceptions, title TOC/stop, DLL TLS indexing and Switch runtime gaps remain gates.
+Original generated XEX callers use all three existing pointer contracts with leased image capabilities, RO/RW permissions, full-span bounds and output rollback. Active call, capability, TLS/PCR, XThread and image ownership remain pinned through cooperative completion, actual join and final reclamation. Concurrent callers, eight repeated cycles, callback errors and fail-stop join behavior are tested on the unchanged nineteen-patch SDK. Scheduling and safe-boundary placement remain host-authored. [Evidence, exact scope and regressions](research/image-backed-pointer-shutdown.md).
+
+## Next exact task: R2r / Phase 18 — bounded generated-loop stop boundaries
+
+**CONDITIONAL GO for original synthetic work:** author a bounded PPC loop with explicit stop-poll import contract, generate it through the actual pipeline, and prove request-to-boundary behavior without interrupting active imports. Exercise multiple callers, closed admission, callback failures, register preservation and exact final-owner cleanup. Keep unsupported signatures and memory paths denied; justify any new import separately. No private title execution or general cancellation implementation is authorized by this readiness result.
+
+**NO-GO for private game execution:** 24 denied imports, uninstrumented private memory, atomics/partial vectors/MMIO/fetch, typed-vector ABI, guest exceptions, general relocation, title TOC/TLS/import/stop and Nintendo Switch runtime gaps remain.
 
 The following entry-readiness acceptance gate remains open:
 

@@ -66,7 +66,7 @@ class Admission {
       if(thread->memory()!=&memory_||rex::runtime::current_ppc_context()!=&context||
          context.r13.u64!=thread->pcr_ptr())throw std::logic_error("TLS context mismatch");
     }
-    if(c.pointer)binding->invoke(c.ordinal,c.function,context,memory_);
+    if(c.pointer){if(!binding->accepts_module(module_.get()))throw std::invalid_argument("pointer module identity");binding->invoke(c.ordinal,c.function,context,memory_);}
     else c.function(context,memory_.virtual_membase());
   }
  public:

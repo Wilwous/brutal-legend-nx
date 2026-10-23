@@ -1,6 +1,6 @@
-# Proposed architecture — Phase 16
+# Proposed architecture — Phase 17
 
-**Current Phase 16 gate (2026-10-23): VERIFIED for the exact original fixed-base synthetic XEX/codegen binding.** A single workflow constructs two XEX images, runs production ReXGlue codegen without function hints, compiles unchanged emitted C++, binds actual image/TLS/import metadata and executes through the real patched SDK. All 35 reachable memory sites per image are checked. All 476 core checks pass across Debug/Release/Sanitized with zero final unexpected signals, timeouts or sanitizer findings. General relocation, full ABI and title integration remain PARTIAL; 24 imports remain denied. Further synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 16 scope, failures, measurements and reproduction](research/synthetic-xex-binding.md).
+**Current Phase 17 gate (2026-10-23): VERIFIED for the explicit original image-pointer and cooperative-stop scope.** All 518 core checks pass across Debug/Release/ASan+UBSan, with zero final unexpected signals, timeouts or sanitizer findings. The nineteen-patch SDK is unchanged. Generated synthetic callers use three reviewed image-pointer adapters; birth/call leases and final-owner cleanup cover stop, callback errors and concurrent callers. Host scheduling/general cancellation remains PARTIAL; 24 imports remain denied. Broader synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 17 evidence and reproduction](research/image-backed-pointer-shutdown.md).
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -19,9 +19,15 @@ flowchart TD
 
 ## Fixed-base synthetic XEX binding
 
-Production codegen now consumes original XEX images whose PDATA supplies function discovery. XexBinding compares actual loaded image/entry/sections/code/TLS/import metadata with the emitted PPCImageInfo and mappings before admission. Compiler-only namespacing permits two fixed-base products in one fixture executable without changing guest addresses. Patch 0019 adds a separate leased, owner/section/page-checked image-copy path; the original virtual-copy path still rejects XEX and fetch remains unsupported. Generated RO/RW image references use this new path, while pointer imports retain their original opaque-buffer capability contracts.
+Production codegen now consumes original XEX images whose PDATA supplies function discovery. XexBinding compares actual loaded image/entry/sections/code/TLS/import metadata with the emitted PPCImageInfo and mappings before admission. Compiler-only namespacing permits two fixed-base products in one fixture executable without changing guest addresses. Patch 0019 adds a separate leased, owner/section/page-checked image-copy path; the original virtual-copy path still rejects XEX and fetch remains unsupported. Generated RO/RW image references use this path. Phase 17 extends the three reviewed pointer adapters with explicit image capabilities while preserving opaque-buffer contracts.
 
-The single workflow reconstructs all SDK patches and historical controls, then tests three profiles and the prior suites. Native harness startup, fixed-base construction and cooperative/fail-stop lifetime policy remain explicit boundaries. General DLL relocation, image-backed SDK pointer adapters, arbitrary native isolation and Horizon behavior remain unverified. [Contracts and measured coverage](research/synthetic-xex-binding.md).
+The single workflow reconstructs all SDK patches and historical controls, then tests three profiles and the prior suites. Native harness startup, fixed-base construction and cooperative/fail-stop lifetime policy remain explicit boundaries. General DLL relocation, arbitrary native isolation, title cancellation and Horizon behavior remain unverified. [Contracts and measured coverage](research/synthetic-xex-binding.md).
+
+## Image pointer and cooperative-stop scope
+
+An explicit Image-tagged PointerBinding retains a birth image lease and obtains a fresh lease for every import. Exact import-module identity, single-section bounds, page/PE permissions and wide-integer checks precede the actual SDK call. RO IN succeeds; RO OUT/INOUT fails. Snapshot/scratch/readback/final checked commit preserve the original three synchronous contracts and reject callback reentry. Failure rolls back only that import's output. A retained capability prevents image replacement until released; closing admission refuses new calls.
+
+The original CooperativeStop state machine places a safe boundary after the bounded synthetic body/import completes. It does not interrupt generated instructions or synchronous imports. Real SDK Exit and native join precede final XThread/TLS/PCR and module reclamation. Observer-driven races, concurrent callers, failed initialization, callback errors and expected join fail-stop remain bounded by external watchdogs. Host scheduling is PARTIAL; arbitrary guest cancellation and guest exception unwind are unsupported. [Exact ownership and measured limits](research/image-backed-pointer-shutdown.md).
 
 ## Phase 15 generated PPC import caller (historical)
 

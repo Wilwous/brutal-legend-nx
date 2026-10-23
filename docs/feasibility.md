@@ -1,6 +1,6 @@
-# Feasibility — Phase 16
+# Feasibility — Phase 17
 
-**Current Phase 16 gate (2026-10-23): VERIFIED for the exact original fixed-base synthetic XEX/codegen binding.** A single workflow constructs two XEX images, runs production ReXGlue codegen without function hints, compiles unchanged emitted C++, binds actual image/TLS/import metadata and executes through the real patched SDK. All 35 reachable memory sites per image are checked. All 476 core checks pass across Debug/Release/Sanitized with zero final unexpected signals, timeouts or sanitizer findings. General relocation, full ABI and title integration remain PARTIAL; 24 imports remain denied. Further synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 16 scope, failures, measurements and reproduction](research/synthetic-xex-binding.md).
+**Current Phase 17 gate (2026-10-23): VERIFIED for the explicit original image-pointer and cooperative-stop scope.** All 518 core checks pass across Debug/Release/ASan+UBSan, with zero final unexpected signals, timeouts or sanitizer findings. The nineteen-patch SDK is unchanged. Generated synthetic callers use three reviewed image-pointer adapters; birth/call leases and final-owner cleanup cover stop, callback errors and concurrent callers. Host scheduling/general cancellation remains PARTIAL; 24 imports remain denied. Broader synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 17 evidence and reproduction](research/image-backed-pointer-shutdown.md).
 
 Historical baseline assessment: **2026-10-22 · v0.0.11-synthetic-execution**. Phase 11 passed its original synthetic Mac scope; overall port feasibility remains PARTIAL and proprietary execution remains NO-GO. The Phase 3 configuration-assisted analysis/generation PASS stands.
 
@@ -13,7 +13,7 @@ Extraction, XEX loading, configured analysis and private C++ emission are verifi
 | Analysis / generation | VERIFIED with configuration | GapFill completes; five checked function hints clear default validation failures; 48,371 bodies emitted |
 | CPU semantics | PARTIAL / BLOCKED | Alias-only SDK patch removes reproduced corruption; numeric behavior unchanged. Canary, Xenia/ReXGlue and library documentation do not establish one verified hardware oracle |
 | Runtime imports | VERIFIED source audit / PARTIAL conformance | All 261 mapped: 7 IMPLEMENTED, 184 PARTIAL, 61 STUB, 9 UNKNOWN; all 274 ordinals recognized including variables |
-| Pointer imports | VERIFIED selected SDK contracts / PARTIAL Xbox conformance | Three bounded synchronous adapters use actual SDK implementations, copy-only guest access, capability admission, output/error checks and cleanup. Six scalar and three pointer signatures are scoped; 24 entry-matrix imports remain denied. Original emitted callers now traverse these contracts; production title binding and full requirements remain open |
+| Pointer imports | VERIFIED selected SDK contracts / PARTIAL Xbox conformance | Three bounded synchronous adapters use actual SDK implementations, copy-only guest access, capability admission, output/error checks and cleanup. Six scalar and three pointer signatures are scoped; 24 entry-matrix imports remain denied. Original emitted callers traverse heap and leased image contracts with RO/RW validation, per-import rollback and cooperative lifetime checks; production title binding and full requirements remain open |
 | Runtime semantics | BLOCKED / UNKNOWN | Selected context/unwind/handler exports now fail closed; full guest exceptions remain incomplete; integrated STFS rejection tested; RtlRaiseException has a possible static entry path, actual execution/boot necessity UNKNOWN |
 | Graphics | UNKNOWN / major unresolved gate | D3D9/Xenos path and shader archive names identified; no translated shader or correct frame |
 | Audio/middleware | UNKNOWN / substantial work | FMOD/Havok/Bink/Lua evidence, XMA imports; 157 banks lack standard initial FSB magic; codecs/active paths unproven |
@@ -24,6 +24,12 @@ Extraction, XEX loading, configured analysis and private C++ emission are verifi
 | Performance | UNKNOWN | Tool RSS/timing is not game performance; no stock-clock FPS/resolution prediction |
 | Host toolchain | VERIFIED for limited checks | Pinned macOS ARM64 CLI completed emission; two partitions compile to objects; full compiler/link closure UNKNOWN |
 | Target build/deployment | UNKNOWN | Private game C++ exists; no complete host game binary, ARM64 Horizon build, NRO or hardware test |
+
+## Phase 17 readiness
+
+**VERIFIED bounded synthetic scope, 518 core checks passed:** actual production-generated XEX callers exercise image IN/OUT/INOUT adapters, checked memory, XEX TLS and real SDK shims. Birth/call leases prevent image replacement and release before final owners; cooperative requests are observed after a bounded body or supported host error boundary. Failed join remains process containment, not orderly reclamation.
+
+**PARTIAL:** safe-boundary placement and scheduling are host-authored; arbitrary generated loops, guest exception unwind, general relocation and full ABI are unverified. **CONDITIONAL GO** for more original synthetic integration. **NO-GO** for private execution: 24 denied imports, private raw-memory paths, atomics/partials/MMIO/fetch, typed-vector signatures, title TLS/TOC/stop and Horizon gaps remain. [Phase 17 results and exact next work](research/image-backed-pointer-shutdown.md).
 
 ## Phase 11 synthetic execution review
 

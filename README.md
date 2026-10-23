@@ -1,6 +1,6 @@
 # Brütal Legend NX
 
-**Wilwous · v0.0.16-synthetic-xex-binding · Xbox 360 → Nintendo Switch / Atmosphère**
+**Wilwous · v0.0.17-image-pointer-shutdown · Xbox 360 → Nintendo Switch / Atmosphère**
 
 Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Legend using static PowerPC recompilation and a homebrew runtime.
 
@@ -8,9 +8,9 @@ Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Le
 
 ## Current status
 
-Phase 16 synthetic XEX binding and reproducible codegen: **2026-10-23**, following `v0.0.15-generated-ppc-dispatch` and its README follow-up.
+Phase 17 image-backed pointer contracts and cooperative shutdown: **2026-10-23**, following `v0.0.16-synthetic-xex-binding`.
 
-**VERIFIED fixed synthetic scope:** a single workflow constructs two original XEX images, runs actual production ReXGlue codegen, compiles unchanged output and binds image/TLS/three SDK imports automatically. All 35 reachable memory sites per image are checked; 476 core checks pass across Debug/Release/Sanitized. General relocation and title integration remain PARTIAL. [Phase 16 evidence and reproduction](docs/research/synthetic-xex-binding.md).
+**VERIFIED original synthetic scope, 518 core checks passed across Debug/Release/ASan+UBSan:** production-generated XEX callers use three reviewed image-pointer adapters with RO/RW checks, bounded scratch and output rollback. Cooperative requests preserve active import, image and TLS ownership through join and final reclamation. The isolated nineteen-patch SDK and generated C++ remain unchanged. Host scheduling/general cancellation remain PARTIAL. [Phase 17 evidence and reproduction](docs/research/image-backed-pointer-shutdown.md).
 
 - **VERIFIED:** the supplied directory contains a LIVE Games on Demand/SVOD package with 33 data fragments, three DLC packages and one title-update package. It contains no standalone ISO.
 - **VERIFIED:** full GOD hash-tree verification and private extraction succeeded. The base has 284 files totaling 5,544,498,100 bytes. All 38 source game files retained their SHA-256, size and modification time.
@@ -32,7 +32,7 @@ Phase 16 synthetic XEX binding and reproducible codegen: **2026-10-23**, followi
 - **VERIFIED synthetic pipeline:** the actual pinned CLI generates an original nine-function PPC module; unchanged output executes through the checked memory layer and real patched SDK, including native XThread stack/PCR/TLS. A separate original fixture loader tests section/relocation/entry policy; normal title startup remains unverified.
 - **UNKNOWN:** runtime correctness, shaders, decoded audio-bank format, game memory budget and stock-clock performance.
 
-**Verdict: Phase 16 verified in the exact original fixed-base synthetic scope; overall port feasibility PARTIAL; private game-code execution NO-GO.** Two generated image products execute with checked image data, actual XEX-header TLS, automatic import binding, real SDK results and tested cleanup. Six scalar and three pointer-scoped signatures remain admitted by policy; 24 imports remain denied. Full ABI, guest exceptions, private generated-memory mediation and Switch runtime integration remain unresolved. [Phase 16 evidence and limits](docs/research/synthetic-xex-binding.md). [Feasibility and blockers](docs/feasibility.md).
+**Verdict: overall port feasibility PARTIAL; private game-code execution NO-GO.** Original synthetic callers exercise leased image pointers and cooperative lifetime contracts. Six scalar and three pointer signatures remain admitted; 24 imports remain denied. Host scheduling, full ABI, guest exceptions, general relocation, private memory mediation and Switch runtime integration remain unresolved. [Phase 17 evidence and limits](docs/research/image-backed-pointer-shutdown.md). [Feasibility and blockers](docs/feasibility.md).
 
 ## Technical approach
 
@@ -54,7 +54,7 @@ The first architecture candidate is ReXGlue plus reviewed Horizon adaptations an
 | Game runtime execution, shaders, audio and hardware | Not validated |
 | Game build or distribution | Not started |
 
-Next: Phase 17 original image-backed pointer contracts, cooperative-stop/failure lifetimes and safe copy batching. Further synthetic integration is CONDITIONAL GO; private game execution remains NO-GO. [Roadmap](docs/roadmap.md).
+Next: Phase 18 bounded generated-loop stop boundaries and explicit stop-poll admission. Further synthetic integration is CONDITIONAL GO; private game execution remains NO-GO. [Roadmap](docs/roadmap.md).
 
 ## Game files and compatibility
 
@@ -70,7 +70,7 @@ No game build command or installation package exists. The repository contains re
 python3 tools/check_public_tree.py
 ```
 
-[Single-command Phase 16 workflow](tests/xex-binding/README.md) reproduces the current milestone with the nineteen-patch XEX-binding lock, actual codegen and three-profile regressions. [Isolated SDK build](tools/sdk/README.md) keeps dependencies, outputs and diagnostics private. [Phase 6 commands](tests/ppc/README.md) retain historical hybrid tests.
+[Single-command Phase 5–17 workflow](tests/image-pointer-shutdown/README.md) reproduces the current milestone with the nineteen-patch XEX-binding lock, actual codegen and three-profile regressions. [Isolated SDK build](tools/sdk/README.md) keeps dependencies, outputs and diagnostics private. [Phase 6 commands](tests/ppc/README.md) retain historical hybrid tests.
 
 CI checks public contents/links, watchdog process-group cleanup, and builds/runs the original dependency-free memory/TLS components at O0/O2 and with sanitizers. It never fetches game data or the SDK, invokes codegen, builds the game or publishes releases. Overclocking is not a baseline requirement; no FPS or resolution is predicted.
 

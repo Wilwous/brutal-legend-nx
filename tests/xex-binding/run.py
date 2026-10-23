@@ -10,7 +10,7 @@ from watchdog import run
 from fixture import create
 MEMORY=['REX_LOAD_U32','REX_STORE_U32','REX_LOAD_U64','REX_STORE_U64','REX_LOAD_VECTOR','REX_STORE_VECTOR']
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
-def main():
+def main(shutdown=False):
  ap=argparse.ArgumentParser(description=__doc__)
  for n in ['sdk','rexglue','workdir']:ap.add_argument('--'+n,type=Path,required=True)
  ap.add_argument('--sanitize',action='store_true');a=ap.parse_args();sdk=a.sdk.resolve();cli=a.rexglue.resolve();work=a.workdir.resolve()
@@ -60,9 +60,10 @@ def main():
   if {f.name:sha(f) for f in emitted}!=before:raise RuntimeError('generated files changed')
   artifacts[name]={'image_sha256':sha(p/'fixture.xex'),'manifest_sha256':sha(p/'fixture_manifest.toml'),'generated':before,'object_sha256':{o.name:sha(o) for o in objects if o.name.startswith(name+'-')}}
  (work/'binding-data.h').write_text(header)
- binary=work/'binding';execute(['clang++',*common,'-I'+str(work),str(ROOT/'tests/xex-binding/contracts.cpp'),*[str(o) for o in objects],'-L'+str(sdk/'lib'),'-lrexruntime','-Wl,-rpath,'+str(sdk/'lib'),'-o',str(binary)],'build-binding')
+ binary=work/'binding';execute(['clang++',*common,'-I'+str(work),str(ROOT/('tests/image-pointer-shutdown/contracts.cpp' if shutdown else 'tests/xex-binding/contracts.cpp')),*[str(o) for o in objects],'-L'+str(sdk/'lib'),'-lrexruntime','-Wl,-rpath,'+str(sdk/'lib'),'-o',str(binary)],'build-binding')
  checks=[];failures=[]
- for mode in ['valid','mismatch','negative','permissions','pointer','target','sdk-error','repeat','concurrent','benchmark','copy-benchmark']:
+ modes=['valid','boundaries','permissions','rollback','reentrant','stale','stop-import','stop-adapter','unload-active','repeat','concurrent','initialization','callback'] if shutdown else ['valid','mismatch','negative','permissions','pointer','target','sdk-error','repeat','concurrent','benchmark','copy-benchmark']
+ for mode in modes:
   rec=run([str(binary),str(work/('runtime-'+mode)),str(input),mode],work,mode,30,True);records.append(rec)
   rows=[json.loads(s) for s in (work/(mode+'.stdout')).read_text().splitlines() if s.startswith('{')];rec['checks']=rows
   if rec['timeout'] or rec['exit_code'] or len(rows)!=1 or rows[0].get('result')!='PASS':failures.append(mode)
@@ -76,6 +77,7 @@ def main():
    if re.search(r'ERROR: AddressSanitizer|SUMMARY:.*Sanitizer|runtime error:',(work/(rec['label']+suffix)).read_text(errors='replace')):findings.append(rec['label']+suffix)
  if findings:failures.append('sanitizer-findings')
  sources=['runtime/synthetic_xex_binding.h','runtime/generated_access.h','runtime/generated_imports.h','runtime/import_admission.h','runtime/pointer_imports.h','runtime/sdk_checked_memory.h','tests/generated-dispatch/fixture.py']+[str(p.relative_to(ROOT)) for p in (ROOT/'tests/xex-binding').glob('*') if p.is_file()]
+ if shutdown:sources+=['runtime/cooperative_stop.h']+[str(p.relative_to(ROOT)) for p in (ROOT/'tests/image-pointer-shutdown').glob('*') if p.is_file()]
  result={'sdk':meta,'rexglue_sha256':sha(cli),'coverage':coverage,'artifacts':artifacts,'binary_sha256':sha(binary),'records':records,'checks':checks,'passed_groups':len(checks),'failed_groups':failures,'sanitizer_findings':findings,'game_loaded':False,'fixture_sources_sha256':{f:sha(ROOT/f) for f in sources}}
  (work/'results.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps({k:v for k,v in result.items() if k not in ['sdk','records','artifacts','fixture_sources_sha256']},indent=2));return bool(failures)
 if __name__=='__main__':
