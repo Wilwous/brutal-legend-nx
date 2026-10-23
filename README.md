@@ -1,6 +1,6 @@
 # Brütal Legend NX
 
-**Wilwous · v0.0.14-pointer-import-dispatch · Xbox 360 → Nintendo Switch / Atmosphère**
+**Wilwous · v0.0.15-generated-ppc-dispatch · Xbox 360 → Nintendo Switch / Atmosphère**
 
 Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Legend using static PowerPC recompilation and a homebrew runtime.
 
@@ -8,7 +8,9 @@ Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Le
 
 ## Current status
 
-Phase 14 pointer adapters and synthetic dispatch: **2026-10-23**, following `v0.0.13-tls-import-admission` (`fc8e58a`).
+Phase 15 generated PPC caller and end-to-end dispatch: **2026-10-23**, following `v0.0.14-pointer-import-dispatch` (`963a613`).
+
+**VERIFIED scoped synthetic execution:** actual ReXGlue output executes all 30 reachable checked-memory sites and three real SDK pointer imports; 440 core checks pass across Debug/Release/Sanitized. Automatic XEX/codegen binding remains PARTIAL. Broader original synthetic integration is CONDITIONAL GO; private game execution remains NO-GO. [Phase 15 evidence and reproduction](docs/research/generated-ppc-end-to-end-dispatch.md).
 
 - **VERIFIED:** the supplied directory contains a LIVE Games on Demand/SVOD package with 33 data fragments, three DLC packages and one title-update package. It contains no standalone ISO.
 - **VERIFIED:** full GOD hash-tree verification and private extraction succeeded. The base has 284 files totaling 5,544,498,100 bytes. All 38 source game files retained their SHA-256, size and modification time.

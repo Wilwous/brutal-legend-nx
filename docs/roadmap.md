@@ -1,6 +1,6 @@
-# Research roadmap — Phase 14
+# Research roadmap — Phase 15
 
-**Current Phase 14 gate (2026-10-23): VERIFIED for the listed host-driven synthetic import path; private game-code execution NO-GO.** Three capability-bound copy adapters now cover IN words, OUT memory information and INOUT critical-section initialization through actual XEX metadata, header TLS, admission and SDK implementations. Six scalar and three pointer-scoped signatures are admitted; 24 matrix entries remain denied. All 401 core checks pass across Debug/Release/Sanitized with zero unexpected signals, timeouts or sanitizer findings. Full conformance labels remain 27 PARTIAL / six BLOCKED. Emitted guest callers, full ABI, exceptions and private generated-memory mediation remain unresolved. [Phase 14 contracts, evidence, regressions and reproduction](research/pointer-import-synthetic-dispatch.md).
+**Current Phase 15 gate (2026-10-23): VERIFIED for the exact original generated PPC execution scope; automatic XEX/codegen binding remains PARTIAL.** Actual ReXGlue output executes checked memory → direct/indirect admission → three pointer adapters → real SDK → generated result branch and cleanup. All 30 reachable generated memory sites are checked; 440 core checks pass across Debug/Release/Sanitized with zero final unexpected signals, timeouts or sanitizer findings. Six scalar and three pointer signatures remain scoped; 24 imports remain denied. Broader synthetic integration is CONDITIONAL GO; private game execution is NO-GO. Full ABI, guest exceptions and private generated-memory mediation remain unresolved. [Phase 15 evidence, reproduction and limits](research/generated-ppc-end-to-end-dispatch.md).
 
 ## Completed
 
@@ -50,9 +50,13 @@ Actual XEX-header templates initialize real independent-module and default title
 
 Three capability-bound IN/OUT/INOUT adapters execute the listed real XEX/TLS/import/SDK path with bounded snapshots, private scratch, output validation and retained ownership. Active module unload and allocation-release attempts, cross-page failures, callback reentrancy/errors and repeated/concurrent XThreads are covered. SDK patches/locks remain unchanged. The shared matrix now admits six scalar and three pointer-scoped signatures while denying 24; full Xbox conformance remains partial. No proprietary code or guest XEX entry executes. [Results, reproduction and limits](research/pointer-import-synthetic-dispatch.md).
 
-## Next exact task: R2o / Phase 15 — emitted caller integration and access accounting
+## R2o / Phase 15 — original generated caller and access accounting
 
-Route an independently authored, actually emitted PPC caller through the checked pointer admission boundary and mediated module data accesses. Account for every call/access and reject unknown dynamic targets. Extend reachable import contracts only with independent failure/lifetime evidence. Preserve typed-vector, atomic/partial-vector/MMIO/fetch, guest exception, title TOC/stop and DLL TLS-index limitations. Private game-code execution remains NO-GO pending a separate exact-scope review.
+Completed in the explicit synthetic scope: actual pinned generation of eight original functions / 59 instructions, unchanged generated caller execution, 30/30 checked reachable memory sites, three pointer contracts and real SDK-result branching. Four concurrent XThreads, active unload/release refusal and repeated image/thread/buffer reclamation pass. All 440 core checks pass across three profiles. Host-authored raw-test rebasing and binding remain PARTIAL; private game output remains uninstrumented. [Complete evidence and limitations](research/generated-ppc-end-to-end-dispatch.md).
+
+## Next exact task: R2p / Phase 16 — validated image/import binding
+
+**CONDITIONAL GO for broader original synthetic work:** derive validated code/import relocation binding and checked image-data capabilities from an original loaded image. Replace explicit raw-test mapping metadata, test rejected relocations/ownership transitions and measure scoped mediation overhead. Expand ABI contracts only with independent evidence. Retain all current refusals and bounded supervision. **NO-GO for private game execution:** 24 imports, private raw-memory paths, atomics/partial vectors/MMIO/fetch, typed-vector ABI, guest exceptions, title TOC/stop and DLL TLS indexing remain gates.
 
 The following entry-readiness acceptance gate remains open:
 

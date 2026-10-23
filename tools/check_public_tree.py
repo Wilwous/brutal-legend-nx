@@ -18,6 +18,9 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    "runtime/generated_imports.h", "tests/generated-dispatch/README.md",
+    "tests/generated-dispatch/fixture.py", "tests/generated-dispatch/contracts.cpp",
+    "tests/generated-dispatch/run.py", "tests/generated-dispatch/test_fixture.py",
     "runtime/pointer_imports.h", "tests/pointer-import/README.md",
     "tests/pointer-import/run.py", "tests/pointer-import/contracts.cpp",
     "runtime/import_admission.h", "tools/sdk/tls-import-lock.json",

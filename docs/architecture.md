@@ -1,6 +1,6 @@
-# Proposed architecture — Phase 14
+# Proposed architecture — Phase 15
 
-**Current Phase 14 gate (2026-10-23): VERIFIED for the listed host-driven synthetic import path; private game-code execution NO-GO.** Three capability-bound copy adapters now cover IN words, OUT memory information and INOUT critical-section initialization through actual XEX metadata, header TLS, admission and SDK implementations. Six scalar and three pointer-scoped signatures are admitted; 24 matrix entries remain denied. All 401 core checks pass across Debug/Release/Sanitized with zero unexpected signals, timeouts or sanitizer findings. Full conformance labels remain 27 PARTIAL / six BLOCKED. Emitted guest callers, full ABI, exceptions and private generated-memory mediation remain unresolved. [Phase 14 contracts, evidence, regressions and reproduction](research/pointer-import-synthetic-dispatch.md).
+**Current Phase 15 gate (2026-10-23): VERIFIED for the exact original generated PPC execution scope; automatic XEX/codegen binding remains PARTIAL.** Actual ReXGlue output executes checked memory → direct/indirect admission → three pointer adapters → real SDK → generated result branch and cleanup. All 30 reachable generated memory sites are checked; 440 core checks pass across Debug/Release/Sanitized with zero final unexpected signals, timeouts or sanitizer findings. Six scalar and three pointer signatures remain scoped; 24 imports remain denied. Broader synthetic integration is CONDITIONAL GO; private game execution is NO-GO. Full ABI, guest exceptions and private generated-memory mediation remain unresolved. [Phase 15 evidence, reproduction and limits](research/generated-ppc-end-to-end-dispatch.md).
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -17,11 +17,17 @@ flowchart TD
   H --> I[Sanitized public findings]
 ```
 
+## Generated PPC import caller
+
+The original Phase 15 raw-test program is decoded/emitted by the pinned CLI and compiled unchanged. Its generated entry and scalar callee mediate all 30 reachable guest-memory sites, prepare pointer and stack arguments, execute scalar/full-vector/TLS operations and branch on actual SDK results. A narrow thread-local GeneratedImports seam routes explicit original gate identities through the existing admission and copy adapters; unregistered targets have no fallback. Actual XEX loading supplies image/import/TLS metadata. Host-authored rebasing/registration and caller setup remain an explicit PARTIAL boundary rather than automatic XEX codegen integration.
+
+Execution and per-import image leases, original capability buffers and real XThread ownership cover four concurrent callers, active-call unload/release refusal and repeated cleanup. The checked Scope adds local attempt/completion counters; SDK patches and contracts remain unchanged. Full native C++ isolation, guest exception unwind, title ABI and private game instrumentation are not supplied. [Measured scope and remaining gates](research/generated-ppc-end-to-end-dispatch.md).
+
 ## Checked pointer import dispatch
 
 The opt-in admission boundary now has three explicit PointerBinding signatures. Actual SDK implementations receive private, owner-tagged scratch addresses; guest buffers are read and committed only through bounded owner/page/protection checks. Facade operations serialize through the call, with explicit nonblocking busy release and guarded callback reentrancy. Final full-span validation refuses external release/protection changes without partial output or false success. Module leases cover each call separately from thread-TLS image ownership.
 
-The listed host-driven path uses real synthetic XEX loading, header TLS, import records, direct/indirect admission, copy adapters, SDK shims and cleanup. Its native XThread driver does not execute XEX entry instructions. This is not transparent instrumentation of private generated callers or a native sandbox. IN snapshot semantics, same-owner query targets and nonretaining synchronous imports define the verified scope. [Contracts, concurrency, ABI and limitations](research/pointer-import-synthetic-dispatch.md).
+The historical Phase 14 host-driven path uses real synthetic XEX loading, header TLS, import records, direct/indirect admission, copy adapters, SDK shims and cleanup. Its native XThread driver does not execute XEX entry instructions. This is not transparent instrumentation of private generated callers or a native sandbox. IN snapshot semantics, same-owner query targets and nonretaining synchronous imports define the verified scope. [Contracts, concurrency, ABI and limitations](research/pointer-import-synthetic-dispatch.md).
 
 ## XEX TLS and import admission
 

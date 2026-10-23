@@ -31,6 +31,8 @@ class Scope {
   Scope* previous_;
   inline static thread_local Scope* current_=nullptr;
  public:
+  struct Statistics { uint64_t reads=0,writes=0,completed=0; };
+  Statistics statistics{};
   Scope(Memory& memory,rex::memory::Memory& sdk):memory_(memory),sdk_(sdk),previous_(current_){current_=this;}
   Scope(const Scope&)=delete;Scope& operator=(const Scope&)=delete;
   ~Scope(){current_=previous_;}
@@ -66,6 +68,7 @@ class Scope {
   }
   static Scope& current(){if(!current_)throw Fault(Kind::unbound);return *current_;}
   void copy(uint32_t address,std::span<std::byte> bytes,bool write){
+    if(write)++statistics.writes;else ++statistics.reads;
     if(!address||bytes.empty()||bytes.size()>0x100000000ull-address)throw Fault(Kind::memory);
     for(uint64_t a=address;a<uint64_t(address)+bytes.size();++a)
       if((a>=0x7f000000ull&&a<0x80000000ull)||sdk_.LookupVirtualMappedRange(uint32_t(a)))
@@ -75,14 +78,14 @@ class Scope {
       if(address>=start&&uint64_t(address)+bytes.size()<=uint64_t(start)+b.size){
         auto result=write?memory_.write(b.handle,address-start,bytes):memory_.read(b.handle,address-start,bytes);
         if(result!=Result::ok)throw Fault(Kind::memory,result);
-        return;
+        ++statistics.completed;return;
       }
     }
     for(auto b:loans_)if(address>=b.address&&uint64_t(address)+bytes.size()<=uint64_t(b.address)+b.size){
       auto result=sdk_.LookupHeap(b.base)->CopyOwnedMemory(b.base,b.owner,address,
           bytes.data(),bytes.size(),write?Memory::Access::write:Memory::Access::read);
       if(result!=Result::ok)throw Fault(Kind::memory,result);
-      return;
+      ++statistics.completed;return;
     }
     throw Fault(Kind::memory,Result::ownership);
   }
