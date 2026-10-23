@@ -1,6 +1,6 @@
-# Feasibility — Phase 18
+# Feasibility — Phase 19
 
-**Current Phase 18 gate (2026-10-23): VERIFIED for the explicit original generated-loop scope.** All 575 core checks pass across Debug/Release/ASan+UBSan. Production midasm hooks cover 6/6 scoped backward branches and run inside generated PPC, including the infinite loop. All six backedge sites are observed in every profile; final unexpected signals, timeouts and sanitizer findings are zero. The nineteen-patch SDK is unchanged. General CFG policy, guest unwind and title integration remain PARTIAL; 24 imports remain denied. Broader synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 18 evidence and reproduction](research/generated-loop-stop-boundaries.md).
+**Current Phase 19 gate (2026-10-23): VERIFIED static audit and bounded original regressions; entry readiness PARTIAL.** The lexical direct closure contains 108 generated functions, 33 imports, 21 unresolved indirect sites and 1,693 unmediated scalar accesses. Nine import contracts are scoped; 24 remain denied. The original stop adapter now uses one state snapshot to avoid a reproduced false rejection. Final Debug/Release/ASan+UBSan regressions pass 578 core checks; interrupted/failed attempts remain documented. No proprietary code executes. Phase 20 synthetic/static work is CONDITIONAL GO; private game entry is NO-GO. [Full audit, ranked blockers and acceptance criteria](research/game-entry-readiness-audit.md).
 
 Historical baseline assessment: **2026-10-22 · v0.0.11-synthetic-execution**. Phase 11 passed its original synthetic Mac scope; overall port feasibility remains PARTIAL and proprietary execution remains NO-GO. The Phase 3 configuration-assisted analysis/generation PASS stands.
 

@@ -25,10 +25,10 @@ loop without stop hooks is used only as the benchmark reference, with identical
 PPC memory-loop words, checked memory and bounded inputs. Its other functions
 are never admitted/executed. It is excluded from stop-coverage claims.
 
-Nineteen isolated children test natural/early returns, finite/infinite/nested/
+Twenty isolated children test natural/early returns, finite/infinite/nested/
 memory loops, long blocks, generated entry, imports/adapter work, active unload,
 four XThreads, concurrent requesters, eight cycles, asynchronous observation,
-checked access failures, callback errors, initialization, policy and benchmark.
+checked access failures, callback errors, initialization, policy, benchmark and 256 request/poll races.
 The failed-join child expects process exit 70, not orderly resource reclamation.
 Each child uses an external monotonic 30-second process-group watchdog; joins
 and observer rendezvous have independent shorter limits.
@@ -42,3 +42,5 @@ for the explicitly audited original scope, not automatic arbitrary-title CFG
 instrumentation.
 
 [Coverage, measurements, ownership and remaining gates](../../docs/research/generated-loop-stop-boundaries.md).
+
+Phase 19 uses a single atomic state snapshot per poll: a racing request may be consumed at the next point, while terminal states still reject. The race group checks both legal scheduling outcomes and terminal refusal; it does not claim exhaustive interleaving coverage. [Current audit](../../docs/research/game-entry-readiness-audit.md).

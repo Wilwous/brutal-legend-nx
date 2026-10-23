@@ -8,7 +8,7 @@ ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'tests/ppc')
 from watchdog import run
 from fixture import create
 from audit import audit
-MODES=['natural','finite-stop','infinite-stop','nested-stop','memory-stop','long-stop','entry-stop','import-stop','adapter-stop','unload-import','concurrent','repeat','latency','error','callback','initialization','policy','benchmark']
+MODES=['natural','finite-stop','infinite-stop','nested-stop','memory-stop','long-stop','entry-stop','import-stop','adapter-stop','unload-import','concurrent','repeat','latency','error','callback','initialization','policy','benchmark','request-race']
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def main():
  ap=argparse.ArgumentParser(description=__doc__)

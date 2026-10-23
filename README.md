@@ -1,6 +1,6 @@
 # Brütal Legend NX
 
-**Wilwous · v0.0.18-generated-loop-stop · Xbox 360 → Nintendo Switch / Atmosphère**
+**Wilwous · v0.0.19-entry-readiness-audit · Xbox 360 → Nintendo Switch / Atmosphère**
 
 Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Legend using static PowerPC recompilation and a homebrew runtime.
 
@@ -8,9 +8,9 @@ Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Le
 
 ## Current status
 
-Phase 18 generated PPC loop stop boundaries: **2026-10-23**, following `v0.0.17-image-pointer-shutdown`.
+Phase 19 entry readiness audit: **2026-10-23**, baseline `v0.0.18-generated-loop-stop`.
 
-**VERIFIED original synthetic scope, 575 core checks passed across Debug/Release/ASan+UBSan:** production midasm hooks execute inside nine original generated functions and cover all six backward branches. Infinite-loop cancellation, SDK/pointer completion and concurrent lifetime tests use unchanged emitted C++ and the existing nineteen-patch SDK. Generic CFG policy and guest unwind remain PARTIAL. [Phase 18 evidence and reproduction](docs/research/generated-loop-stop-boundaries.md).
+**VERIFIED static audit and 578 final original core checks:** the literal direct closure has 108 generated functions, 33 imports, 21 unresolved indirect sites and 1,693 unmediated scalar accesses. Nine scoped import contracts remain admitted; 24 stay denied. A reproduced stop-state race is corrected with a single snapshot and bounded original regressions. Phase 20 synthetic/static work is CONDITIONAL GO; private game entry remains NO-GO. [Evidence, retained failures, ranked blockers and Phase 20–22 plan](docs/research/game-entry-readiness-audit.md).
 
 - **VERIFIED:** the supplied directory contains a LIVE Games on Demand/SVOD package with 33 data fragments, three DLC packages and one title-update package. It contains no standalone ISO.
 - **VERIFIED:** full GOD hash-tree verification and private extraction succeeded. The base has 284 files totaling 5,544,498,100 bytes. All 38 source game files retained their SHA-256, size and modification time.
@@ -32,7 +32,7 @@ Phase 18 generated PPC loop stop boundaries: **2026-10-23**, following `v0.0.17-
 - **VERIFIED synthetic pipeline:** the actual pinned CLI generates an original nine-function PPC module; unchanged output executes through the checked memory layer and real patched SDK, including native XThread stack/PCR/TLS. A separate original fixture loader tests section/relocation/entry policy; normal title startup remains unverified.
 - **UNKNOWN:** runtime correctness, shaders, decoded audio-bank format, game memory budget and stock-clock performance.
 
-**Verdict: overall port feasibility PARTIAL; private game-code execution NO-GO.** Original synthetic callers exercise generated loop safe points, leased image pointers and cooperative lifetime contracts. Six scalar and three pointer signatures remain admitted; 24 imports remain denied. Host scheduling, full ABI, guest exceptions, general relocation, private memory mediation and Switch runtime integration remain unresolved. [Phase 18 evidence and limits](docs/research/generated-loop-stop-boundaries.md). [Feasibility and blockers](docs/feasibility.md).
+**Verdict: overall port feasibility PARTIAL; private game-code execution NO-GO.** Original synthetic callers exercise generated loop safe points, leased image pointers and cooperative lifetime contracts. Six scalar and three pointer signatures remain admitted; 24 imports remain denied. Host scheduling, full ABI, guest exceptions, general relocation, private memory mediation and Switch runtime integration remain unresolved. [Phase 19 evidence and limits](docs/research/game-entry-readiness-audit.md). [Feasibility and blockers](docs/feasibility.md).
 
 ## Technical approach
 

@@ -1,6 +1,6 @@
-# Research roadmap — Phase 18
+# Research roadmap — Phase 19
 
-**Current Phase 18 gate (2026-10-23): VERIFIED for the explicit original generated-loop scope.** All 575 core checks pass across Debug/Release/ASan+UBSan. Production midasm hooks cover 6/6 scoped backward branches and run inside generated PPC, including the infinite loop. All six backedge sites are observed in every profile; final unexpected signals, timeouts and sanitizer findings are zero. The nineteen-patch SDK is unchanged. General CFG policy, guest unwind and title integration remain PARTIAL; 24 imports remain denied. Broader synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 18 evidence and reproduction](research/generated-loop-stop-boundaries.md).
+**Current Phase 19 gate (2026-10-23): VERIFIED static audit and bounded original regressions; entry readiness PARTIAL.** The lexical direct closure contains 108 generated functions, 33 imports, 21 unresolved indirect sites and 1,693 unmediated scalar accesses. Nine import contracts are scoped; 24 remain denied. The original stop adapter now uses one state snapshot to avoid a reproduced false rejection. Final Debug/Release/ASan+UBSan regressions pass 578 core checks; interrupted/failed attempts remain documented. No proprietary code executes. Phase 20 synthetic/static work is CONDITIONAL GO; private game entry is NO-GO. [Full audit, ranked blockers and acceptance criteria](research/game-entry-readiness-audit.md).
 
 ## Completed
 
@@ -66,19 +66,25 @@ Original generated XEX callers use all three existing pointer contracts with lea
 
 The original nine-function XEX uses actual production midasm hooks at all six backward branches and explicit whole-instruction safe points. Finite/infinite/nested/memory/import loops, concurrent requests, active unload and checkpoint/lease cleanup execute through unchanged generated C++ and the real SDK. The finite unhooked benchmark retains checked memory. General guest cancellation and arbitrary-title instrumentation remain unverified. [Coverage, overhead and regressions](research/generated-loop-stop-boundaries.md).
 
-## Next exact task: R2s / Phase 19 — CFG stop-policy and site identity validation
+## R2s / Phase 19 — readiness audit (completed in static/synthetic scope)
 
-**CONDITIONAL GO for original synthetic work:** derive and negatively test safe-point policy from a broader bounded CFG, including supported forward joins and callee boundaries. Compare indexed site identities against the current validated PC lookup while retaining every required safe point, memory/import admission and final-owner cleanup. Require complete scoped loop coverage and independent timing evidence before selecting an optimization. Do not infer generic title cancellation or guest unwind from these fixtures.
+Reconciled the preserved entry/memory census; all 33 imports are classified A9/B18/E6, with initialization necessity UNKNOWN for every row. Private detailed identifiers stay outside Git. No game generation/execution occurs. A reproduced original stop-state race is corrected by one atomic snapshot and a 256-cycle regression per profile. All 578 selected final core checks pass; one initial false rejection, storage interruption and two calendar-watchdog terminations remain recorded. [Evidence and ranked B01–B10 matrix](research/game-entry-readiness-audit.md).
 
-**NO-GO for private execution:** 24 denied imports, uninstrumented private generated memory, atomics/partial vectors/MMIO/fetch, typed-vector ABI, guest exceptions, relocation/title TOC/TLS/import/stop contracts and Horizon remain unresolved.
+## Next: Phase 20 — bounded region and identity evidence
 
-The following entry-readiness acceptance gate remains open:
+**CONDITIONAL GO for original synthetic/static work.** Address B01/B06 first: privately identify the smallest meaningful entry region ending before unsupported effects; independently validate actual PCs, forward joins, cycles, transfers and stop placement. Use an original synthetic analogue and conflict/omission tests. Unknown indirect targets must reject before transfer. Do not construct a speculative whole-title CFG engine or execute game code. Exit with a defensible region manifest, or a documented finding that the candidate cannot meet the contract.
 
-**NO-GO for proprietary execution.** Address raw accesses to 4 KiB guest pages sharing 16 KiB host pages, and define a fail-closed entry/import policy. Establish which unsupported vector ABI/exception/error paths are unreachable or refused, title TLS/TOC/dispatch prerequisites, and memory/pointer lifetime boundaries with original fixtures. XamAlloc host exceptions are not an Xbox error-code implementation; complete guest unwinding is not supplied.
+## Phase 21 — only the selected runtime dependencies
 
-**Acceptance before any execution proposal:** explicit checked-access scope, no unresolved critical safety issue on the proposed path, documented failure observability and independently justified required ABI/error contracts. A later readiness review must precede a narrowly bounded private generated-code trace. Full game compilation, game execution/boot, graphics/audio and Switch deployment are separate gates.
+After Phase 20, address B03/B04/B05 and any demonstrated B07/B08/B09 dependency. Validate exact image/code binding, consumed initial registers/stack/TLS/PCR and only the necessary import/pointer/error contracts using original generated callers. Preserve all other denials. Full guest unwind or all 24 denied imports need not be implemented if independently excluded or stopped before use. Require all three profiles, complete access/call/stop accounting and legitimate final-owner cleanup.
 
-Keep the XEX, assets, manifest and prior generated output private and unchanged. Alternate headers and title updates remain separate decisions. Phase 3's analyzer allowance remains consumed; no analyzer is rerun. The saved Phase 8 SIGBUS and exploratory diagnostics remain private evidence rather than being discarded.
+## Phase 22 — private instrumentation and independent reassessment
+
+After the region/contract evidence exists, use a separately bounded generation-only task to produce new private output with pinned production configuration and complete checked seams (B02). Preserve historical game outputs and configuration. Validate every access/transfer/site against independent metadata, exact compiled image binding and negative original regressions. Any renewed title analysis needs its own finite allowance. Only then reassess a later separately authorized private experiment; this roadmap grants no execution permission.
+
+**Private game entry remains NO-GO.** The mandatory gate is complete checked memory, supported-or-rejected operations, exact import ABI/pointer/error admission, image/code ownership, consumed initialization, stop and indirect coverage, observable failure and external process containment for the actual frozen region. Typed-vector ABI, full Xbox ABI and guest exception dispatch/unwind remain unsupported or unverified. Indexed lookup performance, graphics/audio, broad DLL loading and Horizon work follow demonstrated dependencies, not a generic emulator checklist.
+
+Keep XEX/assets/configuration/old generated output unchanged and private. No full game compilation, boot or Switch deployment follows from synthetic success. The saved allocation SIGBUS and all useful failed/interrupted diagnostics remain private evidence.
 
 ## R3 — independent Horizon probes (not started)
 

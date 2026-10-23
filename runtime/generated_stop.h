@@ -38,11 +38,13 @@ class GeneratedStop {
     if(found==self->sites_.end()||*found!=pc)throw std::logic_error("unadmitted generated stop site");
     ++self->hits[size_t(found-self->sites_.begin())];
     if(self->observer_)self->observer_(pc);
-    if(self->stop_.state()==CooperativeStop::State::requested){
+    // One snapshot: a request racing a running snapshot belongs to the next poll.
+    const auto state=self->stop_.state();
+    if(state==CooperativeStop::State::requested){
       if(!self->stop_.safe_boundary())throw std::logic_error("stop transition race");
       throw Stopped(self);
     }
-    if(self->stop_.state()!=CooperativeStop::State::running)throw std::logic_error("generated execution after stop boundary");
+    if(state!=CooperativeStop::State::running)throw std::logic_error("generated execution after stop boundary");
   }
 };
 }

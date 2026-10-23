@@ -22,6 +22,8 @@ jobs:
         run: python3 tests/guest-memory/test_audit.py
       - name: Check original instrumentation census fixtures
         run: python3 tests/instrumentation/test_audit.py
+      - name: Check original readiness audit fixtures
+        run: python3 tests/readiness/test_audit.py
       - name: Check original synthetic module encoding
         run: python3 tests/synthetic/test_fixture.py
       - name: Check original generated caller encoding

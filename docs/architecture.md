@@ -1,6 +1,6 @@
-# Proposed architecture — Phase 18
+# Proposed architecture — Phase 19
 
-**Current Phase 18 gate (2026-10-23): VERIFIED for the explicit original generated-loop scope.** All 575 core checks pass across Debug/Release/ASan+UBSan. Production midasm hooks cover 6/6 scoped backward branches and run inside generated PPC, including the infinite loop. All six backedge sites are observed in every profile; final unexpected signals, timeouts and sanitizer findings are zero. The nineteen-patch SDK is unchanged. General CFG policy, guest unwind and title integration remain PARTIAL; 24 imports remain denied. Broader synthetic work is CONDITIONAL GO; private game execution is NO-GO. [Phase 18 evidence and reproduction](research/generated-loop-stop-boundaries.md).
+**Current Phase 19 gate (2026-10-23): VERIFIED static audit and bounded original regressions; entry readiness PARTIAL.** The lexical direct closure contains 108 generated functions, 33 imports, 21 unresolved indirect sites and 1,693 unmediated scalar accesses. Nine import contracts are scoped; 24 remain denied. The original stop adapter now uses one state snapshot to avoid a reproduced false rejection. Final Debug/Release/ASan+UBSan regressions pass 578 core checks; interrupted/failed attempts remain documented. No proprietary code executes. Phase 20 synthetic/static work is CONDITIONAL GO; private game entry is NO-GO. [Full audit, ranked blockers and acceptance criteria](research/game-entry-readiness-audit.md).
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -16,6 +16,12 @@ flowchart TD
   G --> H[Independent Switch runtime and graphics tests: future]
   H --> I[Sanitized public findings]
 ```
+
+## Entry-region acceptance boundary
+
+The Phase 19 inventory is lexical, not a complete dynamic graph or instruction address map. Detailed entry/edge/access identifiers remain private. A bounded region must establish independent actual site identities, complete checked memory and call admission, exact image/code ownership, consumed initial ABI/TLS state and stop coverage before any execution proposal. The existing synthetic binder and scope have explicit capacity/layout limits; they do not automatically admit the 108-function game closure.
+
+The next engineering work freezes that region with an original analogue, validates only required runtime contracts, then separately produces reproducible private instrumentation for a fresh readiness decision. General emulator features, indexed lookup optimization and Horizon integration are deferred unless evidence makes them prerequisites. [Contract and dependency order](research/game-entry-readiness-audit.md).
 
 ## Fixed-base synthetic XEX binding
 

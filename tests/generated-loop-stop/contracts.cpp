@@ -160,6 +160,21 @@ int main(int argc,char**argv){if(argc!=4)return 2;std::setbuf(stdout,nullptr);re
      run(a_finite,10,0);run(a_finite,0,0);run(a_nested,4,0);put(0x200,0);run(a_memory,8,d.guest_address()+0x200);run(a_imports,d.guest_address(),0);run(a_long,3,0);run(description_a().code_base+196,d.guest_address(),0);
     }else if(mode=="benchmark"){
      for(unsigned pair=0;pair<5;++pair){for(unsigned step=0;step<2;++step){const bool ref=(pair+step)&1;put(0x200,0);run(ref?b_memory:a_memory,200,d.guest_address()+0x200,ref,false,false,true);}}
+    }else if(mode=="request-race"){
+     // A request may arrive while poll observes running. Both legal schedules
+     // must converge at the next poll, without a spurious terminal-state error.
+     for(unsigned iteration=0;iteration<256;++iteration){
+      Stop local;std::atomic<bool>entered{false},won{false};
+      GeneratedStop probe(local,c,a_sites,[&](uint32_t){entered.store(true);});
+      std::jthread requester([&]{while(!entered.load())std::this_thread::yield();won=local.request();});
+      bool caught=false;
+      try{GeneratedStop::poll(a_sites[0]);}catch(const GeneratedStop::Stopped&signal){test(probe.owns(signal));caught=true;}
+      requester.join();test(won.load());
+      if(!caught){try{GeneratedStop::poll(a_sites[0]);}catch(const GeneratedStop::Stopped&signal){test(probe.owns(signal));caught=true;}}
+      test(caught&&local.state()==Stop::State::boundary);
+      bool terminal=false;try{GeneratedStop::poll(a_sites[0]);}catch(const std::logic_error&){terminal=true;}
+      test(terminal);++rejected;
+     }
     }else if(mode=="error")run(a_memory,2,0,false,false,true);
     else if(mode=="callback")run(a_imports,d.guest_address(),0,false,false,true);
     else if(mode=="policy")run(a_finite,2,0);
