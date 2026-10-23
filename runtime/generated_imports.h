@@ -44,6 +44,12 @@ class GeneratedImports {
   for(auto g:gates_)if(g.thunk==thunk||g.ordinal==ordinal)throw std::invalid_argument("duplicate generated gate");
   gates_.push_back({nullptr,thunk,ordinal,signature,&binding});
  }
+ // A caller that has classified a target as an import must not reach the
+ // general direct-call API's explicitly allowed native-function branch.
+ static void direct_import(PPCFunc* f,PPCContext& c,uint8_t* base){
+  if(f&&current_)for(auto g:current_->gates_)if(g.symbol==f){current_->invoke(g,false,c,base);return;}
+  throw instrumentation::Fault(instrumentation::Kind::unsupported_call);
+ }
  static void direct(PPCFunc* f,PPCContext& c,uint8_t* base){
   if(current_)for(auto g:current_->gates_)if(g.symbol==f){current_->invoke(g,false,c,base);return;}
   instrumentation::Scope::current().direct(f,c,base);

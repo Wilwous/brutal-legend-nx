@@ -1,6 +1,6 @@
-# Feasibility — Phase 19
+# Feasibility — Phase 20
 
-**Current Phase 19 gate (2026-10-23): VERIFIED static audit and bounded original regressions; entry readiness PARTIAL.** The lexical direct closure contains 108 generated functions, 33 imports, 21 unresolved indirect sites and 1,693 unmediated scalar accesses. Nine import contracts are scoped; 24 remain denied. The original stop adapter now uses one state snapshot to avoid a reproduced false rejection. Final Debug/Release/ASan+UBSan regressions pass 578 core checks; interrupted/failed attempts remain documented. No proprietary code executes. Phase 20 synthetic/static work is CONDITIONAL GO; private game entry is NO-GO. [Full audit, ranked blockers and acceptance criteria](research/game-entry-readiness-audit.md).
+**Current Phase 20 gate (2026-10-24): VERIFIED in static/original-synthetic scope.** A frozen entry region has 19 permitted instructions plus one pre-call exit word, two selected ranges, four blocks and 19 normal edges. Its eight stores remain unmediated in the preserved game output. B01 is closed only for this region; B06 has static identities and a separate original proof: 74/74 emitted/observed stop sites and 72/72 edges. Final regressions pass 629 core checks. Exception metadata and differing PE/XEX image bounds remain execution dependencies. Phase 21 synthetic contracts are CONDITIONAL GO; private game execution is NO-GO. [Exact confidence, evidence and remaining gates](research/bounded-entry-region-cfg.md).
 
 Historical baseline assessment: **2026-10-22 · v0.0.11-synthetic-execution**. Phase 11 passed its original synthetic Mac scope; overall port feasibility remains PARTIAL and proprietary execution remains NO-GO. The Phase 3 configuration-assisted analysis/generation PASS stands.
 
@@ -25,7 +25,15 @@ Extraction, XEX loading, configured analysis and private C++ emission are verifi
 | Host toolchain | VERIFIED for limited checks | Pinned macOS ARM64 CLI completed emission; two partitions compile to objects; full compiler/link closure UNKNOWN |
 | Target build/deployment | UNKNOWN | Private game C++ exists; no complete host game binary, ARM64 Horizon build, NRO or hardware test |
 
-## Phase 18 readiness
+## Phase 20 bounded-region decision
+
+The normal-flow entry dependency is substantially narrower than the previous 108-function lexical closure: two selected ranges, no admitted SDK imports, no unresolved normal transfer, and a pre-initializer exit. This is a static control result, not a runtime compatibility result. Zero normal imports is proven from the complete selected words and exit policy; it does not remove the 24 denials or establish later title requirements.
+
+Memory remains BLOCKED: eight game stores have no checked instrumentation. Image/code binding remains BLOCKED for execution; PE SizeOfImage exceeds the XEX/loaded bound, although selected code/data lie inside both. Consumed launch state, host thread ownership, actual stop integration and exceptional-continuation refusal need Phase 21 original contracts. One entry-owner exception scope intersects the region; complete guest exceptions/unwind remains unsupported.
+
+**CONDITIONAL GO for Phase 21 original synthetic validation; private execution NO-GO.** Require exact stack/save/store widths and ownership, conservative image bounds, initial register/linkage/context state, root/code identity, exceptional/unknown-transfer refusal and final reclamation. Keep all unrelated import/ABI/DLL/runtime features denied or deferred. [629 final checks and scoped evidence](research/bounded-entry-region-cfg.md).
+
+## Historical Phase 18 readiness
 
 Production-generated original PPC now observes requests inside finite/infinite/nested loops, at function entry, memory boundaries and after completed imports. All six scoped backward branches are instrumented. The typed host completion signal preserves ordinary C++ cleanup and existing image/pointer/TLS ownership; it does not implement guest unwind. The finite unhooked benchmark retains checked memory and is excluded from cancellation coverage.
 

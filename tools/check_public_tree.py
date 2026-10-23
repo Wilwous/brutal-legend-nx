@@ -18,6 +18,9 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    "tools/bounded_cfg.py", "runtime/bounded_cfg.h",
+    "tests/bounded-cfg/README.md", "tests/bounded-cfg/fixture.py",
+    "tests/bounded-cfg/contracts.cpp", "tests/bounded-cfg/run.py", "tests/bounded-cfg/test_manifest.py",
     "tools/audit_readiness.py", "tests/readiness/test_audit.py",
     "runtime/generated_stop.h", "tests/generated-loop-stop/README.md",
     "tests/generated-loop-stop/fixture.py", "tests/generated-loop-stop/audit.py",

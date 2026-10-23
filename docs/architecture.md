@@ -1,6 +1,6 @@
-# Proposed architecture — Phase 19
+# Proposed architecture — Phase 20
 
-**Current Phase 19 gate (2026-10-23): VERIFIED static audit and bounded original regressions; entry readiness PARTIAL.** The lexical direct closure contains 108 generated functions, 33 imports, 21 unresolved indirect sites and 1,693 unmediated scalar accesses. Nine import contracts are scoped; 24 remain denied. The original stop adapter now uses one state snapshot to avoid a reproduced false rejection. Final Debug/Release/ASan+UBSan regressions pass 578 core checks; interrupted/failed attempts remain documented. No proprietary code executes. Phase 20 synthetic/static work is CONDITIONAL GO; private game entry is NO-GO. [Full audit, ranked blockers and acceptance criteria](research/game-entry-readiness-audit.md).
+**Current Phase 20 gate (2026-10-24): VERIFIED in static/original-synthetic scope.** A frozen entry region has 19 permitted instructions plus one pre-call exit word, two selected ranges, four blocks and 19 normal edges. Its eight stores remain unmediated in the preserved game output. B01 is closed only for this region; B06 has static identities and a separate original proof: 74/74 emitted/observed stop sites and 72/72 edges. Final regressions pass 629 core checks. Exception metadata and differing PE/XEX image bounds remain execution dependencies. Phase 21 synthetic contracts are CONDITIONAL GO; private game execution is NO-GO. [Exact confidence, evidence and remaining gates](research/bounded-entry-region-cfg.md).
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -17,11 +17,13 @@ flowchart TD
   H --> I[Sanitized public findings]
 ```
 
-## Entry-region acceptance boundary
+## Frozen region and control-policy boundary
 
-The Phase 19 inventory is lexical, not a complete dynamic graph or instruction address map. Detailed entry/edge/access identifiers remain private. A bounded region must establish independent actual site identities, complete checked memory and call admission, exact image/code ownership, consumed initial ABI/TLS state and stop coverage before any execution proposal. The existing synthetic binder and scope have explicit capacity/layout limits; they do not automatically admit the 108-function game closure.
+The Phase 20 selector reconciles current XEX header facts, preserved loaded-image PE/PDATA, independently decoded actual PCs and the existing generated instruction/function/callee/link/branch mappings. A meaningful stack/data initialization stage ends before an unverified initializer. Normal control is finite and closed; shared suffix aliases and exceptional continuations are not additional admission targets. Detailed addresses/operands and canonical region/dependency records remain private.
 
-The next engineering work freezes that region with an original analogue, validates only required runtime contracts, then separately produces reproducible private instrumentation for a fresh readiness decision. General emulator features, indexed lookup optimization and Horizon integration are deferred unless evidence makes them prerequisites. [Contract and dependency order](research/game-entry-readiness-audit.md).
+An original XEX analogue uses production before-instruction hooks, immutable hash-bound manifests and exact context/target admission. Conditions, calls, shadow caller returns, joins, loops, imports, exits and refusals are checked. Existing generated-import policy is unchanged: the opt-in CFG seam chooses an explicit native or imported target and has no fallback. Checked memory, actual XThread/TLS/PCR, image leases, native join and final-owner cleanup remain required. This is an original fixture policy, not automatic title launch or a native C++ sandbox.
+
+B01 is closed only for the selected normal-flow region; the wider title graph is not complete. The 20 private planned sites have no new emitted hooks or execution evidence. Before any private execution, verify actual memory mediation, consumed initial state, code/owner binding including PE/XEX bounds, and exception refusal. The entry owner has an intersecting exception scope: a missing normal CFG edge is not proof that exceptions cannot occur. Full guest unwind remains unsupported. [Evidence and B01–B09 ledger](research/bounded-entry-region-cfg.md).
 
 ## Fixed-base synthetic XEX binding
 
@@ -139,7 +141,7 @@ The half-float numeric gate remains open: pinned Canary and Xenia/ReXGlue softwa
 
 The actual image is PE32 PowerPC big-endian, with `.text` and a separate executable BINK section, `.pdata`, TLS, kernel imports and static-library records. Preserve guest register/ABI semantics, endian and VMX128 lane behavior, atomics/reservations, FP status/rounding, indirect dispatch, TLS, callbacks and exception flow. None is proven by parsing or by the presence of a host shim.
 
-The loaded allocation is `0xD70000` at `0x82000000`, entry `0x827F1498`. Header stack is `0x40000`; TLS declares 64 slots and 28 bytes of raw/data. No heap budget or total resident memory is established. The PE declares 14 sections; ReXGlue's analysis view uses 13 and skips `.reloc` beyond the loaded image end. Arbitrary rebasing remains unproven.
+The loaded allocation is `0xD70000` bytes; exact preferred base and entry identities stay in the private metadata inventory. Header stack is `0x40000`; TLS declares 64 slots and 28 bytes of raw/data. No heap budget or total resident memory is established. The PE declares 14 sections; ReXGlue's analysis view uses 13 and skips `.reloc` beyond the loaded image end. Arbitrary rebasing remains unproven.
 
 All 274 import ordinals resolve and 261 function shims exist, but source review identifies imported exception/unwind and STFS stubs. Determine which paths are exercised before replacing APIs. Required classes include threads/APCs/events/waits, memory/physical mappings, files/content/saves, XAudio/XMA, controller APIs, Vd GPU calls and module loading. [Binary/runtime evidence](research/xbox360-analysis.md).
 
