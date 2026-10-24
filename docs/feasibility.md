@@ -1,6 +1,6 @@
-# Feasibility — Phase 20
+# Feasibility — Phase 21
 
-**Current Phase 20 gate (2026-10-24): VERIFIED in static/original-synthetic scope.** A frozen entry region has 19 permitted instructions plus one pre-call exit word, two selected ranges, four blocks and 19 normal edges. Its eight stores remain unmediated in the preserved game output. B01 is closed only for this region; B06 has static identities and a separate original proof: 74/74 emitted/observed stop sites and 72/72 edges. Final regressions pass 629 core checks. Exception metadata and differing PE/XEX image bounds remain execution dependencies. Phase 21 synthetic contracts are CONDITIONAL GO; private game execution is NO-GO. [Exact confidence, evidence and remaining gates](research/bounded-entry-region-cfg.md).
+**Current Phase 21 gate (2026-10-24): VERIFIED original-synthetic runtime contracts.** All eight store classes pass positive and individual refusal tests through actual production codegen, the SDK loader and XThread. Loaded image ownership stays bounded despite a larger PE extent; malformed code/sections/context refuse. All 24 stop sites and 21 edges are observed. Final Debug/Release/ASan+UBSan regressions pass 752 core checks. Private stores/hooks remain uninstrumented, actual title startup values UNKNOWN and exception integration PARTIAL. Phase 22 instrumentation/audit is CONDITIONAL GO; game execution remains NO-GO. [Evidence, measurements and separate readiness layers](research/bounded-entry-runtime-contracts.md).
 
 Historical baseline assessment: **2026-10-22 · v0.0.11-synthetic-execution**. Phase 11 passed its original synthetic Mac scope; overall port feasibility remains PARTIAL and proprietary execution remains NO-GO. The Phase 3 configuration-assisted analysis/generation PASS stands.
 
@@ -25,7 +25,13 @@ Extraction, XEX loading, configured analysis and private C++ emission are verifi
 | Host toolchain | VERIFIED for limited checks | Pinned macOS ARM64 CLI completed emission; two partitions compile to objects; full compiler/link closure UNKNOWN |
 | Target build/deployment | UNKNOWN | Private game C++ exists; no complete host game binary, ARM64 Horizon build, NRO or hardware test |
 
-## Phase 20 bounded-region decision
+## Phase 21 contract decision
+
+**VERIFIED synthetic contracts / BLOCKED private admission.** C0–C7 cover every selected store class through unchanged generated PPC, real SDK-owned stack/image memory and eight separate refusal cases. PE declaration/ownership disagreement is reproduced safely; code/section/image hashes and leases are still mandatory. Startup mechanics work with explicit original values, while actual consumed game launch values and provenance remain UNKNOWN. Original exceptional transfers refuse at the host gate; actual private exception enforcement remains PARTIAL.
+
+The complete final matrix passes 752 core checks with zero unexpected signals, timeouts or sanitizer findings. Synthetic reuse is GO; a separately bounded Phase 22 instrumentation/admission audit is CONDITIONAL GO. It must produce and independently reconcile actual private checked accesses/hooks and exact binding without automatically compiling/executing game code. [Measurements, retained failure and remaining gates](research/bounded-entry-runtime-contracts.md).
+
+## Historical Phase 20 bounded-region decision
 
 The normal-flow entry dependency is substantially narrower than the previous 108-function lexical closure: two selected ranges, no admitted SDK imports, no unresolved normal transfer, and a pre-initializer exit. This is a static control result, not a runtime compatibility result. Zero normal imports is proven from the complete selected words and exit policy; it does not remove the 24 denials or establish later title requirements.
 

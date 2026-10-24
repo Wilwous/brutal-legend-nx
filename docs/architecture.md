@@ -1,6 +1,6 @@
-# Proposed architecture — Phase 20
+# Proposed architecture — Phase 21
 
-**Current Phase 20 gate (2026-10-24): VERIFIED in static/original-synthetic scope.** A frozen entry region has 19 permitted instructions plus one pre-call exit word, two selected ranges, four blocks and 19 normal edges. Its eight stores remain unmediated in the preserved game output. B01 is closed only for this region; B06 has static identities and a separate original proof: 74/74 emitted/observed stop sites and 72/72 edges. Final regressions pass 629 core checks. Exception metadata and differing PE/XEX image bounds remain execution dependencies. Phase 21 synthetic contracts are CONDITIONAL GO; private game execution is NO-GO. [Exact confidence, evidence and remaining gates](research/bounded-entry-region-cfg.md).
+**Current Phase 21 gate (2026-10-24): VERIFIED original-synthetic runtime contracts.** All eight store classes pass positive and individual refusal tests through actual production codegen, the SDK loader and XThread. Loaded image ownership stays bounded despite a larger PE extent; malformed code/sections/context refuse. All 24 stop sites and 21 edges are observed. Final Debug/Release/ASan+UBSan regressions pass 752 core checks. Private stores/hooks remain uninstrumented, actual title startup values UNKNOWN and exception integration PARTIAL. Phase 22 instrumentation/audit is CONDITIONAL GO; game execution remains NO-GO. [Evidence, measurements and separate readiness layers](research/bounded-entry-runtime-contracts.md).
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -24,6 +24,12 @@ The Phase 20 selector reconciles current XEX header facts, preserved loaded-imag
 An original XEX analogue uses production before-instruction hooks, immutable hash-bound manifests and exact context/target admission. Conditions, calls, shadow caller returns, joins, loops, imports, exits and refusals are checked. Existing generated-import policy is unchanged: the opt-in CFG seam chooses an explicit native or imported target and has no fallback. Checked memory, actual XThread/TLS/PCR, image leases, native join and final-owner cleanup remain required. This is an original fixture policy, not automatic title launch or a native C++ sandbox.
 
 B01 is closed only for the selected normal-flow region; the wider title graph is not complete. The 20 private planned sites have no new emitted hooks or execution evidence. Before any private execution, verify actual memory mediation, consumed initial state, code/owner binding including PE/XEX bounds, and exception refusal. The entry owner has an intersecting exception scope: a missing normal CFG edge is not proof that exceptions cannot occur. Full guest unwind remains unsupported. [Evidence and B01–B09 ledger](research/bounded-entry-region-cfg.md).
+
+## Original bounded startup integration
+
+Phase 21 adds an opt-in original initial-state validator with actual current XThread/context/PCR, supplied register/linkage values and a conservative owned/committed/writable stack window. The independently authored generated prefix saves four U64 registers and U32 linkage, reserves a frame and writes two signed-displacement image words. Every corresponding store has an endian/EA oracle and individual unchanged-byte refusal. Separate generated probes exercise span/ownership/alignment failures. The native helper, exact shadow return and approved pre-initializer exit use the unchanged Phase 20 control policy.
+
+The actual SDK accepts an oversized PE declaration without enlarging the XEX allocation; some overlaps can load, so exact section/code/owner binding remains mandatory before admission. Existing active leases contain unload through stop/join/final release. Exceptional/continuation tests prove host gate refusal and orderly cleanup in the original fixture, not real Xbox dispatch/unwind. The private manifest is immutable; new synthetic namespaces do not certify private hooks or title initialization. [Evidence matrix and four distinct readiness layers](research/bounded-entry-runtime-contracts.md).
 
 ## Fixed-base synthetic XEX binding
 

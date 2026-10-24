@@ -1,6 +1,6 @@
 # Brütal Legend NX
 
-**Wilwous · v0.0.20-bounded-entry-cfg · Xbox 360 → Nintendo Switch / Atmosphère**
+**Wilwous · v0.0.21-entry-runtime-contracts · Xbox 360 → Nintendo Switch / Atmosphère**
 
 Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Legend using static PowerPC recompilation and a homebrew runtime.
 
@@ -8,9 +8,9 @@ Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Le
 
 ## Current status
 
-Phase 20 bounded entry CFG: **2026-10-24**, baseline `v0.0.19-entry-readiness-audit`.
+Phase 21 bounded entry runtime contracts: **2026-10-24**, baseline `v0.0.20-bounded-entry-cfg`.
 
-**VERIFIED static/original-synthetic scope, 629 final core checks:** a meaningful entry region is frozen at 19 permitted instructions plus one pre-call exit word. Existing metadata/generated views and an independent decoder agree on its normal graph. The original XEX analogue observes all 74 stop sites and 72 declared edges. Private stores remain unmediated; image bounds, initial state and exception refusal need further contracts. Phase 21 synthetic work is CONDITIONAL GO; private game execution remains NO-GO. [Evidence, canonical manifest and remaining blockers](docs/research/bounded-entry-region-cfg.md).
+**VERIFIED original-synthetic contracts, 752 final core checks:** all eight store classes pass through production codegen and the real SDK/XThread; oversized PE metadata grants no extra image ownership. All 24 stop sites and 21 edges are observed. Actual title initial state remains UNKNOWN, private stores/hooks are uninstrumented and exception integration is PARTIAL. Phase 22 instrumentation/audit is CONDITIONAL GO; private game execution remains NO-GO. [Evidence, measurements and remaining gaps](docs/research/bounded-entry-runtime-contracts.md).
 
 - **VERIFIED:** the supplied directory contains a LIVE Games on Demand/SVOD package with 33 data fragments, three DLC packages and one title-update package. It contains no standalone ISO.
 - **VERIFIED:** full GOD hash-tree verification and private extraction succeeded. The base has 284 files totaling 5,544,498,100 bytes. All 38 source game files retained their SHA-256, size and modification time.
@@ -32,7 +32,7 @@ Phase 20 bounded entry CFG: **2026-10-24**, baseline `v0.0.19-entry-readiness-au
 - **VERIFIED synthetic pipeline:** the actual pinned CLI generates an original nine-function PPC module; unchanged output executes through the checked memory layer and real patched SDK, including native XThread stack/PCR/TLS. A separate original fixture loader tests section/relocation/entry policy; normal title startup remains unverified.
 - **UNKNOWN:** runtime correctness, shaders, decoded audio-bank format, game memory budget and stock-clock performance.
 
-**Verdict: overall port feasibility PARTIAL; private game-code execution NO-GO.** Original synthetic callers exercise generated loop safe points, leased image pointers and cooperative lifetime contracts. Six scalar and three pointer signatures remain admitted; 24 imports remain denied. Host scheduling, full ABI, guest exceptions, general relocation, private memory mediation and Switch runtime integration remain unresolved. [Phase 20 evidence and limits](docs/research/bounded-entry-region-cfg.md). [Feasibility and blockers](docs/feasibility.md).
+**Verdict: overall port feasibility PARTIAL; private game-code execution NO-GO.** Original synthetic callers exercise generated loop safe points, leased image pointers and cooperative lifetime contracts. Six scalar and three pointer signatures remain admitted; 24 imports remain denied. Host scheduling, full ABI, guest exceptions, general relocation, private memory mediation and Switch runtime integration remain unresolved. [Phase 21 evidence and limits](docs/research/bounded-entry-runtime-contracts.md). [Feasibility and blockers](docs/feasibility.md).
 
 ## Technical approach
 
