@@ -24,6 +24,12 @@ jobs:
         run: python3 tests/instrumentation/test_audit.py
       - name: Check original readiness audit fixtures
         run: python3 tests/readiness/test_audit.py
+      - name: Check original offline instrumentation admission fixtures
+        run: python3 tests/entry-audit/test_audit.py
+      - name: Check original static loader-model fixtures
+        run: python3 tests/offline-region/test_models.py
+      - name: Check original static residency and page-chain fixtures
+        run: python3 tests/entry-audit/test_residency.py
       - name: Check original bounded startup encoding and bindings
         run: python3 tests/entry-contracts/test_fixture.py
       - name: Check bounded manifest identities and independent CFG fixtures

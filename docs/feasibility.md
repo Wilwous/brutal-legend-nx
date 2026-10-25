@@ -1,6 +1,30 @@
-# Feasibility — Phase 21
+# Feasibility — Phase 22 audit (unfinished)
 
-**Current Phase 21 gate (2026-10-24): VERIFIED original-synthetic runtime contracts.** All eight store classes pass positive and individual refusal tests through actual production codegen, the SDK loader and XThread. Loaded image ownership stays bounded despite a larger PE extent; malformed code/sections/context refuse. All 24 stop sites and 21 edges are observed. Final Debug/Release/ASan+UBSan regressions pass 752 core checks. Private stores/hooks remain uninstrumented, actual title startup values UNKNOWN and exception integration PARTIAL. Phase 22 instrumentation/audit is CONDITIONAL GO; game execution remains NO-GO. [Evidence, measurements and separate readiness layers](research/bounded-entry-runtime-contracts.md).
+**Current local Phase 22 Recovery III: BLOCKED; published baseline remains Phase 21.** Independent static loader comparison does not resolve original XEX tail ownership. Exact offline production-core API emission now verifies 8/8 checked stores and 20/20 emitted/compiled hook references, with two compile-only function bodies per host profile. There are zero linked hook implementations and zero proprietary executions. Offline artifacts do not provide image ownership, title startup state or execution admission. [Recovery III evidence and G1–G12 gates](research/private-entry-instrumentation-audit.md#recovery-iii-residency-evidence-and-offline-preparation).
+
+**Residency evidence gate — outcome B:** targeted Xenia CPU/UserModule,
+RXDK360, Microsoft PE/COFF and reported independent RGH hardware evidence do
+not establish the uncovered tail's owner, commitment, initialization, permissions,
+neighbor interaction, lifetime or reclamation. SDK correctness remains PARTIAL
+for console parity; G4/G8 stay BLOCKED and G5 UNKNOWN. No SDK correction,
+new positive fixture, original load retry or regression rerun is justified.
+The preserved 1001/0 matrix and exact offline artifacts remain unchanged.
+[Source independence, H1–H3 and eight missing contracts](research/private-entry-instrumentation-audit.md#residency-evidence-gate--outcome-b).
+
+
+Recovery II independently reconciles all fourteen PE section headers, verifies
+all 215 page-chain descriptors and checks fresh payload framing using a separate
+AES backend. The LZX routine remains shared; no independent Xbox rule proves
+ownership or initialization of the uncovered section tail. Preserve loader
+refusal (model D for this SDK, E for unknown console semantics); no SDK mapping
+change, original load retry or full-XEX codegen retry is justified. Recovery III
+separately validates offline production-core API generation without that loader.
+The earlier UBSan finding in the new malformed-descriptor fixture is corrected by integer
+validation before enum access under a new twenty-two-patch lock. The original
+twenty-one-patch SDK and its failing evidence are preserved. New original
+residency fixtures distinguish explicit BASIC zero-fill inside an existing owner
+from unsupported outside-image space, and verify foreign-neighbor preservation.
+[Residency evidence, methods and scope](research/private-entry-instrumentation-audit.md#recovery-ii-independent-section-residency-evidence).
 
 Historical baseline assessment: **2026-10-22 · v0.0.11-synthetic-execution**. Phase 11 passed its original synthetic Mac scope; overall port feasibility remains PARTIAL and proprietary execution remains NO-GO. The Phase 3 configuration-assisted analysis/generation PASS stands.
 
@@ -19,13 +43,23 @@ Extraction, XEX loading, configured analysis and private C++ emission are verifi
 | Audio/middleware | UNKNOWN / substantial work | FMOD/Havok/Bink/Lua evidence, XMA imports; 157 banks lack standard initial FSB magic; codecs/active paths unproven |
 | Input | INFERRED reusable foundation | XamInput and libnx reference adapters exist; no game input test |
 | Filesystem/saves | UNKNOWN | File/content imports and archives identified; streaming/persistence behavior not tested |
-| Memory | VERIFIED checked subset / PARTIAL coverage | The real-SDK opaque-handle copy layer passes selected page/ownership/lifetime/endian/concurrency tests; private generated game accesses remain unmediated. Real PPC memory-export lifecycle/errors and integrated MMIO/recovery/fail-stop pass on the rebuilt SDK. Whole unowned host pages now fault; accessible sub-host-page slack remains a critical raw-access limitation. Guest aliases, raw generated accesses and Horizon behavior remain open |
+| Memory | VERIFIED checked subset / PARTIAL coverage | The real-SDK opaque-handle copy layer passes selected page/ownership/lifetime/endian/concurrency tests; only the exact eight-store offline region has verified static mediation; whole-title and private runtime coverage remain unverified. Real PPC memory-export lifecycle/errors and integrated MMIO/recovery/fail-stop pass on the rebuilt SDK. Whole unowned host pages now fault; accessible sub-host-page slack remains a critical raw-access limitation. Guest aliases, raw generated accesses and Horizon behavior remain open |
 | TLS | VERIFIED selected header path / PARTIAL general semantics | Actual original XEX header drives templates, per-thread blocks, PCR/r13 and the default title-process 64-slot bitmap; lifetime/rollback and final reclamation pass. Explicit independent-module binding does not define a general DLL/process TLS-index architecture. Fibers/APCs remain unverified |
 | Performance | UNKNOWN | Tool RSS/timing is not game performance; no stock-clock FPS/resolution prediction |
 | Host toolchain | VERIFIED for limited checks | Pinned macOS ARM64 CLI completed emission; two partitions compile to objects; full compiler/link closure UNKNOWN |
 | Target build/deployment | UNKNOWN | Private game C++ exists; no complete host game binary, ARM64 Horizon build, NRO or hardware test |
 
-## Phase 21 contract decision
+## Phase 22 private build and execution decision
+
+The final selected Recovery III regressions pass **1001 core groups / zero FAIL**: 334 Debug, 334 Release and 333 Sanitized. No unexpected signals/timeouts or sanitizer findings remain. The initial 997/1 matrix, its Release SIGABRT and stack sample remain retained. Predicate writes without the condition mutex permitted a lost notification in the original synthetic lifetime fixture. Both predicate writes now hold that mutex; the five-second gate/join limits and ownership assertions are unchanged. Only that suite was rerun in all three profiles, with an additional bounded 128-round synchronization regression. The SDK is unchanged from Recovery II. [Measurements and selection provenance](research/private-entry-instrumentation-audit.md#recovery-iii-final-regression-evidence).
+
+**Offline extraction, production-core correspondence, eight-store static instrumentation and compile-only validity: VERIFIED. Twenty-hook runtime integration: PARTIAL.** Separate raw-word decoding/source/object accounting confirms four U32 plus four U64 stores, twenty requested/emitted/verified/compiled references and zero hook definitions. Two actual emitted bodies compile per profile; none is linked or executed. The lower-level SDK API path is not whole-XEX CLI analysis and supplies no image reservation or runtime owner.
+
+**Loaded/bound instrumented-build readiness NO-GO; private execution NO-GO.** G4 remains BLOCKED by unproven full-image ownership. G5 is UNKNOWN for actual consumed startup state. G2/G3/G6/G7/G9/G11 have scoped offline or synthetic evidence, while real private enforcement and exceptional-transfer refusal remain incomplete (G8 BLOCKED). Typed-vector signatures, complete Xbox ABI and guest exception dispatch/unwind remain unsupported or unverified.
+
+The separate twenty-two-patch SDK and earlier locks are preserved. Independent Xenia/IDA source comparison establishes no valid tail reservation/commit/initialization/permission/reclamation rule. Stop speculative loader changes. Obtain that independent rule and demonstrate a faithful original fixture before reconsidering the original nonexecuting loader. Exact offline generation cannot waive the binder. Phase 22 remains unpublished and Phase 23 is not started. [Independent verdicts and full G1–G12 matrix](research/private-entry-instrumentation-audit.md).
+
+## Historical Phase 21 contract decision
 
 **VERIFIED synthetic contracts / BLOCKED private admission.** C0–C7 cover every selected store class through unchanged generated PPC, real SDK-owned stack/image memory and eight separate refusal cases. PE declaration/ownership disagreement is reproduced safely; code/section/image hashes and leases are still mandatory. Startup mechanics work with explicit original values, while actual consumed game launch values and provenance remain UNKNOWN. Original exceptional transfers refuse at the host gate; actual private exception enforcement remains PARTIAL.
 

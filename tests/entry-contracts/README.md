@@ -49,3 +49,12 @@ join, legitimate final-owner destruction and image/virtual page-count balance.
 Expected historical fatal join exits remain separately accounted for.
 
 See [Phase 21 evidence and remaining gaps](../../docs/research/bounded-entry-runtime-contracts.md).
+# Recovery loader oracle
+
+The Phase 22 recovery loader now refuses overlapping sections before an image
+lease or binder can be created. Metadata variants 3 and 5 therefore require an
+early load failure, no lease/processor/header, and the existing allocation-balance
+check. Earlier Phase 21 evidence retained their later binder refusal. No candidate
+is newly accepted. Valid oversized PE metadata and the byte-end binding negative
+still reach their original checks. The independent loader-only overlap fixture
+establishes this stricter contract; the original zero-context observer is unchanged.

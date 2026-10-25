@@ -18,6 +18,22 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    "tools/offline_region.py", "tools/compare_residency_models.py",
+    "tests/offline-region/generator.cpp", "tests/offline-region/run.py",
+    "tests/offline-region/test_models.py",
+    "tools/sdk/residency-lock.json",
+    "patches/rexglue-sdk/0022-integer-descriptor-preflight.patch",
+    "tools/audit_xex_residency.py", "tests/entry-audit/test_residency.py",
+    "tests/entry-audit/residency.py", "tests/entry-audit/residency_contracts.cpp",
+    "tools/sdk/entry-audit-lock.json",
+    "patches/rexglue-sdk/0020-complete-thread-context.patch",
+    "patches/rexglue-sdk/0021-pe-section-preflight.patch",
+    "tests/entry-audit/recovery.py", "tests/entry-audit/context_fields.cpp",
+    "tests/entry-audit/loader_contracts.cpp",
+    "tools/audit_entry_instrumentation.py", "tools/entry-audit/load_probe.cpp",
+    "tests/entry-audit/README.md", "tests/entry-audit/context_probe.cpp",
+    "tests/entry-audit/run.py", "tests/entry-audit/test_audit.py",
+    "tests/entry-audit/context_initialization.cpp",
     "runtime/entry_contract.h", "tests/entry-contracts/README.md",
     "tests/entry-contracts/fixture.py", "tests/entry-contracts/contracts.cpp",
     "tests/entry-contracts/run.py", "tests/entry-contracts/test_fixture.py",
@@ -180,7 +196,7 @@ def check():
         except (ValueError, KeyError, TypeError) as exc:
             errors.append(f"reference snapshot invalid: {exc}")
 
-    for name in ["tools/sdk/lock.json", "tools/sdk/pre-entry-lock.json", "tools/sdk/entry-readiness-lock.json", "tools/sdk/instrumentation-lock.json", "tools/sdk/synthetic-lock.json", "tools/sdk/image-runtime-lock.json", "tools/sdk/tls-import-lock.json", "tools/sdk/xex-binding-lock.json"]:
+    for name in ["tools/sdk/lock.json", "tools/sdk/pre-entry-lock.json", "tools/sdk/entry-readiness-lock.json", "tools/sdk/instrumentation-lock.json", "tools/sdk/synthetic-lock.json", "tools/sdk/image-runtime-lock.json", "tools/sdk/tls-import-lock.json", "tools/sdk/xex-binding-lock.json", "tools/sdk/entry-audit-lock.json", "tools/sdk/residency-lock.json"]:
         if name not in texts:
             continue
         try:

@@ -1,6 +1,84 @@
-# Research roadmap — Phase 21
+# Research roadmap — Phase 22 audit (unfinished)
 
-**Current Phase 21 gate (2026-10-24): VERIFIED original-synthetic runtime contracts.** All eight store classes pass positive and individual refusal tests through actual production codegen, the SDK loader and XThread. Loaded image ownership stays bounded despite a larger PE extent; malformed code/sections/context refuse. All 24 stop sites and 21 edges are observed. Final Debug/Release/ASan+UBSan regressions pass 752 core checks. Private stores/hooks remain uninstrumented, actual title startup values UNKNOWN and exception integration PARTIAL. Phase 22 instrumentation/audit is CONDITIONAL GO; game execution remains NO-GO. [Evidence, measurements and separate readiness layers](research/bounded-entry-runtime-contracts.md).
+**Current local Phase 22 Recovery III: BLOCKED; published baseline remains Phase 21.** Independent static loader comparison does not resolve original XEX tail ownership. Exact offline production-core API emission now verifies 8/8 checked stores and 20/20 emitted/compiled hook references, with two compile-only function bodies per host profile. There are zero linked hook implementations and zero proprietary executions. Offline artifacts do not provide image ownership, title startup state or execution admission. [Recovery III evidence and G1–G12 gates](research/private-entry-instrumentation-audit.md#recovery-iii-residency-evidence-and-offline-preparation).
+
+## Two independent research tracks
+
+The development branch `research/phase-22-blocked` preserves incomplete research,
+original synthetic tests, reviewed SDK patches and sanitized documentation. It
+is not a completed Phase 22 milestone. The completed baseline remains
+`v0.0.21-entry-runtime-contracts`; Phase 23 has not started.
+
+| Track | Current decision | Evidence required next |
+| --- | --- | --- |
+| A — Xbox XEX residency | **BLOCKED** pending independent hardware evidence. The user has no Xbox 360 debugging hardware access. | An independently supplied original-fixture trace package, or explicitly arranged authorized lab access, proving the post-mapping/pre-entry boundary and all eight ownership/lifecycle properties. |
+| B — Nintendo Switch/Horizon synthetic runtime | **Eligible for a separate feasibility investigation; NOT STARTED.** This track does not require proprietary game execution or a successful original XEX load. | A separately scoped original-only target/runtime feasibility report and bounded synthetic evidence. Switch access and target tooling must be inventoried rather than assumed. |
+
+### Track A — preserve the blocked residency gate
+
+Retain the loader's original `0xC0000001` refusal, strict binder and 22-patch
+SDK lock. G4 and G8 remain BLOCKED; G5 remains UNKNOWN. No allocation growth,
+section omission, new parser wrapper or offline artifact can replace the missing
+Xbox reservation/commit/owner/initialization/permission/lifetime evidence. The
+[hardware protocol and evidence checklist](research/private-entry-instrumentation-audit.md#hardware-trace-feasibility-and-pause-preservation)
+remain an unexecuted plan. Do not retry original loading or proprietary generation
+while this evidence is absent.
+
+### Track B — proposed original-only Horizon feasibility scope
+
+A future investigation can assess a minimal independently authored ARM64 Horizon
+program and the narrow runtime contracts it needs, without loading an original
+XEX, importing title assets or linking generated game code. First inventory
+available Switch hardware/access, firmware/loader configuration, authorized
+toolchains and dependency/license pins. Record unavailable resources explicitly.
+
+Proposed questions, in order:
+
+1. Can a pinned minimal target build and link cleanly, and which host SDK
+   assumptions require Horizon adapters? Cross-compilation alone is not execution
+   evidence.
+2. Can an original synthetic memory model enforce explicit range ownership,
+   commitment/protection, endian copies and denied gaps, with bounded allocation
+   failure, rollback and final release? Measure target page behavior rather than
+   importing the Mac's results.
+3. Can original threads/TLS, selected register contracts, stop/join and error
+   reporting be exercised with finite budgets and observable failures? Document
+   target diagnostic/sanitizer availability rather than assume parity with host
+   ASan/UBSan.
+4. If those prerequisites pass, is a separately admitted original PPC fixture
+   through the pinned generation/runtime pipeline feasible on that target? This
+   would require its own exact coverage and unsupported-operation report.
+
+The deliverable would be an independent GO / CONDITIONAL GO / NO-GO decision
+for **synthetic Horizon runtime work only**, with reproducible commands and
+resource/timing evidence where actually measured. Graphics/audio integration,
+proprietary code, title startup, boot and playability remain outside that scope.
+Track B cannot satisfy Track A's G4, establish the game's G5 or implement its G8.
+This preservation task starts neither track's experiments nor Phase 23.
+
+**Residency evidence gate — outcome B:** targeted Xenia CPU/UserModule,
+RXDK360, Microsoft PE/COFF and reported independent RGH hardware evidence do
+not establish the uncovered tail's owner, commitment, initialization, permissions,
+neighbor interaction, lifetime or reclamation. SDK correctness remains PARTIAL
+for console parity; G4/G8 stay BLOCKED and G5 UNKNOWN. No SDK correction,
+new positive fixture, original load retry or regression rerun is justified.
+The preserved 1001/0 matrix and exact offline artifacts remain unchanged.
+[Source independence, H1–H3 and eight missing contracts](research/private-entry-instrumentation-audit.md#residency-evidence-gate--outcome-b).
+
+
+Recovery II independently reconciles all fourteen PE section headers, verifies
+all 215 page-chain descriptors and checks fresh payload framing using a separate
+AES backend. The LZX routine remains shared; no independent Xbox rule proves
+ownership or initialization of the uncovered section tail. Preserve loader
+refusal (model D for this SDK, E for unknown console semantics); no SDK mapping
+change, original load retry or full-XEX codegen retry is justified. Recovery III
+separately validates offline production-core API generation without that loader.
+The earlier UBSan finding in the new malformed-descriptor fixture is corrected by integer
+validation before enum access under a new twenty-two-patch lock. The original
+twenty-one-patch SDK and its failing evidence are preserved. New original
+residency fixtures distinguish explicit BASIC zero-fill inside an existing owner
+from unsupported outside-image space, and verify foreign-neighbor preservation.
+[Residency evidence, methods and scope](research/private-entry-instrumentation-audit.md#recovery-ii-independent-section-residency-evidence).
 
 ## Completed
 
@@ -78,13 +156,28 @@ Completed in static/original-synthetic scope. A meaningful entry stack/data stag
 
 Completed in original-synthetic scope: all eight store classes have value/endian/EA and individual protection-refusal evidence, the SDK safely preserves the loaded bound under a larger PE declaration, and exact code/section/context mismatches refuse. Actual generated startup/helper execution uses XThread/PCR/TLS, checked memory and image leases. All 24 sites/21 edges and all 752 selected final core checks pass. Original supplied-state mechanics are verified; actual title values/provenance remain UNKNOWN and real exception integration remains PARTIAL. [Evidence matrix and measurements](research/bounded-entry-runtime-contracts.md).
 
-## Next: Phase 22 — reproducible private instrumentation and final admission audit
+## Phase 22 — private entry instrumentation audit (unfinished)
 
-**CONDITIONAL GO for separately bounded instrumentation/audit only.** Preserve the original XEX/configuration/old generated output and Phase 20 region identities. Derive a new private production configuration/output namespace with a finite generation budget; no proprietary compilation or execution follows automatically. Reconcile all eight actual checked store paths, 20 actual hook identities, 19 normal edges, exact helper/link/return and the pre-initializer exit against independent metadata. Reject raw/missing/unknown paths and require repeat generation, exact code/image/config/manifest hashes and actual loaded-owner/section bounds.
+Frozen identity remains nineteen admitted instructions plus one unexecuted boundary word, two ranges, four blocks and nineteen normal edges. Recovery III independently reconciles exact bytes and uses supported production-core SDK APIs without invoking full-XEX loading. All eight emitted stores retain checked routing and exact semantics. Twenty hook references are emitted and compile into objects for two bodies per profile; no hook implementation is linked and no proprietary code executes. Earlier policy-data-only and loader-failure evidence remains preserved. [Recovery III and G1–G12 checklist](research/private-entry-instrumentation-audit.md).
 
-Bind the real stack window and current XThread/PCR/module leases. Obtain independent evidence for consumed initial title values and startup provenance; original fixture constants cannot fill that gap. Enforce observable abort before every unverified exceptional/handler/unwind continuation. Repeat stop/permission/ownership/failure and final-reclamation checks before a separate independent admission decision. Keep all 24 import denials and typed-vector/full-ABI limits; no generic emulator, gameplay, graphics/audio or Horizon expansion is justified here.
+## Remaining Phase 22 recovery
 
-**Private game execution remains NO-GO.** Actual instrumentation, code/image binding, startup knowledge and exceptional denial must all pass before any later explicitly scoped experiment. Phase 21 synthetic success authorizes none. Preserve useful diagnostics privately and publish no game instructions, addresses, generated code or local paths.
+Final selected regressions pass **1001 core groups / zero FAIL** plus 125 Python units. The initial 997/1 Release fixture SIGABRT is retained with its sample; a lost notification is corrected by protecting condition predicates with their mutex. Only the affected synthetic suite was rerun in all three profiles. Time limits, SDK code and the original strict context observer are unchanged. The twenty-two-patch lock and historical workspaces remain preserved.
+
+Independent Xenia and IDA source study does not resolve original console section-tail residency. Do not repeat equivalent decoding or add speculative mappings. The available targeted references are exhausted without a defensible tail rule. The exact next action is to acquire an independent image-capable console/debugger observation channel and a reproducible evidence package covering all eight missing contracts; no further speculative mapping or equivalent parsing is justified. Only after that rule exists should an original bounded fixture validate it. Until then keep G4 BLOCKED and the original loader refusal. Do not retry original loading solely because offline generation succeeds.
+
+Separately required original completion gates remain: real initial-state provenance (G5 UNKNOWN), linked hook policy and actual exceptional-transfer refusal, exact image/code/section binding, owner/lease/lifetime enforcement and a complete nonexecuting native artifact audit. The existing offline references are not hook implementations, a loaded module or execution authorization. No loaded/bound private build or game entry is admitted. Phase 23 is not started.
+
+A concrete future alternative is a snapshot-backed sparse guest-memory module
+with per-range capabilities and denied gaps. It needs independently established
+bytes, pre-entry state, ownership, permissions and lifetime, plus a distinct binder
+and original synthetic rollback tests. It cannot impersonate XexModule, weaken
+the existing binder or close current G4. Evaluation is deferred; no Phase 23,
+snapshot execution or architecture implementation begins here.
+
+## Historical next-phase decisions — not started
+
+Further original synthetic contract recovery: **GO**. Private instrumented-build readiness: **NO-GO / BLOCKED**. First private entry experiment: **NO-GO**. G2/G3/G4/G5/G6/G7/G8/G9/G11 are unsatisfied; G1/G10/G12 evidence does not waive them. Do not automatically advance or create an experiment invocation protocol before independent admission passes. Graphics/audio/gameplay/Horizon remain deferred.
 
 ## R3 — independent Horizon probes (not started)
 

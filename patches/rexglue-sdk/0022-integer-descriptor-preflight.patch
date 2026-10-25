@@ -1,0 +1,19 @@
+--- a/src/system/xex_module.cpp
++++ b/src/system/xex_module.cpp
+@@ -989,9 +989,13 @@
+   if (!heap || heap->heap_type() != memory::HeapType::kGuestXex) return false;
+   uint64_t extent = 0;
+   for (uint32_t i = 0; i < sec_header->page_descriptor_count; ++i) {
+-    xex2_page_descriptor desc; desc.value = rex::byte_swap(sec_header->page_descriptors[i].value);
+-    extent += uint64_t(desc.page_count) * heap->page_size();
+-    if (!desc.page_count || desc.info < XEX_SECTION_CODE || desc.info > XEX_SECTION_READONLY_DATA ||
++    // Validate untrusted bits as integers before any enum bitfield read.
++    // Loading an out-of-range xex2_section_type is itself undefined behavior.
++    const uint32_t descriptor = sec_header->page_descriptors[i].value;
++    const uint32_t page_count = descriptor >> 4;
++    const uint32_t section_type = descriptor & 15u;
++    extent += uint64_t(page_count) * heap->page_size();
++    if (!page_count || section_type < XEX_SECTION_CODE || section_type > XEX_SECTION_READONLY_DATA ||
+         extent > UINT32_MAX || uint64_t(base_address_) + extent > 0x100000000ull) return false;
+   }
+ 

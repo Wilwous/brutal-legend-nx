@@ -1,0 +1,42 @@
+diff --git a/src/system/xex_module.cpp b/src/system/xex_module.cpp
+index 041c863..312d97d 100644
+--- a/src/system/xex_module.cpp
++++ b/src/system/xex_module.cpp
+@@ -857,6 +857,11 @@ static_assert(offsetof1(IMAGE_NT_HEADERS, OptionalHeader) == 24);
+ 
+   if (!ImageContains(base_address_ + doshdr->e_lfanew,
+        sizeof(IMAGE_NT_HEADERS32) + uint64_t(filehdr->NumberOfSections) * sizeof(IMAGE_SECTION_HEADER))) return 1;
++  // Preflight declared sections before exposing them to the image-copy API.
++  // This supported image contract requires readable sections; no permission
++  // is fabricated from XEX pages for a PE declaration without READ.
++  std::vector<std::pair<uint64_t, uint64_t>> section_bounds;
++  section_bounds.reserve(filehdr->NumberOfSections);
+   // Quick scan to determine bounds of sections.
+   size_t upper_address = 0;
+   const IMAGE_SECTION_HEADER* sechdr = IMAGE_FIRST_SECTION1(nthdr);
+@@ -864,8 +869,13 @@ static_assert(offsetof1(IMAGE_NT_HEADERS, OptionalHeader) == 24);
+     if (uint64_t(base_address_) + sechdr->VirtualAddress > UINT32_MAX ||
+         !ImageContains(base_address_ + sechdr->VirtualAddress, sechdr->Misc.VirtualSize)) return 1;
+     const size_t physical_address = uint64_t(base_address_) + sechdr->VirtualAddress;
++    if (!(sechdr->Characteristics & 0x40000000u)) return 1;
++    section_bounds.emplace_back(physical_address, physical_address + sechdr->Misc.VirtualSize);
+     upper_address = std::max(upper_address, physical_address + sechdr->Misc.VirtualSize);
+   }
++  std::sort(section_bounds.begin(), section_bounds.end());
++  for (size_t i = 1; i < section_bounds.size(); ++i)
++    if (section_bounds[i].first < section_bounds[i - 1].second) return 1;
+ 
+   // Setup/load sections.
+   sechdr = IMAGE_FIRST_SECTION1(nthdr);
+@@ -991,6 +1001,11 @@ bool XexModule::Load(const std::string_view name, const std::string_view path, c
+       format->compression_type > XEX_COMPRESSION_NORMAL ||
+       (format->compression_type == XEX_COMPRESSION_BASIC && ((format->info_size - 8) & 7)) ||
+       (format->compression_type == XEX_COMPRESSION_NORMAL && format->info_size < 36)) return false;
++  // Uncompressed basefiles are already laid out at guest RVAs. A rounded
++  // allocation is not evidence for missing payload bytes or extra image pages.
++  // Basic compression has an explicit zero-fill contract; this path does not.
++  if (format->compression_type == XEX_COMPRESSION_NONE &&
++      uint64_t(xex_length) - header_size != extent) return false;
+   // Load in the XEX basefile
+   // We'll try using both XEX2 keys to see if any give a valid PE
+   int result_code = ReadImage(xex_addr, xex_length, false);

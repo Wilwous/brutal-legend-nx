@@ -20,6 +20,7 @@
 #include <memory>
 #include <pthread.h>
 #include <stdexcept>
+#include <thread>
 #include <vector>
 using namespace rex::system;
 REX_EXTERN(__imp__ExTerminateThread);
@@ -50,8 +51,8 @@ class LifetimeThread final:public XThread {
 using Thread=rex::system::object_ref<LifetimeThread>;
 static bool live(rex::memory::Memory& memory,uint32_t address){rex::memory::HeapAllocationInfo info{};return address&&memory.LookupHeap(address)->QueryRegionInfo(address,&info)&&info.state!=0;}
 static void wait_for(State& state){std::unique_lock lock(state.mutex);check(state.condition.wait_for(lock,std::chrono::seconds(5),[&]{return state.at_gate.load();}));}
-static void release(State& state){state.release=true;state.condition.notify_all();}
-static void hold(State& state){state.at_gate=true;state.condition.notify_all();std::unique_lock lock(state.mutex);if(!state.condition.wait_for(lock,std::chrono::seconds(5),[&]{return state.release.load();}))throw std::runtime_error("fixture gate timeout");}
+static void release(State& state){{std::lock_guard lock(state.mutex);state.release=true;}state.condition.notify_all();}
+static void hold(State& state){std::unique_lock lock(state.mutex);state.at_gate=true;state.condition.notify_all();if(!state.condition.wait_for(lock,std::chrono::seconds(5),[&]{return state.release.load();}))throw std::runtime_error("fixture gate timeout");}
 static void join(Thread& thread){check(rex::thread::Wait(thread->thread(),false,std::chrono::seconds(5))==rex::thread::WaitResult::kSuccess);}
 static void freed(rex::memory::Memory& memory,KernelState& kernel,State& state,bool executed=true){
  check(state.destructors==1&&state.errors==0&&state.callbacks==0);
@@ -77,7 +78,11 @@ int main(int argc,char** argv){if(argc!=3)return 2;std::setbuf(stdout,nullptr);r
    check(thread->ReleaseHandle());thread.reset();freed(memory,kernel,state);
   };
   auto process_count=uint32_t(process->thread_count);
-  if(mode=="normal"||mode=="self-terminate"||mode=="return"||mode=="export-exit"||mode=="callback-error"||mode=="callback-exit"){
+  if(mode=="gate-synchronization"){
+   // Predicate writes share the waiter's mutex: no notification may be lost
+   // between observing false and atomically releasing the lock to wait.
+   for(unsigned i=0;i<128;++i){State state;std::thread worker([&]{hold(state);++state.ended;});wait_for(state);release(state);worker.join();check(state.ended==1&&state.at_gate&&state.release);}
+  }else if(mode=="normal"||mode=="self-terminate"||mode=="return"||mode=="export-exit"||mode=="callback-error"||mode=="callback-exit"){
    State state;auto thread=make(state,[&](LifetimeThread& self){
     if(mode=="return")return;
     if(mode=="callback-error"){

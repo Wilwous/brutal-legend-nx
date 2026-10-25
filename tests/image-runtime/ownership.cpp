@@ -52,7 +52,9 @@ int main(int argc,char**argv){if(argc!=3)return 2;std::setbuf(stdout,nullptr);re
     case 3:b=basic(true);continuation=false;break;
     case 4:be(b,0x300,36);image_fixture::put(b,0x306,2,2,true);be(b,0x308,0x8000);be(b,0x30c,26);continuation=false;break;
     case 5:b=missing_import();break;
-    case 6:be(b,0x100+0x184+2*24,0x22);break;
+    // The enlarged descriptor extent has no uncompressed payload backing.
+    // Recovery must refuse during Load, before allocation/PE continuation.
+    case 6:be(b,0x100+0x184+2*24,0x22);continuation=false;break;
     case 7:be(b,16,0xffc);continuation=false;break;
     case 8:be(b,0x300,36);image_fixture::put(b,0x306,2,2,true);be(b,0x308,0);be(b,0x30c,0);continuation=false;break;
     case 9:b=missing_import();be(b,0x21000,0x0100ffff);break;

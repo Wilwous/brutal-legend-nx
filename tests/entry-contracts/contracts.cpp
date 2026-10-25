@@ -62,15 +62,14 @@ int main(int argc,char**argv){if(argc!=4)return 2;std::setbuf(stdout,nullptr);re
    if(variant==0)le(0x98+56,0x90000); // SizeOfImage alone does not grant ownership.
    if(variant==1)le(table+3*40+8,65537);
    if(variant==2)le(table+3*40+12,0x41000);
-   if(variant==3)le(table+3*40+12,0x10000); // Overlap code; loader may accept, binder must deny.
+   if(variant==3)le(table+3*40+12,0x10000); // Overlap code: recovery loader must reject before binding.
    if(variant==4){bytes[0x1000+0x86]=5;bytes[0x1000+0x87]=0;}
-   if(variant==5)le(table+40+12,0x30000); // Code section no longer owns emitted entry.
+   if(variant==5)le(table+40+12,0x30000); // Overlaps data and no longer owns emitted entry.
    if(variant==6)le(table+3*40+8,65532);
    std::string name="metadata"+std::to_string(variant)+".xex";auto module=make_module(bytes,name);auto status=module->LoadFromFile("game:\\"+name);
-   if(variant==1||variant==2||variant==4){check(status!=0);++metadata_rejected;}
+   if(variant==1||variant==2||variant==3||variant==4||variant==5){check(status!=0);check(!module->AcquireImageLease()&&module->processor_module()==nullptr&&module->guest_xex_header()==0);++metadata_rejected;}
    else{check(status==0);++metadata_loaded;auto lease=module->AcquireImageLease();check(bool(lease));check(lease->image_size()==0x40000);std::array<std::byte,8>out{};
     check(lease->CopyMemory(description().base+0x40000,out.data(),4,Memory::Access::read)!=Memory::Result::ok);
-    if(variant==3)check(lease->CopyMemory(description().code_base,out.data(),4,Memory::Access::read)!=Memory::Result::ok);
     if(variant==6){check(lease->CopyMemory(description().base+0x3fff8,out.data(),4,Memory::Access::read)==Memory::Result::ok);check(lease->CopyMemory(description().base+0x3fffc,out.data(),4,Memory::Access::read)!=Memory::Result::ok);}
     bool denied=false;try{brutal::synthetic::XexBinding b(module,cfg_image_info,description(),image_functions.size()+4,*runtime.export_resolver());}catch(const std::invalid_argument&){denied=true;}
     check(denied==(variant!=0));binding_refused+=denied;lease.reset();check(module->Unload()==0);

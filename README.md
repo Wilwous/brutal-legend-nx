@@ -8,9 +8,16 @@ Evidence-first research toward a native ARM64 Nintendo Switch port of Brütal Le
 
 ## Current status
 
-Phase 21 bounded entry runtime contracts: **2026-10-24**, baseline `v0.0.20-bounded-entry-cfg`.
+Published baseline: **v0.0.21-entry-runtime-contracts**. Local Phase 22 audit: **unfinished / BLOCKED**.
 
-**VERIFIED original-synthetic contracts, 752 final core checks:** all eight store classes pass through production codegen and the real SDK/XThread; oversized PE metadata grants no extra image ownership. All 24 stop sites and 21 edges are observed. Actual title initial state remains UNKNOWN, private stores/hooks are uninstrumented and exception integration is PARTIAL. Phase 22 instrumentation/audit is CONDITIONAL GO; private game execution remains NO-GO. [Evidence, measurements and remaining gaps](docs/research/bounded-entry-runtime-contracts.md).
+Incomplete Phase 22 work is preserved on `research/phase-22-blocked`, without a
+completion tag or merge into main. The [roadmap's independent tracks](docs/roadmap.md#two-independent-research-tracks)
+keep Xbox residency blocked on hardware evidence and identify original-only
+Switch/Horizon runtime feasibility as a separate investigation that has not started.
+
+The last measured original image load fails safe PE ownership checks; independent loader comparison leaves section-tail residency UNKNOWN/BLOCKED. Recovery III produces the exact frozen region offline through production SDK emitter APIs: 8/8 checked stores, 20/20 emitted and compiled hook references, and two compile-only function bodies per profile. Hook implementations remain zero; no game code executes. Strict scalar-context tests pass, but actual title startup state remains UNKNOWN. A loaded/bound private build and execution remain NO-GO. Phase 22 is unfinished and Phase 23 has not started. [Recovery, retained failures and G1–G12 gates](docs/research/private-entry-instrumentation-audit.md).
+
+Final selected Recovery III regressions: **1001 core PASS / zero FAIL** across Debug, Release and ASan/UBSan, plus 125 Python units; no unexpected signals/timeouts or reported sanitizer findings. The initial Recovery III 997/1 matrix and Release SIGABRT remain preserved: a lost condition-variable notification in the original synthetic fixture was corrected without changing SDK code or time limits; only the affected suite was rerun in all three profiles. Earlier Recovery II UBSan/SIGABRT evidence is also retained. Synthetic and compile-only success do not resolve private execution gates.
 
 - **VERIFIED:** the supplied directory contains a LIVE Games on Demand/SVOD package with 33 data fragments, three DLC packages and one title-update package. It contains no standalone ISO.
 - **VERIFIED:** full GOD hash-tree verification and private extraction succeeded. The base has 284 files totaling 5,544,498,100 bytes. All 38 source game files retained their SHA-256, size and modification time.

@@ -1,6 +1,30 @@
-# Proposed architecture — Phase 21
+# Proposed architecture — Phase 22 audit (unfinished)
 
-**Current Phase 21 gate (2026-10-24): VERIFIED original-synthetic runtime contracts.** All eight store classes pass positive and individual refusal tests through actual production codegen, the SDK loader and XThread. Loaded image ownership stays bounded despite a larger PE extent; malformed code/sections/context refuse. All 24 stop sites and 21 edges are observed. Final Debug/Release/ASan+UBSan regressions pass 752 core checks. Private stores/hooks remain uninstrumented, actual title startup values UNKNOWN and exception integration PARTIAL. Phase 22 instrumentation/audit is CONDITIONAL GO; game execution remains NO-GO. [Evidence, measurements and separate readiness layers](research/bounded-entry-runtime-contracts.md).
+**Current local Phase 22 Recovery III: BLOCKED; published baseline remains Phase 21.** Independent static loader comparison does not resolve original XEX tail ownership. Exact offline production-core API emission now verifies 8/8 checked stores and 20/20 emitted/compiled hook references, with two compile-only function bodies per host profile. There are zero linked hook implementations and zero proprietary executions. Offline artifacts do not provide image ownership, title startup state or execution admission. [Recovery III evidence and G1–G12 gates](research/private-entry-instrumentation-audit.md#recovery-iii-residency-evidence-and-offline-preparation).
+
+**Residency evidence gate — outcome B:** targeted Xenia CPU/UserModule,
+RXDK360, Microsoft PE/COFF and reported independent RGH hardware evidence do
+not establish the uncovered tail's owner, commitment, initialization, permissions,
+neighbor interaction, lifetime or reclamation. SDK correctness remains PARTIAL
+for console parity; G4/G8 stay BLOCKED and G5 UNKNOWN. No SDK correction,
+new positive fixture, original load retry or regression rerun is justified.
+The preserved 1001/0 matrix and exact offline artifacts remain unchanged.
+[Source independence, H1–H3 and eight missing contracts](research/private-entry-instrumentation-audit.md#residency-evidence-gate--outcome-b).
+
+
+Recovery II independently reconciles all fourteen PE section headers, verifies
+all 215 page-chain descriptors and checks fresh payload framing using a separate
+AES backend. The LZX routine remains shared; no independent Xbox rule proves
+ownership or initialization of the uncovered section tail. Preserve loader
+refusal (model D for this SDK, E for unknown console semantics); no SDK mapping
+change, original load retry or full-XEX codegen retry is justified. Recovery III
+separately validates offline production-core API generation without that loader.
+The earlier UBSan finding in the new malformed-descriptor fixture is corrected by integer
+validation before enum access under a new twenty-two-patch lock. The original
+twenty-one-patch SDK and its failing evidence are preserved. New original
+residency fixtures distinguish explicit BASIC zero-fill inside an existing owner
+from unsupported outside-image space, and verify foreign-neighbor preservation.
+[Residency evidence, methods and scope](research/private-entry-instrumentation-audit.md#recovery-ii-independent-section-residency-evidence).
 
 The architecture remains a **proposal**, with intake, host loading and configuration-assisted analysis/generation tested on the supplied game. Full port implementation has not started.
 
@@ -17,13 +41,21 @@ flowchart TD
   H --> I[Sanitized public findings]
 ```
 
+## Private instrumentation admission audit — blocked
+
+Final selected Recovery III validation passes 1001 core groups across Debug/Release/ASan+UBSan. It retains the initial 997/1 result and corrects a synthetic condition-variable notification defect; the three affected suite reruns replace only their earlier receipts. SDK code, loader/binder and the strict context observer are unchanged. Existing section/extent refusals remain enforced. [Exact selection, measurements and retained failures](research/private-entry-instrumentation-audit.md#recovery-iii-final-regression-evidence).
+
+Phase 22 re-decodes the immutable private region and reconciles original production mappings, then attempts the pinned production path in a dedicated private workspace. The actual loader rejects a declared section outside the loaded allocation. An unchanged-return diagnostic of the production ownership predicate matches that independently parsed span. Selected code/data being inside the image cannot authorize an invalid whole-image binding. No section is silently dropped, no ownership is enlarged from PE SizeOfImage and no older permissive CLI is substituted.
+
+Recovery III replaces the earlier policy-data-only limitation with actual production emitter output for the exact frozen slices. A read-only analysis Module has no runtime, guest allocations or dispatcher; its BinaryView coordinate envelope does not map gaps. Two emitted bodies compile privately without linking. All eight stores retain checked-memory routing and exact operands; all twenty before-hook identities are external references with zero implementations. No artifact can obtain a loader/binder lease or execution authorization. Original synthetic audits verify emitted syntax, canonical/compiled policy identity and adversarial refusals. The corrected real SDK constructor completely initializes scalar register storage before applying supplied SP/PCR; field tests preserve control/vector defaults and host FPSCR policy. Initial title state remains UNKNOWN, and synthetic values cannot fill the gap. Fresh decompression confirms the unresolved virtual-section extent, with historical import fixups accounted for separately. Loader ownership recovery remains necessary before loaded/bound private build readiness; offline core emission does not satisfy it. [Evidence and independent gate decisions](research/private-entry-instrumentation-audit.md).
+
 ## Frozen region and control-policy boundary
 
 The Phase 20 selector reconciles current XEX header facts, preserved loaded-image PE/PDATA, independently decoded actual PCs and the existing generated instruction/function/callee/link/branch mappings. A meaningful stack/data initialization stage ends before an unverified initializer. Normal control is finite and closed; shared suffix aliases and exceptional continuations are not additional admission targets. Detailed addresses/operands and canonical region/dependency records remain private.
 
 An original XEX analogue uses production before-instruction hooks, immutable hash-bound manifests and exact context/target admission. Conditions, calls, shadow caller returns, joins, loops, imports, exits and refusals are checked. Existing generated-import policy is unchanged: the opt-in CFG seam chooses an explicit native or imported target and has no fallback. Checked memory, actual XThread/TLS/PCR, image leases, native join and final-owner cleanup remain required. This is an original fixture policy, not automatic title launch or a native C++ sandbox.
 
-B01 is closed only for the selected normal-flow region; the wider title graph is not complete. The 20 private planned sites have no new emitted hooks or execution evidence. Before any private execution, verify actual memory mediation, consumed initial state, code/owner binding including PE/XEX bounds, and exception refusal. The entry owner has an intersecting exception scope: a missing normal CFG edge is not proof that exceptions cannot occur. Full guest unwind remains unsupported. [Evidence and B01–B09 ledger](research/bounded-entry-region-cfg.md).
+B01 is closed only for the selected normal-flow region; the wider title graph is not complete. The twenty private sites now have exact offline emitted references, but no linked hook implementation or execution evidence. Before any private execution, verify actual memory mediation, consumed initial state, code/owner binding including PE/XEX bounds, and exception refusal. The entry owner has an intersecting exception scope: a missing normal CFG edge is not proof that exceptions cannot occur. Full guest unwind remains unsupported. [Evidence and B01–B09 ledger](research/bounded-entry-region-cfg.md).
 
 ## Original bounded startup integration
 

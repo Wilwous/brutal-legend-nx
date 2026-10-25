@@ -61,7 +61,7 @@ def main():
     lifetime=work/'lifetime';injector=work/'create-failure.dylib'
     execute(['clang++',*flags,str(ROOT/'tests/synthetic/lifetime.cpp'),*libraries,'-o',str(lifetime)],'build-lifetime')
     execute(['clang++',*flags,'-dynamiclib',str(ROOT/'tests/synthetic/create-failure.cpp'),'-o',str(injector)],'build-create-failure')
-    lifetime_modes=['normal','self-terminate','return','export-exit','callback-error','callback-exit',
+    lifetime_modes=['gate-synchronization','normal','self-terminate','return','export-exit','callback-error','callback-exit',
       'creation-failure','host-creation-failure','native-creation-failure','owners','release-before-exit',
       'foreign-termination','repeat','simultaneous']
     for mode in lifetime_modes:

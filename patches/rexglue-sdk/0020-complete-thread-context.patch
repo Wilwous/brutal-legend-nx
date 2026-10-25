@@ -1,0 +1,27 @@
+diff --git a/src/system/thread_state.cpp b/src/system/thread_state.cpp
+index 83f3143..9b6335f 100644
+--- a/src/system/thread_state.cpp
++++ b/src/system/thread_state.cpp
+@@ -32,6 +32,22 @@ ThreadState::ThreadState(uint32_t thread_id, uint32_t stack_base, uint32_t pcr_a
+     thread_id_ = 0x80000000 | system_thread_handle;
+   }
+ 
++  // Aggregate initialization selects Register::s8, the first union member.
++  // Initialize the complete guest-visible scalar storage, not structure padding.
++  // This is the SDK default contract, not a claim about console launch inputs.
++  PPCRegister* scalar_registers[] = {
++      &context_->r0, &context_->r1, &context_->r2, &context_->r3, &context_->r4, &context_->r5, &context_->r6, &context_->r7,
++      &context_->r8, &context_->r9, &context_->r10, &context_->r11, &context_->r12, &context_->r13, &context_->r14, &context_->r15,
++      &context_->r16, &context_->r17, &context_->r18, &context_->r19, &context_->r20, &context_->r21, &context_->r22, &context_->r23,
++      &context_->r24, &context_->r25, &context_->r26, &context_->r27, &context_->r28, &context_->r29, &context_->r30, &context_->r31,
++      &context_->f0, &context_->f1, &context_->f2, &context_->f3, &context_->f4, &context_->f5, &context_->f6, &context_->f7,
++      &context_->f8, &context_->f9, &context_->f10, &context_->f11, &context_->f12, &context_->f13, &context_->f14, &context_->f15,
++      &context_->f16, &context_->f17, &context_->f18, &context_->f19, &context_->f20, &context_->f21, &context_->f22, &context_->f23,
++      &context_->f24, &context_->f25, &context_->f26, &context_->f27, &context_->f28, &context_->f29, &context_->f30, &context_->f31,
++      &context_->ctr, &context_->reserved,
++  };
++  for (auto* reg : scalar_registers) reg->u64 = 0;
++
+   // Set initial registers
+   context_->r1.u64 = stack_base;    // Stack pointer
+   context_->r13.u64 = pcr_address;  // PCR address

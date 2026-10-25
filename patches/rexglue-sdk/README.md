@@ -81,3 +81,29 @@ The [eighteen-patch lock](../../tools/sdk/tls-import-lock.json) adds bounded TLS
 ## 0019 — checked copying through XEX image leases
 
 `0019-leased-xex-copy.patch` adds a separate owner-checked XEX heap copy and an ImageLease facade. An active module lease pins image ownership; the XEX layer verifies a single PE section's byte extent and read/write flags. The shared heap implementation retains global/heap locking, owner identity, committed-page/protection checks, bounded MMIO scanning and unsupported-fetch refusal. The original virtual-copy entry selects its original heap policy and continues rejecting XEX. This patch does not relocate images, authorize arbitrary execution, admit new imports or change global host protection. Modifications follow BSD-3-Clause with retained original notices. [Phase 16 evidence](../../docs/research/synthetic-xex-binding.md).
+
+## Phase 22 recovery additions
+
+The optional `tools/sdk/entry-audit-lock.json` extends the preserved nineteen-patch
+lock. `0020-complete-thread-context.patch` initializes every full-width scalar
+register union in the real ThreadState constructor before applying the supplied
+SP/PCR. It preserves other field defaults, object layout and host FPSCR setup;
+it does not define Xbox title launch values. `0021-pe-section-preflight.patch`
+rejects overlapping PE byte ranges, declarations without READ in the supported
+checked-image contract, and uncompressed payload sizes that disagree with the
+verified page-descriptor extent. Rounded allocation padding does not establish
+payload backing. Basic compression's explicit zero-fill path is preserved.
+It preserves out-of-owner rejection, existing allocation
+ownership, page permissions and transactional rollback. It does not add mappings
+for the unresolved private image layout. Both patches apply only in an isolated
+reproducible SDK, never the installed SDK. Original bounded fixtures and the
+unchanged strict context observer provide regression evidence.
+
+## 0022 — integer descriptor preflight
+
+The separate [residency lock](../../tools/sdk/residency-lock.json) preserves the
+first 21 patches. An original malformed descriptor triggered UBSan when the
+validator read an invalid enum bitfield before rejecting it. Patch 0022 decodes
+the raw endian-converted integer, masks type bits and shifts page count before
+range checks. Valid descriptors retain the same extent and permission behavior.
+It adds no section mapping and does not resolve original-image residency.
