@@ -1,4 +1,22 @@
-# Research roadmap — Phase 21
+# Research roadmap — independent Switch/Horizon feasibility
+
+**Current independent Switch track (2026-10-25): BUILD VERIFIED / RUNTIME UNKNOWN.**
+An original component NRO builds reproducibly with pinned devkitA64/libnx.
+Debug/Release/ASan+UBSan host contracts pass 63 assertions. Actual ReXGlue
+generation of a four-instruction original leaf succeeds; unchanged SDK headers
+block its Horizon compilation. No game code is executed. [Compatibility matrix,
+measurements, blockers and reproduction](research/switch-horizon-feasibility.md).
+
+| Independent track | Current status | Next dependency |
+| --- | --- | --- |
+| A — Xbox XEX residency | **BLOCKED**, preserved on `research/phase-22-blocked` at `f3c6affb913f`; Phase 22 is incomplete. | Independent hardware evidence of original residency/ownership. No Xbox debugging hardware access is available; Switch builds cannot close this gate. |
+| B — original Switch/Horizon runtime | **PARTIAL feasibility**, separate worktree/branch based on main. Component NRO build GO; unchanged ReXGlue integration NO-GO; target execution UNKNOWN. | Validate the exact original NRO on an authorized existing homebrew setup with observable bounded failures. Independently audit the minimum SDK platform/header/checked-copy seam if hardware is unavailable. |
+
+The last completed core milestone remains `v0.0.21-entry-runtime-contracts`.
+The Switch track does not merge Phase 22 recovery or start private-entry
+Phase 23. No boot, playability or performance claim follows from this NRO.
+
+## Historical core baseline
 
 **Current Phase 21 gate (2026-10-24): VERIFIED original-synthetic runtime contracts.** All eight store classes pass positive and individual refusal tests through actual production codegen, the SDK loader and XThread. Loaded image ownership stays bounded despite a larger PE extent; malformed code/sections/context refuse. All 24 stop sites and 21 edges are observed. Final Debug/Release/ASan+UBSan regressions pass 752 core checks. Private stores/hooks remain uninstrumented, actual title startup values UNKNOWN and exception integration PARTIAL. Phase 22 instrumentation/audit is CONDITIONAL GO; game execution remains NO-GO. [Evidence, measurements and separate readiness layers](research/bounded-entry-runtime-contracts.md).
 

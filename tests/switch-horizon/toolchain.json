@@ -1,0 +1,10 @@
+{
+  "image": "devkitpro/devkita64@sha256:1fc388c3a0d34bd2045a6dadcb1020e069d5f876a187fd705de14b4440c00282",
+  "platform": "linux/arm64",
+  "packages": {"devkitA64": "r29.2-1", "libnx": "4.12.0-1", "switch-tools": "1.13.1-1", "devkita64-rules": "1.1.1-1"},
+  "gcc": "15.2.0",
+  "libnx_revision": "7644c9b26099aa2d2145bc72a21ee24190e92085",
+  "libnx_archive_sha256": "12a59cdfdceab83e39ee129b0275dd803e393e83f19de3922a3b6cc95c767edd",
+  "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+  "sdk_lock": "tools/sdk/xex-binding-lock.json"
+}
