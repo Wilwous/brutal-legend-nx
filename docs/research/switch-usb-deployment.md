@@ -1,7 +1,11 @@
 # Original Switch probe: USB deployment and local package
 
-**BUILD VERIFIED · PACKAGE VERIFIED · USB DEPLOY VERIFIED · HARDWARE EXECUTION
-UNKNOWN.** ReXGlue integration remains BLOCKED; game execution remains NO-GO.
+**Follow-up hardware evidence:** the user reports `PASS=23 FAIL=0` on a real
+Switch. This is VERIFIED for the original native probe only; configuration and
+launch details were not supplied. The separate [generated PPC Runtime Probe](switch-horizon-runtime-adapter.md)
+has BUILD VERIFIED / HARDWARE EXECUTION UNKNOWN. Game execution remains NO-GO.
+
+The historical build/deployment evidence below is retained.
 This is an extension of the independent Switch track, not Xbox Phase 22 recovery
 or private-entry Phase 23. No proprietary code/assets are used.
 
@@ -14,7 +18,7 @@ shows PASS/FAIL and waits for **PLUS (+)**. A normal applet shutdown also exits.
 The old two-second result timeout is removed. Yielding continues during the
 result screen; native wait failure still aborts without freeing live worker
 state. This UI wait intentionally has no automatic timeout. Startup/native
-thread behavior on Switch is still unobserved.
+thread behavior was subsequently externally observed through the reported successful probe result.
 
 The digest-pinned [toolchain](../../tests/switch-horizon/toolchain.json) remains
 devkitA64 r29.2-1 / GCC 15.2.0, libnx 4.12.0-1 and switch-tools 1.13.1-1.

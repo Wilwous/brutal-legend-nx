@@ -18,6 +18,25 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    'runtime/horizon/leaf.h',
+    'patches/rexglue-sdk/horizon-leaf.patch',
+    'tests/horizon-runtime/Makefile',
+    'tests/horizon-runtime/NOTICE.txt',
+    'tests/horizon-runtime/lock.json',
+    'tests/horizon-runtime/fixture.py',
+    'tests/horizon-runtime/prepare.py',
+    'tests/horizon-runtime/run.py',
+    'tests/horizon-runtime/probe.h',
+    'tests/horizon-runtime/probe.cpp',
+    'tests/horizon-runtime/main.cpp',
+    'tests/horizon-runtime/host.cpp',
+    'tests/horizon-runtime/inspect_nro.py',
+    'tests/horizon-runtime/package.py',
+    'tests/horizon-runtime/deploy.py',
+    'tests/horizon-runtime/test_contract.py',
+    'tests/horizon-runtime/templates/test/ppc_config_h.inja',
+    'tests/horizon-runtime/templates/test/ppc_test_functions_cpp.inja',
+
     "tools/switch/sanitize_elf.py", "tests/switch-horizon/test_sanitize.py",
     "tools/switch/common.py", "tools/switch/deploy.py", "tools/switch/package.py",
     "tools/switch/icon.py", "tools/switch/requirements.txt", "tools/switch/NOTICE.txt",

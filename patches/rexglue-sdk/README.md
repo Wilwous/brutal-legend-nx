@@ -81,3 +81,13 @@ The [eighteen-patch lock](../../tools/sdk/tls-import-lock.json) adds bounded TLS
 ## 0019 — checked copying through XEX image leases
 
 `0019-leased-xex-copy.patch` adds a separate owner-checked XEX heap copy and an ImageLease facade. An active module lease pins image ownership; the XEX layer verifies a single PE section's byte extent and read/write flags. The shared heap implementation retains global/heap locking, owner identity, committed-page/protection checks, bounded MMIO scanning and unsupported-fetch refusal. The original virtual-copy entry selects its original heap policy and continues rejecting XEX. This patch does not relocate images, authorize arbitrary execution, admit new imports or change global host protection. Modifications follow BSD-3-Clause with retained original notices. [Phase 16 evidence](../../docs/research/synthetic-xex-binding.md).
+
+## Separate Horizon leaf experiment
+
+[horizon-leaf.patch](horizon-leaf.patch) is an optional, separately pinned BSD-3-Clause
+patch after the existing nineteen-patch SDK. It admits only Horizon context-header
+platform detection and exposes the production test generator's template override
+API through an explicit CLI option. It does not port the desktop runtime or change
+Xbox loader, ownership, import or memory contracts. All earlier lock files remain
+unchanged. Apply only in an isolated copy/build; the public preparation helper
+copies the affected source before compiling. [Scope and evidence](../../docs/research/switch-horizon-runtime-adapter.md).

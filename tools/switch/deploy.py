@@ -102,50 +102,55 @@ def rename_new(parent,source,dest):
         # Used for host mock-filesystem regressions, never macOS FAT fallback.
         os.link(source,dest,src_dir_fd=parent,dst_dir_fd=parent,follow_symlinks=False)
         os.unlink(source,dir_fd=parent)
-def deploy_fd(root,payload,revalidate):
+def deployment_names(application):
+    if application not in {APP,'brutal-legend-nx-ppc'}:raise Refused('unknown application destination')
+    return application,application+'.nro'
+def deploy_fd(root,payload,revalidate,*,application=APP,allow_replace=True):
+    app_name,nro_name=deployment_names(application)
     if not payload or len(payload)>LIMIT:raise Refused('invalid deployment payload')
     revalidate();structure(root)
     switch=directory('switch',root)
     try:
-        if absent(switch,APP):
-            if not absent(switch,'._'+APP):raise Refused('pre-existing app metadata without directory; retained')
-            try:os.mkdir(APP,0o755,dir_fd=switch)
+        if absent(switch,app_name):
+            if not absent(switch,'._'+app_name):raise Refused('pre-existing app metadata without directory; retained')
+            try:os.mkdir(app_name,0o755,dir_fd=switch)
             except FileExistsError:pass
-        app=directory(APP,switch)
+        app=directory(app_name,switch)
     finally:os.close(switch)
     lock=None;tmp=None
     try:
         lock=os.open('.deploy.lock',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=app)
         old=None;old_token=None
-        try:fd=os.open(NRO,os.O_RDONLY|os.O_NOFOLLOW,dir_fd=app)
+        try:fd=os.open(nro_name,os.O_RDONLY|os.O_NOFOLLOW,dir_fd=app)
         except FileNotFoundError:pass
         else:
             try:old=read_fd(fd);old_token=token(os.fstat(fd))
             finally:os.close(fd)
+        if old is not None and old!=payload and not allow_replace:raise Refused('existing selected probe requires explicit replacement selection')
         if old==payload:return {'status':'ALREADY_CURRENT_VERIFIED','sha256':sha(payload),'backup':None}
         free=os.fstatvfs(app)
         if free.f_bavail*free.f_frsize<len(payload)+len(old or b'')+1024*1024:raise Refused('insufficient free space; original retained')
-        tmp='.brutal-legend-nx-'+uuid.uuid4().hex+'.tmp'
+        tmp='.'+app_name+'-'+uuid.uuid4().hex+'.tmp'
         flush=write_new(app,tmp,payload);verify_file(app,tmp,payload)
         backup=None
         if old is not None:
-            backup='brutal-legend-nx.previous-'+sha(old)[:12]+'-'+uuid.uuid4().hex[:12]+'.nro'
+            backup=app_name+'.previous-'+sha(old)[:12]+'-'+uuid.uuid4().hex[:12]+'.nro'
             write_new(app,backup,old);verify_file(app,backup,old)
         revalidate();structure(root)
         # An opened directory pins its identity, but reject renamed/replaced parents.
         switch=directory('switch',root)
         try:
-            current=directory(APP,switch)
+            current=directory(app_name,switch)
             try:
                 if token(os.fstat(current))[:2]!=token(os.fstat(app))[:2]:raise Refused('application directory changed')
             finally:os.close(current)
         finally:os.close(switch)
-        if old is None:rename_new(app,tmp,NRO)
+        if old is None:rename_new(app,tmp,nro_name)
         else:
-            if token(os.stat(NRO,dir_fd=app,follow_symlinks=False))!=old_token:raise Refused('previous application changed; refusing replacement')
-            os.replace(tmp,NRO,src_dir_fd=app,dst_dir_fd=app)
+            if token(os.stat(nro_name,dir_fd=app,follow_symlinks=False))!=old_token:raise Refused('previous application changed; refusing replacement')
+            os.replace(tmp,nro_name,src_dir_fd=app,dst_dir_fd=app)
         tmp=None
-        verify_file(app,NRO,payload)
+        verify_file(app,nro_name,payload)
         directory_sync='fsync'
         try:os.fsync(app)
         except OSError as e:
@@ -161,7 +166,8 @@ def deploy_fd(root,payload,revalidate):
                 if token(os.stat('.deploy.lock',dir_fd=app,follow_symlinks=False))==token(os.fstat(lock)):os.unlink('.deploy.lock',dir_fd=app)
             finally:os.close(lock)
         os.close(app)
-def deploy_usb(info,payload):
+def deploy_usb(info,payload,*,application=APP,allow_replace=True):
+    app_name,nro_name=deployment_names(application)
     root=directory(info['MountPoint'])
     identity=os.fstat(root)
     def revalidate():
@@ -172,19 +178,19 @@ def deploy_usb(info,payload):
         if token(os.stat(info['MountPoint'],follow_symlinks=False))[:2]!=token(identity)[:2]:raise Refused('volume root changed')
         if identity.st_dev==os.stat('/Volumes').st_dev:raise Refused('destination is on the host filesystem')
     try:
-        result=deploy_fd(root,payload,revalidate)
+        result=deploy_fd(root,payload,revalidate,application=application,allow_replace=allow_replace)
         # Flush directory creation/rename/lock cleanup too, after app handles close.
         subprocess.run(['/bin/sync'],check=True,timeout=15)
         revalidate();structure(root)
         switch=directory('switch',root)
         try:
-            app=directory(APP,switch)
-            try:verify_file(app,NRO,payload)
+            app=directory(app_name,switch)
+            try:verify_file(app,nro_name,payload)
             finally:os.close(app)
         finally:os.close(switch)
         result['macos_sync']='completed; final bytes reverified'
     finally:os.close(root)
-    result.update(destination=info['MountPoint']+'/'+RELATIVE,device=info['DeviceIdentifier'],safe_eject_required=True,hardware_execution='UNKNOWN')
+    result.update(destination=info['MountPoint']+'/switch/'+app_name+'/'+nro_name,device=info['DeviceIdentifier'],safe_eject_required=True,hardware_execution='UNKNOWN')
     return result
 def nxlink_command(executable,address,nro):
     ipaddress.IPv4Address(address)

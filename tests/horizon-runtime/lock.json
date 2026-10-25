@@ -1,0 +1,24 @@
+{
+  "baseline_commit": "95e9199c14673b970a8293463ba7073b6f0c00ad",
+  "original_cli_sha256": "c8e1e6056a1793377b750745279af4dbe1f5ef1c02fdb4ec26642eea8baf97e3",
+  "sdk_context_headers_sha256": {
+    "rex/platform.h": "c540993525ba004aa943e3075edad40bd5c530e959177e8ad56093608ce55043",
+    "rex/assert.h": "ad25d6dc69545e6ae2c7c3ee749261fe428be74c4f52d382ebad647ceec2d1ce",
+    "rex/types.h": "37e3f7ba20a4e7668d2253232f6e6cc7edd5f48846c7d5c80f498152c5bb7af2",
+    "rex/ppc/context.h": "5f84d78c38cf626cf4c8107293cd9824f6e8cf81225f201b608505698273dc36",
+    "rex/ppc/func.h": "1e3af378fafaff29996b9dc2e5184e0549da2ad81b3a7396c91340787167a912",
+    "rex/platform/fpscr.h": "e1f98e71630e8dc9efaae4db831679c64273419d612256d76193fb5bd8930adb"
+  },
+  "sdk_command_sha256": "36578dbe6f5df222053353e6d1106c2921ad707f11aaa7e6c05d55b5050b3c5d",
+  "patch_sha256": "1391a78256b14bf6ae9cb212298816c9067e2a71704db601b30724a7378f7547",
+  "host_passed_per_profile": 59,
+  "host_failed": 0,
+  "expected_hardware_passed": 38,
+  "hardware_execution": "UNKNOWN",
+  "generated_sha256": {
+    "ppc_config.h": "d7170b691d652b412f9b92c6a21bf1677bcb6d968cfcfc152d3e2141c33fcb1c",
+    "ppc_test_functions.cpp": "88777beb155234650d2e463470757cf3e7d7e5c11b33e295c9ead470cc89909c",
+    "ppc_test_decls.h": "149b7ceea7524ae01849f2c43db02f83e048af60d2aa9f89772443267ca0bb0d",
+    "ppc_test_cases.cpp": "a932014c60ed31d67a66ab28400319f3bc9de21656bc4a798752364adce52365"
+  }
+}

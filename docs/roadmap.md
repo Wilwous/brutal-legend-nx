@@ -1,21 +1,21 @@
 # Research roadmap — independent Switch/Horizon feasibility
 
-**Current independent Switch track (2026-10-25): BUILD VERIFIED / RUNTIME UNKNOWN.**
-An original component NRO builds reproducibly with pinned devkitA64/libnx.
-Debug/Release/ASan+UBSan host contracts pass 81 assertions, including result-loop
-checks. The ready-to-copy package and USB copy/hash/sync are verified; 45 mock
-deployment/package units and eight synthetic ELF diagnostic-path units pass.
-The NRO waits for PLUS (+); actual device output
-has not been observed. [USB workflow and launch instructions](research/switch-usb-deployment.md).
-Actual ReXGlue
-generation of a four-instruction original leaf succeeds; unchanged SDK headers
-block its Horizon compilation. No game code is executed. [Compatibility matrix,
-measurements, blockers and reproduction](research/switch-horizon-feasibility.md).
+**Current independent Switch track (2026-10-25): generated-leaf BUILD VERIFIED /
+HARDWARE EXECUTION UNKNOWN.** The user independently observed the existing
+native probe at `PASS=23 FAIL=0` on a real Switch: VERIFIED for that probe only.
+A separate PPC Runtime Probe now compiles/links the actual production-generated
+original four-instruction leaf with real SDK context headers and a minimal
+checked native-thread adapter. Two clean ELF/NRO builds match; 177 generated
+host assertions, eight compiler refusals and relevant existing regressions pass.
+No generated PPC execution on Switch has yet been observed. [Adapter evidence,
+contracts and exact hardware handoff](research/switch-horizon-runtime-adapter.md).
+The old successful probe and [safe USB workflow](research/switch-usb-deployment.md)
+remain regression targets; the new application uses a separate SD directory.
 
 | Independent track | Current status | Next dependency |
 | --- | --- | --- |
 | A — Xbox XEX residency | **BLOCKED**, preserved on `research/phase-22-blocked` at `f3c6affb913f`; Phase 22 is incomplete. | Independent hardware evidence of original residency/ownership. No Xbox debugging hardware access is available; Switch builds cannot close this gate. |
-| B — original Switch/Horizon runtime | **PARTIAL feasibility**, separate worktree/branch based on main. Component NRO build GO; unchanged ReXGlue integration NO-GO; target execution UNKNOWN. | Validate the exact original NRO on an authorized existing homebrew setup with observable bounded failures. Independently audit the minimum SDK platform/header/checked-copy seam if hardware is unavailable. |
+| B — original Switch/Horizon runtime | **PARTIAL feasibility**: old native probe hardware VERIFIED; new generated-leaf build/link VERIFIED, hardware UNKNOWN. | Observe the exact PPC Runtime Probe on the existing homebrew setup, including checked refusals, cleanup and PLUS exit. Guest stack/PCR/TLS and broader SDK integration remain separate later synthetic work. |
 
 The last completed core milestone remains `v0.0.21-entry-runtime-contracts`.
 The Switch track does not merge Phase 22 recovery or start private-entry

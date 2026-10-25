@@ -5,7 +5,10 @@ Audit date: 2026-10-25. **Independent Switch track; not Phase 23.**
 This records the original `d4187c1607a4` feasibility artifact. The subsequent
 [USB package/deployment audit](switch-usb-deployment.md) adds hbmenu metadata,
 an original icon and PLUS-to-exit behavior, with a new artifact checksum.
-Hardware execution remains UNKNOWN; the original measurements below are retained.
+The user subsequently reports `PASS=23 FAIL=0` for the native probe on a real
+Switch (VERIFIED for that probe only). A separate [minimal generated-leaf adapter](switch-horizon-runtime-adapter.md)
+now resolves compilation/linking in its narrow scope; its hardware execution
+remains UNKNOWN. The original measurements and unchanged-SDK blockers below are historical.
 
 **VERIFIED:** an original component NRO cross-compiles and links with the
 official devkitPro toolchain. Two fresh builds produce identical ELF/NRO

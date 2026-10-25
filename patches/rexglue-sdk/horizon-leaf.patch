@@ -1,0 +1,57 @@
+--- a/include/rex/platform.h
++++ b/include/rex/platform.h
+@@ -28,7 +28,10 @@
+ #include <TargetConditionals.h>
+ #endif
+ 
+-#if defined(TARGET_OS_MAC) && TARGET_OS_MAC
++#if defined(__SWITCH__)
++// Header-only synthetic PPC context. Does not admit the desktop runtime.
++#define REX_PLATFORM_HORIZON 1
++#elif defined(TARGET_OS_MAC) && TARGET_OS_MAC
+ #define REX_PLATFORM_MAC 1
+ #elif defined(WIN32) || defined(_WIN32)
+ #define REX_PLATFORM_WIN32 1
+--- a/src/rexglue/commands/test_recompiler.cpp
++++ b/src/rexglue/commands/test_recompiler.cpp
+@@ -299,7 +299,7 @@
+   return "misc";
+ }
+ 
+-bool RecompileTests(std::string_view binDir, std::string_view asmDir, std::string_view outDir) {
++bool RecompileTests(std::string_view binDir, std::string_view asmDir, std::string_view outDir, const std::string& templatesDir) {
+   std::array<ui::KeyValueRow, 3> header_rows = {{
+       {"Bin dir", std::string(binDir)},
+       {"ASM dir", std::string(asmDir)},
+@@ -438,6 +438,11 @@
+   }
+ 
+   codegen::TemplateRegistry registry;
++  if (!templatesDir.empty()) {
++    if (!std::filesystem::is_directory(templatesDir))
++      throw std::runtime_error("Template override directory is missing");
++    registry.loadOverrides(templatesDir);
++  }
+   auto writeRendered = [&](std::string_view templateId, std::string_view filename) {
+     auto rendered = codegen::renderWithJson(registry, std::string(templateId), templateData);
+     std::ofstream out(fmt::format("{}/{}", outDir, filename));
+@@ -456,6 +461,7 @@
+   std::string bin_dir;
+   std::string asm_dir;
+   std::string output;
++  std::string templates;
+ };
+ 
+ }  // namespace
+@@ -474,9 +480,10 @@
+   sub->add_option("--output", args->output, "Output path for recompile-tests")
+       ->type_name("PATH")
+       ->required();
++  sub->add_option("--templates", args->templates, "Explicit template override directory");
+   sub->callback([args, &pending]() {
+     pending = [args]() -> rex::Result<void> {
+-      if (!RecompileTests(args->bin_dir, args->asm_dir, args->output)) {
++      if (!RecompileTests(args->bin_dir, args->asm_dir, args->output, args->templates)) {
+         return Err<void>(rex::ErrorCategory::Validation, "Test recompilation failed");
+       }
+       return rex::Ok();
