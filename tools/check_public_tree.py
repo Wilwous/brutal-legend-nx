@@ -18,11 +18,16 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    "tools/switch/sanitize_elf.py", "tests/switch-horizon/test_sanitize.py",
+    "tools/switch/common.py", "tools/switch/deploy.py", "tools/switch/package.py",
+    "tools/switch/icon.py", "tools/switch/requirements.txt", "tools/switch/NOTICE.txt",
+    "tests/switch-horizon/result_ui.h", "tests/switch-horizon/ui.cpp",
+    "tests/switch-horizon/test_deploy.py",
     "tests/switch-horizon/README.md", "tests/switch-horizon/Makefile",
     "tests/switch-horizon/probe.h", "tests/switch-horizon/probe.cpp",
     "tests/switch-horizon/host.cpp", "tests/switch-horizon/main.cpp",
     "tests/switch-horizon/toolchain.json", "tests/switch-horizon/run.py",
-    "tests/switch-horizon/inspect.py", "tests/switch-horizon/integration.py",
+    "tests/switch-horizon/inspect_nro.py", "tests/switch-horizon/integration.py",
     "runtime/entry_contract.h", "tests/entry-contracts/README.md",
     "tests/entry-contracts/fixture.py", "tests/entry-contracts/contracts.cpp",
     "tests/entry-contracts/run.py", "tests/entry-contracts/test_fixture.py",

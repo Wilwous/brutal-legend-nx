@@ -2,6 +2,11 @@
 
 Audit date: 2026-10-25. **Independent Switch track; not Phase 23.**
 
+This records the original `d4187c1607a4` feasibility artifact. The subsequent
+[USB package/deployment audit](switch-usb-deployment.md) adds hbmenu metadata,
+an original icon and PLUS-to-exit behavior, with a new artifact checksum.
+Hardware execution remains UNKNOWN; the original measurements below are retained.
+
 **VERIFIED:** an original component NRO cross-compiles and links with the
 official devkitPro toolchain. Two fresh builds produce identical ELF/NRO
 bytes. **UNKNOWN:** execution on Horizon. **BLOCKED:** unchanged pinned

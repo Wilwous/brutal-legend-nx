@@ -15,7 +15,24 @@ def inspect():
     assert struct.unpack_from('<HH',elf,16)==(3,183), 'expected AArch64 PIE'
     assert nro[16:20]==b'NRO0', 'missing NRO header'
     size=struct.unpack_from('<I',nro,24)[0]
-    assert size==len(nro), 'unexpected appended data or size mismatch'
+    assert 128<=size<=len(nro), 'NRO image size mismatch'
+    assert nro[size:size+4]==b'ASET', 'missing hbmenu metadata'
+    assert struct.unpack_from('<I',nro,size+4)[0]==0, 'unknown asset header version'
+    assets=[struct.unpack_from('<QQ',nro,size+off) for off in (8,24,40)]
+    ranges=sorted((off,off+length) for off,length in assets if length)
+    assert ranges and all(56<=lo<hi<=len(nro)-size for lo,hi in ranges)
+    assert all(ranges[i][1]<=ranges[i+1][0] for i in range(len(ranges)-1))
+    assert ranges[-1][1]==len(nro)-size, 'unexpected trailing data'
+    icon_off,icon_size=assets[0];nacp_off,nacp_size=assets[1]
+    assert nacp_size==0x4000 and assets[2][1]==0, 'unexpected NACP/RomFS'
+    nacp=nro[size+nacp_off:size+nacp_off+nacp_size]
+    title=nacp[:0x200].split(b'\0',1)[0].decode()
+    author=nacp[0x200:0x300].split(b'\0',1)[0].decode()
+    version=nacp[0x3060:0x3070].split(b'\0',1)[0].decode()
+    assert (title,author,version)==('Brutal Legend NX Probe','Wilwous','0.1.0')
+    if icon_size:
+        icon=nro[size+icon_off:size+icon_off+icon_size]
+        assert icon.startswith(b'\xff\xd8') and icon.endswith(b'\xff\xd9'), 'expected JPEG icon'
     segments=[struct.unpack_from('<II',nro,off) for off in (32,40,48)]
     assert all(start%4096==0 and length%4096==0 and start+length<=size for start,length in segments)
     assert all(segments[i][0]+segments[i][1]<=segments[i+1][0] for i in (0,1))
@@ -65,6 +82,7 @@ def inspect():
             'native_worker_stack_request_bytes':64*1024,
             'runtime':'UNKNOWN','hardware_svc_permission':'UNKNOWN',
             'nro_sha256':hashlib.sha256(nro).hexdigest()}
+    result['hbmenu']={'title':title,'author':author,'version':version,'icon_bytes':icon_size,'romfs_bytes':0}
     Path('inspection.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result,indent=2))
 if __name__=='__main__':inspect()

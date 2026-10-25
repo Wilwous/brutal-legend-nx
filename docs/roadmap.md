@@ -2,7 +2,12 @@
 
 **Current independent Switch track (2026-10-25): BUILD VERIFIED / RUNTIME UNKNOWN.**
 An original component NRO builds reproducibly with pinned devkitA64/libnx.
-Debug/Release/ASan+UBSan host contracts pass 63 assertions. Actual ReXGlue
+Debug/Release/ASan+UBSan host contracts pass 81 assertions, including result-loop
+checks. The ready-to-copy package and USB copy/hash/sync are verified; 45 mock
+deployment/package units and eight synthetic ELF diagnostic-path units pass.
+The NRO waits for PLUS (+); actual device output
+has not been observed. [USB workflow and launch instructions](research/switch-usb-deployment.md).
+Actual ReXGlue
 generation of a four-instruction original leaf succeeds; unchanged SDK headers
 block its Horizon compilation. No game code is executed. [Compatibility matrix,
 measurements, blockers and reproduction](research/switch-horizon-feasibility.md).

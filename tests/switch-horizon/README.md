@@ -3,6 +3,9 @@
 **BUILD VERIFIED / RUNTIME UNKNOWN.** These sources contain no game code and
 do not provide a ReXGlue SDK port. [Measured audit and decisions](../../docs/research/switch-horizon-feasibility.md).
 
+For the ready-to-copy NRO/ZIP, verified USB deployment and PLUS-to-exit screen,
+use the [current USB packaging workflow](../../docs/research/switch-usb-deployment.md).
+
 `probe.cpp` uses the unchanged public bounded checked-memory, host-thread TLS
 and cooperative-stop components. Twenty-one assertions cover allocation,
 alignment, endian/cross-page copies, uncommitted/RO/stale/freed/overflow refusal,
@@ -23,7 +26,8 @@ docker pull --platform linux/arm64 \
 python3 tests/switch-horizon/run.py --workdir "$PRIVATE_WORK/horizon-build" --switch-build
 ```
 
-The first command builds/executes Debug, Release and ASan+UBSan host children.
+The first command builds/executes Debug, Release and ASan+UBSan host children,
+including six result-loop checks per profile in addition to the 21 components.
 The second runner additionally builds the NRO twice in fresh directories and
 compares ELF/NRO hashes. It validates ELF64/AArch64 PIE, segment bounds, absence
 of RWX load segments, the real 8-byte `__nx_heap_size` contract, NRO0 layout,
@@ -69,6 +73,6 @@ aborts rather than freeing live worker state. Do not use this NRO to infer
 Xbox XThread/PCR behavior, complete ABI support or game readiness.
 
 The user has confirmed existing homebrew Switch access and will test later.
-Expected success output is `PASS=23 FAIL=0`; the result is displayed for two
-seconds before automatic exit. Capture a video/screen and the launch mode,
+Expected success output is `PASS=23 FAIL=0`; the current result screen waits for
+PLUS (+) or normal applet shutdown. Capture a video/screen and the launch mode,
 including any abort/error code. No observed hardware result exists yet.

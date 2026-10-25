@@ -10,10 +10,15 @@ OFILES := main.o probe.o
 LIBS := -lnx
 LD := $(CXX)
 all: probe.nro
-main.o: $(REPO)/tests/switch-horizon/main.cpp $(REPO)/tests/switch-horizon/probe.h
+main.o: $(REPO)/tests/switch-horizon/main.cpp $(REPO)/tests/switch-horizon/probe.h $(REPO)/tests/switch-horizon/result_ui.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 probe.o: $(REPO)/tests/switch-horizon/probe.cpp $(REPO)/tests/switch-horizon/probe.h $(REPO)/runtime/checked_memory.h $(REPO)/runtime/checked_tls.h $(REPO)/runtime/cooperative_stop.h
 	$(CXX) $(CXXFLAGS) -fstack-usage -c $< -o $@
-probe.elf: $(OFILES)
+probe.elf: $(OFILES) $(REPO)/tools/switch/sanitize_elf.py
 	$(LD) $(LDFLAGS) $(OFILES) $(LIBS) -o $@
+	python3 $(REPO)/tools/switch/sanitize_elf.py $@
+probe.nacp:
+	nacptool --create "Brutal Legend NX Probe" "Wilwous" "0.1.0" $@
+probe.nro: probe.elf probe.nacp $(ICON)
+	elf2nro probe.elf $@ --nacp=probe.nacp $(if $(ICON),--icon=$(ICON))
 .PHONY: all

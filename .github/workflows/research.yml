@@ -42,6 +42,10 @@ jobs:
         run: python3 tests/ppc/test_watchdog.py
       - name: Check original portable Horizon component contracts on host
         run: python3 tests/switch-horizon/run.py --workdir "${{ runner.temp }}/horizon-host"
+      - name: Check safe Switch deployment on mock filesystems only
+        run: python3 tests/switch-horizon/test_deploy.py
+      - name: Check bounded diagnostic path sanitization on synthetic ELF fixtures
+        run: python3 tests/switch-horizon/test_sanitize.py
 
   runtime-foundation:
     runs-on: ubuntu-latest

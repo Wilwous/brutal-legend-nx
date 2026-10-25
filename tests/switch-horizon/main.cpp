@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Wilwous
 #include <switch.h>
 #include "probe.h"
+#include "result_ui.h"
 #include <atomic>
 #include <cstdio>
 
@@ -17,10 +18,20 @@ void worker(void* raw){
   for(unsigned i=0;i<100000 && !work.stop.load(std::memory_order_acquire);++i)
     work.steps.fetch_add(1,std::memory_order_relaxed);
 }
+struct HorizonUi {
+  PadState pad{};
+  bool running(){return appletMainLoop();}
+  void update_input(){padUpdate(&pad);}
+  bool plus_pressed(){return (padGetButtonsDown(&pad)&HidNpadButton_Plus)!=0;}
+  void present(){consoleUpdate(nullptr);}
+  void yield_frame(){svcSleepThread(16666667);}
+};
 }
 int main(){
-  consoleInit(nullptr);
-  std::puts("Original Horizon feasibility probe; no game code");
+  if(!consoleInit(nullptr))return 2;
+  std::puts("\n  BRUTAL LEGEND NX PROBE\n  Original runtime test - NOT the game\n");
+  std::puts("  Running 21 portable + 2 native checks...\n");
+  consoleUpdate(nullptr);
   auto result=portable_probe();
   Thread thread{};Work work;
   Result rc=threadCreate(&thread,worker,&work,nullptr,64*1024,0x3b,-2);
@@ -45,8 +56,12 @@ int main(){
     if(R_FAILED(rc)){++result.failed;std::printf("threadClose: %08x\n",rc);}
     else ++result.passed;
   }
-  std::printf("PASS=%u FAIL=%u\n",result.passed,result.failed);
-  std::puts("Record this screen. These are synthetic component checks only.");
-  consoleUpdate(nullptr);svcSleepThread(2000000000LL);consoleExit(nullptr);
+  std::printf("\n  %sPASS=%u FAIL=%u\x1b[0m\n\n",result.failed?"\x1b[31m":"\x1b[32m",result.passed,result.failed);
+  std::puts("  Record this screen and your hbmenu launch mode.\n");
+  std::puts("  Synthetic checks only; no PPC or game code executed.\n");
+  std::puts("  Press PLUS (+) to exit to hbmenu.");
+  padConfigureInput(1,HidNpadStyleSet_NpadStandard);
+  HorizonUi ui;padInitializeDefault(&ui.pad);
+  consoleUpdate(nullptr);brutal::probe::wait_for_exit(ui);consoleExit(nullptr);
   return result.failed?1:0;
 }
