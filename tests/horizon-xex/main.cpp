@@ -18,6 +18,7 @@ struct Ui {
 int main(){
  if(!consoleInit(nullptr))return 2;
  std::puts("\n BRUTAL LEGEND NX - SYNTHETIC XEX RUNTIME\n Original synthetic PPC. NOT the game.\n Platform init: PASS\n Loading original synthetic XEX and running bounded tests...\n");consoleUpdate(nullptr);
+ std::printf(" Target Horizon / libnx 4.12.0 / SDK 0.10.0\n Build Synthetic XEX 0.4.0 / GCC %s\n",__VERSION__);
  auto r=xex_probe();
  std::printf(" Synthetic XEX / metadata / refusal checks: PASS=%u FAIL=%u\n",r.passed,r.failed);
  std::printf(" Observed primary PPC r3=%u; primary SDK calls=%u\n",r.observed_result,r.sdk_calls);

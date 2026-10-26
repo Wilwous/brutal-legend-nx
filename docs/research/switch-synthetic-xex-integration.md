@@ -5,7 +5,7 @@ overall PARTIAL; HARDWARE EXECUTION UNKNOWN.** Stage 2 host/build acceptance,
 including its separate stack-window correction, passed before final Stage 3 work.
 No new console result is claimed and no game XEX is loaded. The prior PASS38
 four-instruction probe remains HARDWARE VERIFIED only for that externally observed
-scope, with prior launch mode UNKNOWN. Xbox Phase 22 remains BLOCKED.
+scope. Launch from hbmenu is confirmed; Applet versus Title Override is UNKNOWN. Xbox Phase 22 remains BLOCKED.
 
 ## Genuine pipeline and deliberately excluded parts
 
@@ -157,7 +157,9 @@ NX - Synthetic XEX Runtime**, NACP 0.4.0, SD path
 `sdmc:/switch/brutal-legend-nx-xex/brutal-legend-nx-xex.nro`.
 Expected successful screen: **PASS=119 FAIL=0**, primary r3=17, primary SDK calls=1,
 hook hits 4/1 and zero live guest allocations. These are computed execution
-checks, not hardcoded successes. Both new applications wait for PLUS.
+checks, not hardcoded successes. Both new applications wait for PLUS. The XEX screen identifies the target
+Horizon/libnx/SDK versions, application build 0.4.0 and actual compiler version;
+this is build identification, not a fabricated running Horizon version.
 
 ## Reproduction and manual hardware gate
 
@@ -194,21 +196,21 @@ This work authorizes no proprietary execution, game compatibility or Phase 23.
 
 ## Final artifact measurements
 
-NRO **626,082 bytes**, SHA-256 `8ce7c1f9018a474d1746788115158f38e4b18d21b20b4ff02f474580ce46d205`.
-ELF SHA-256 `c53fa2246db1091d2ff2ee96874a3536bb592dd17fc303109b3a791ab8c54072`.
+NRO **626,082 bytes**, SHA-256 `025fd5a978c9e5367b277e342fa12a0bc98c42882f7d2dbb86f66e2ac898c24b`.
+ELF SHA-256 `0b73e44420ce289adcb2463b8b2692fa77409ede99df31d6598add65e59c1900`.
 Two clean ELF/NRO/object builds match; AArch64 PIE, RX/R/RW segments, no W+X,
 zero DT_NEEDED and zero unresolved strong symbols. Original icon/NACP present,
 no RomFS or private user/build paths. The unchanged pinned read-only newlib
 diagnostic sanitizer changes no executable bytes or layout.
-Loaded file bytes: RX 241144, R 323700, RW 17456; writable memory extent 36448.
+Loaded file bytes: RX 241208, R 323796, RW 17456; writable memory extent 36448.
 Heap request 16 MiB; main arena 4 MiB, each isolated repeat arena 4 MiB;
 guest stack 16 KiB/thread, PCR 728 bytes and TLS 288 bytes (page-rounded backing).
 Native worker stack request 64 KiB; main stack remains loader-owned/UNKNOWN.
 Compiler reports a 24,016-byte static frame for xex_probe (not total call-chain
 usage). Actual console peak memory, SVC permissions and timing are UNKNOWN.
-Final runner: 18 bounded child commands, 41.626 summed child seconds.
-run-Debug: 0.986 s, peak RSS 19,333,120 bytes.
-run-Release: 0.182 s, peak RSS 10,354,688 bytes.
-run-Sanitized: 0.456 s, peak RSS 52,969,472 bytes.
+Final runner: 18 bounded child commands, 49.720 summed child seconds.
+run-Debug: 0.958 s, peak RSS 23,805,952 bytes.
+run-Release: 0.175 s, peak RSS 10,371,072 bytes.
+run-Sanitized: 0.853 s, peak RSS 53,067,776 bytes.
 Docker-client RSS does not measure compiler/container peak RSS. No game FPS
 or stock-clock performance conclusion follows from these host measurements.

@@ -3,8 +3,8 @@
 2026-10-26. **HOST VERIFIED / BUILD VERIFIED / HARDWARE EXECUTION UNKNOWN.**
 The user reports the preceding four-instruction PPC Runtime Probe at
 `PASS=38 FAIL=0`, r3=42, checked memory/cleanup PASS and normal PLUS exit on a
-real Switch. This is HARDWARE VERIFIED for that original scope only; launch mode
-(Applet versus Title Override) remains UNKNOWN. The new foundation NRO has not
+real Switch. This is HARDWARE VERIFIED for that original scope only. The user
+confirms launching from hbmenu; Applet versus Title Override remains UNKNOWN. The new foundation NRO has not
 been observed on hardware. Xbox Phase 22 remains BLOCKED and game execution NO-GO.
 
 ## Implemented subset

@@ -3,7 +3,7 @@
 **Current independent Switch track (2026-10-26): corrected Stage 2 foundation
 HOST/BUILD VERIFIED; Stage 3 synthetic XEX profile HOST/BUILD VERIFIED, overall
 PARTIAL. Both new hardware results remain UNKNOWN.** The prior PASS38 probe and
-PLUS exit are externally verified for their original scope; launch mode is UNKNOWN.
+PLUS exit are externally verified for their original scope; hbmenu launch is confirmed, Applet/Title Override UNKNOWN.
 Stage 2's expanded stack-window check passes 108/0 per host profile and expects
 PASS109 on console. Stage 3 passes 118/0 per profile and expects PASS119, with
 six generated functions, real image loading, two production stop hooks and one
