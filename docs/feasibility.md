@@ -1,6 +1,15 @@
 # Feasibility — Phase 21
 
-**Current Phase 21 gate (2026-10-24): VERIFIED original-synthetic runtime contracts.** All eight store classes pass positive and individual refusal tests through actual production codegen, the SDK loader and XThread. Loaded image ownership stays bounded despite a larger PE extent; malformed code/sections/context refuse. All 24 stop sites and 21 edges are observed. Final Debug/Release/ASan+UBSan regressions pass 752 core checks. Private stores/hooks remain uninstrumented, actual title startup values UNKNOWN and exception integration PARTIAL. Phase 22 instrumentation/audit is CONDITIONAL GO; game execution remains NO-GO. [Evidence, measurements and separate readiness layers](research/bounded-entry-runtime-contracts.md).
+**Independent Switch update, 2026-10-27:** Stages 4–8 are HOST/BUILD VERIFIED
+for the original synthetic runtime; hardware execution is UNKNOWN. The probe
+uses checked logical memory, four guest workers/PCR/TLS, production-generated
+PPC and two actual SDK leaves. [Current integrated evidence](research/switch-integrated-runtime.md).
+Xbox Phase 22 remains BLOCKED (G4/G8 BLOCKED, G5 UNKNOWN); game execution NO-GO.
+The following core architecture/feasibility assessment is historical and is not
+an authorization to resume Phase 22 or start Phase 23.
+
+
+**Historical Phase 21 gate (2026-10-24): VERIFIED original-synthetic runtime contracts.** All eight store classes pass positive and individual refusal tests through actual production codegen, the SDK loader and XThread. Loaded image ownership stays bounded despite a larger PE extent; malformed code/sections/context refuse. All 24 stop sites and 21 edges are observed. Final Debug/Release/ASan+UBSan regressions pass 752 core checks. Private stores/hooks remain uninstrumented, actual title startup values UNKNOWN and exception integration PARTIAL. Phase 22 instrumentation/audit is CONDITIONAL GO; game execution remains NO-GO. [Evidence, measurements and separate readiness layers](research/bounded-entry-runtime-contracts.md).
 
 Historical baseline assessment: **2026-10-22 · v0.0.11-synthetic-execution**. Phase 11 passed its original synthetic Mac scope; overall port feasibility remains PARTIAL and proprietary execution remains NO-GO. The Phase 3 configuration-assisted analysis/generation PASS stands.
 

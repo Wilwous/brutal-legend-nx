@@ -9,7 +9,7 @@ namespace {struct Ui {PadState pad{};bool running(){return appletMainLoop();}voi
 int main(){
  if(!consoleInit(nullptr))return 2;
  std::puts("\n BRUTAL LEGEND NX - INTEGRATED RUNTIME\n Original synthetic PPC only. NOT THE GAME.\n Platform initialization: PASS\n Running bounded smoke checks...");consoleUpdate(nullptr);
- std::printf(" Build 0.5.0 / stages through %u / GCC %s\n",unsigned(STAGE_MAX),__VERSION__);
+ std::printf(" Build 0.8.0 / synthetic c64f6cb388bd / stages through %u / GCC %s\n",unsigned(STAGE_MAX),__VERSION__);
  auto r=expansion_probe();
  for(unsigned i=0;i<5;++i)if(r.stage_pass[i]||r.stage_fail[i])std::printf(" Stage %u: PASS=%u FAIL=%u\n",i+4,r.stage_pass[i],r.stage_fail[i]);
  std::printf(" Generated PPC result=%u; actual SDK calls=%u\n Peak concurrent guest workers=%u; allocations=%u leases=%u\n",r.result,r.sdk_calls,r.workers,r.remaining,r.leases);

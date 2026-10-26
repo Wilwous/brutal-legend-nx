@@ -29,7 +29,7 @@ probe.elf: $(OFILES)
 	$(LD) $(LDFLAGS) $(OFILES) -lnx -o $@
 	python3 $(REPO)/tools/switch/sanitize_elf.py $@
 probe.nacp:
-	nacptool --create "Brutal Legend NX - Integrated Runtime" "Wilwous" "0.5.0" $@
+	nacptool --create "Brutal Legend NX - Integrated Runtime" "Wilwous" "0.8.0" $@
 probe.nro: probe.elf probe.nacp $(ICON)
 	elf2nro probe.elf $@ --nacp=probe.nacp $(if $(ICON),--icon=$(ICON))
 .PHONY: all

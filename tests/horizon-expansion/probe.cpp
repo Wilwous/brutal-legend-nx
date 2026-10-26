@@ -167,8 +167,51 @@ void import_checks(Check c){
 }
 #endif
 
+#if STAGE_MAX >= 8
+void integrated_checks(Check c,unsigned cycles){
+ uint32_t random=0xb17a1;auto next=[&]{random^=random<<13;random^=random>>17;random^=random<<5;return random;};
+ for(unsigned cycle=0;cycle<cycles;++cycle){
+  Space space;XexImage image(space,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto t=slots.allocate();
+  std::array<std::unique_ptr<GuestThread>,4> guests;std::array<std::unique_ptr<GuestTask>,4> tasks;std::array<unsigned,4> expected{},values{},completed{};std::array<brutal::horizon::Event,4> ready;brutal::horizon::Event gate;
+  for(unsigned i=0;i<4;++i){unsigned seed=7+next()%32,iterations=next()%8;expected[i]=seed+iterations+7;guests[i]=std::make_unique<GuestThread>(space,image.life(),slots,t,seed,image.tls_template());tasks[i]=std::make_unique<GuestTask>(*guests[i]);
+   c(tasks[i]->start([&,i,iterations]{auto&g=*guests[i];g.context.r3.u64=iterations;g.context.lr=0x8201feed;Scope scope(g,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);ImportFrame sdk(image,g);HookFrame hooks(scope,xex_hooks,observed);ready[i].signal();if(!gate.wait())throw Error(Fault::unsupported,"stress gate");image.invoke(scope,xex_entry);values[i]=g.context.r3.u32;completed[i]=sdk.calls;}),"integrated worker starts");
+  }
+  for(auto&e:ready){c(e.wait(),"integrated worker active");}gate.signal();
+  for(unsigned i=0;i<4;++i){c(tasks[i]->join()&&!tasks[i]->callback_error(),"integrated join");c(values[i]==expected[i]&&completed[i]==2,"seeded generated multicall + actual imports");guests[i]->cleanup();}
+  slots.release(t);c(image.unload(),"integrated unload");c(space.live()==0&&space.leases()==0,"integrated balance");
+ }
+ for(int fail=0;fail<4;++fail){Space s;c.refuse(Fault::exhausted,[&]{XexImage mod(s,xex_bytes,{xex_bytes,xex_generated,xex_entry},fail);},"partial image allocation failure");c(s.live()==0&&s.leases()==0,"failed load rollback");}
+ {Space small(128*1024);c.refuse(Fault::exhausted,[&]{XexImage mod(small,xex_bytes,{xex_bytes,xex_generated,xex_entry});},"real bounded arena exhaustion");c(small.live()==0,"arena failure rollback");}
+ for(unsigned which=0;which<4;++which){std::vector<uint8_t> bad(xex_bytes.begin(),xex_bytes.end());Fault expected=Fault::argument;
+  if(which==0){bad[0x40c]='z';}if(which==1){bad[0x3100b]=0x2f;}if(which==2){bad[0x11000]^=1;}if(which==3){bad[0x1000+0x98+224+40+14]=0;}
+  if(which==1){expected=Fault::unsupported;}Space s;c.refuse(expected,[&]{XexImage mod(s,bad,{xex_bytes,xex_generated,xex_entry});},"malformed image refused");c(s.live()==0,"malformed image zero allocations");
+ }
+ {Space s;XexImage image(s,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto t=slots.allocate();ModuleLife alias(image.life().identity);GuestThread foreign(s,alias,slots,t);
+  {Scope scope(foreign,image.functions(),alias.identity,nullptr,{},expansion_plan_ptr);c.refuse(Fault::argument,[&]{image.lend(scope);},"foreign image ownership");c.refuse(Fault::argument,[&]{image.invoke(scope,xex_entry);},"foreign entry ownership");}
+  foreign.cleanup();c(alias.close(),"foreign module cleanup");
+  {GuestThread retained(s,image.life(),slots,t);c(!image.unload(),"retained thread prevents unload");c.refuse(Fault::stale,[&]{Scope denied(retained,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);},"stale function scope after closing");retained.cleanup();}
+  slots.release(t);c(image.unload()&&s.live()==0,"stale admission cleanup");
+ }
+ {Space s(16384);std::array<Space::Handle,4> all;for(auto&h:all)h=s.allocate(4096);c.refuse(Fault::exhausted,[&]{s.allocate(1);},"allocation pressure explicit failure");s.release_all(all);c(s.live()==0,"allocation pressure balance");}
+ {brutal::synthetic::CooperativeStop stop;brutal::horizon::Event gate,a_ready,b_ready;NativeThread a,b;std::atomic<unsigned> accepted{};
+  c(a.start([&]{a_ready.signal();if(!gate.wait())throw Error(Fault::unsupported,"request gate");if(stop.request())++accepted;}),"stop requester A");c(b.start([&]{b_ready.signal();if(!gate.wait())throw Error(Fault::unsupported,"request gate");if(stop.request())++accepted;}),"stop requester B");c(a_ready.wait()&&b_ready.wait(),"requesters ready");gate.signal();c(a.join()&&b.join()&&!a.callback_error()&&!b.callback_error(),"requesters join");c(accepted==1&&!stop.request(),"one concurrent stop wins");c(stop.safe_boundary(),"single boundary transition");stop.exited();stop.joined();stop.reclaimed();stop.unloaded();}
+ {Space s;XexImage image(s,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto t=slots.allocate();GuestThread guest(s,image.life(),slots,t);GuestTask worker(guest);brutal::synthetic::CooperativeStop stop;brutal::horizon::Event ready,release;std::atomic<bool> stopped{};auto saved=guest.context.r1.u32+4;
+  c(worker.start([&]{guest.context.lr=0x8201feed;guest.context.r3.u64=3;Scope scope(guest,image.functions(),image.life().identity,&stop,[&](uint32_t pc){if(pc==0x82010008){ready.signal();if(!release.wait())throw Error(Fault::unsupported,"memory site gate");}},expansion_plan_ptr);image.lend(scope);HookFrame hooks(scope,xex_hooks,observed);try{scope.invoke(xex_original_entry);}catch(const Scope::Stopped&e){if(e.owner!=&scope)throw;stopped=true;stop.exited();}}),"memory-boundary worker start");
+  c(ready.wait(),"checked store site reached");c(stop.request(),"stop at active memory boundary");c.refuse(Fault::ownership,[&]{guest.cleanup();},"active memory context retained");release.signal();c(worker.join()&&!worker.callback_error()&&stopped,"memory worker stopped and joined");c(s.load<uint32_t>(saved)==0,"store after stop did not execute");stop.joined();guest.cleanup();stop.reclaimed();c(image.unload()&&s.live()==0,"memory stop cleanup");stop.unloaded();slots.release(t);
+ }
+ c(Space::totals()==std::pair<size_t,size_t>{0,0},"all integrated logical resources reclaimed");
 }
-ExpansionResult expansion_probe(){ExpansionResult r;const auto start_sdk=ImportFrame::sdk_completed.load();const auto start_memory=Space::totals();try{memory_checks({r,4});pipeline({r,4});
+#endif
+
+}
+ExpansionResult expansion_probe(unsigned cycles){ExpansionResult r;if(cycles<1||cycles>
+#ifdef __SWITCH__
+1
+#else
+8
+#endif
+){throw Error(Fault::argument,"smoke/stress cycle budget");}
+ const auto start_sdk=ImportFrame::sdk_completed.load();const auto start_memory=Space::totals();try{memory_checks({r,4});pipeline({r,4});
 #if STAGE_MAX >= 5
 thread_checks({r,5});
 #endif
@@ -177,5 +220,8 @@ abi_checks({r,6});
 #endif
 #if STAGE_MAX >= 7
 import_checks({r,7});
+#endif
+#if STAGE_MAX >= 8
+integrated_checks({r,8},cycles);
 #endif
 }catch(const std::exception&e){std::fprintf(stderr,"ERROR: %s\n",e.what());++r.failed;}r.sdk_calls=unsigned(ImportFrame::sdk_completed.load()-start_sdk);auto end_memory=Space::totals();r.remaining=unsigned(end_memory.first-start_memory.first);r.leases=unsigned(end_memory.second-start_memory.second);if(r.remaining||r.leases)++r.failed;return r;}

@@ -42,3 +42,11 @@ Phase 11 recovery adds original GPL-3.0-only lifetime, native-failure injection 
 The Horizon leaf adapter uses the pinned ReXGlue PPC context headers (BSD-3-Clause) and SIMDe headers (MIT), with no desktop runtime library linked. The optional template-directory/platform patch retains the SDK BSD-3-Clause boundary. The independently authored leaf input, adapter and templates are GPL-3.0-only; generated original-synthetic output and compiled NRO remain local artifacts. [Package notices](tests/horizon-runtime/NOTICE.txt) retain the upstream license texts; [build evidence and scope](docs/research/switch-horizon-runtime-adapter.md).
 
 The independent Horizon foundation/XEX stages add original GPL-3.0-only runtime, parser, fixture and template code. One exact BSD-licensed SDK RtlCompareMemoryUlong body is fingerprinted and extracted only into private build output; packaged notices retain Tom Clay and Ben Vanik/Xenia attribution. No full desktop SDK runtime or proprietary binary is distributed in Git. [Stage 2](docs/research/switch-horizon-runtime-foundation.md) · [Stage 3 and admitted subset](docs/research/switch-synthetic-xex-integration.md).
+
+The Horizon expansion retains those GPL/BSD/ISC/MIT boundaries. Two exact SDK
+exports (compare and critical-section initialization only), the SDK dispatcher
+structure, and original synthetic generated callers are compiled into the local
+integrated probe. The 2013/2022 Ben Vanik and 2026 Tom Clay notices are retained in
+[the integrated package notice](tests/horizon-expansion/NOTICE.txt). Full desktop
+runtime, proprietary XEX/code and assets remain excluded. The source recipe and
+original PPC fixtures are public; build outputs remain local, with no Release.

@@ -3,4 +3,4 @@
 #pragma once
 #include <array>
 struct ExpansionResult {unsigned passed{},failed{},workers{},sdk_calls{},result{},remaining{},leases{};std::array<unsigned,5> stage_pass{},stage_fail{};};
-ExpansionResult expansion_probe();
+ExpansionResult expansion_probe(unsigned cycles=1);

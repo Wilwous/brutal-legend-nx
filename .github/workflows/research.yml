@@ -52,6 +52,10 @@ jobs:
         run: python3 tests/horizon-xex/test_fixture.py
       - name: Check expanded original PPC encoding and independent hook census
         run: python3 tests/horizon-expansion/test_fixture.py
+      - name: Check integrated app deployment refusal on mock filesystems
+        run: python3 tests/horizon-expansion/test_deploy.py
+      - name: Check integrated package provenance on original unit fixtures
+        run: python3 tests/horizon-expansion/test_package.py
       - name: Check bounded diagnostic path sanitization on synthetic ELF fixtures
         run: python3 tests/switch-horizon/test_sanitize.py
 

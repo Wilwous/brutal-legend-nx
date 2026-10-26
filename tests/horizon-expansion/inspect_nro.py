@@ -5,4 +5,4 @@ import importlib.util
 from pathlib import Path
 p=Path(__file__).resolve().parents[1]/'horizon-xex/inspect_nro.py'
 s=importlib.util.spec_from_file_location('original_inspector',p);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
-m.inspect(('Brutal Legend NX - Integrated Runtime','Wilwous','0.5.0'))
+m.inspect(('Brutal Legend NX - Integrated Runtime','Wilwous','0.8.0'))

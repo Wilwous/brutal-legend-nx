@@ -1,19 +1,18 @@
 # Research roadmap — independent Switch/Horizon feasibility
 
-**Current independent Switch track (2026-10-26): corrected Stage 2 foundation
-HOST/BUILD VERIFIED; Stage 3 synthetic XEX profile HOST/BUILD VERIFIED, overall
-PARTIAL. Both new hardware results remain UNKNOWN.** The prior PASS38 probe and
-PLUS exit are externally verified for their original scope; hbmenu launch is confirmed, Applet/Title Override UNKNOWN.
-Stage 2's expanded stack-window check passes 108/0 per host profile and expects
-PASS109 on console. Stage 3 passes 118/0 per profile and expects PASS119, with
-six generated functions, real image loading, two production stop hooks and one
-admitted real SDK import. Image construction remains host-side and the complete
-SDK runtime/other signatures are not ported. [Foundation evidence](research/switch-horizon-runtime-foundation.md) · [Synthetic XEX evidence](research/switch-synthetic-xex-integration.md).
+**Current independent Switch track (2026-10-27): Stages 4–8 HOST/BUILD VERIFIED
+within the declared synthetic subset; integrated hardware execution UNKNOWN.**
+The original PASS38 probe and PLUS exit remain externally verified for their
+original scope; hbmenu launch confirmed, Applet/Title Override UNKNOWN. The new
+integrated smoke passes 256/0 per host profile, bounded stress 382/0; two clean
+AArch64 builds match. Expected console summary is PASS257/FAIL0, PPC r3=18,
+28 actual SDK calls and zero allocation/lease balance; this is not observed yet.
+[Integrated report and reproduction](research/switch-integrated-runtime.md).
 
 | Independent track | Current status | Next dependency |
 | --- | --- | --- |
-| A — Xbox XEX residency | **BLOCKED**, preserved on `research/phase-22-blocked`; Phase 22 incomplete. | Independent original residency/ownership evidence. Switch synthetic work does not close this gate. |
-| B — Switch/Horizon runtime | Prior PASS38 probe HARDWARE VERIFIED; corrected Stage 2 and selected Stage 3 HOST/BUILD VERIFIED, new hardware UNKNOWN. | Manually observe Foundation PASS109 and PLUS exit first, then Synthetic XEX PASS119. Broader SDK imports, guest exceptions and full ABI remain separate gated work. |
+| A — Xbox XEX residency | **BLOCKED**, preserved on `research/phase-22-blocked`; Phase 22 incomplete. G4/G8 BLOCKED, G5 UNKNOWN. | Independent original residency/ownership evidence. No hardware access is currently available; synthetic results cannot close this gate. |
+| B — Switch/Horizon runtime | Older PASS38 scope HARDWARE VERIFIED; expanded Stages 4–8 HOST/BUILD VERIFIED, hardware UNKNOWN; general Xbox runtime PARTIAL. | One integrated smoke observation and PLUS exit. No intermediate deployments required. Full ABI, unsupported imports/exceptions and game execution stay blocked. |
 
 The last completed core milestone remains `v0.0.21-entry-runtime-contracts`.
 The Switch track does not merge Phase 22 recovery or start private-entry
@@ -107,9 +106,9 @@ Bind the real stack window and current XThread/PCR/module leases. Obtain indepen
 
 **Private game execution remains NO-GO.** Actual instrumentation, code/image binding, startup knowledge and exceptional denial must all pass before any later explicitly scoped experiment. Phase 21 synthetic success authorizes none. Preserve useful diagnostics privately and publish no game instructions, addresses, generated code or local paths.
 
-## R3 — independent Horizon probes (not started)
+## R3 — independent Horizon probes (selected synthetic scope verified)
 
-Use original minimal fixtures or appropriately licensed probes: guest address aliases and coherence, required protection/fault semantics, register preservation, threads/waits/APCs, Vulkan presentation/features, audio, pads and SD access. Record exact console/loader/Atmosphère/toolchain configuration. Begin at stock clocks in full application mode. A triangle or successful alias alone does not validate the game runtime.
+The independent Switch track above now supplies one integrated original-synthetic runtime. Broader capabilities remain unstarted. Use original minimal fixtures or appropriately licensed probes: guest address aliases and coherence, required protection/fault semantics, register preservation, threads/waits/APCs, Vulkan presentation/features, audio, pads and SD access. Record exact console/loader/Atmosphère/toolchain configuration. Begin at stock clocks in full application mode. A triangle or successful alias alone does not validate the game runtime.
 
 ## R4 — conditional smallest game milestone (not started)
 
