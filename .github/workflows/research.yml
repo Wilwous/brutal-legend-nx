@@ -50,6 +50,8 @@ jobs:
         run: python3 tests/horizon-foundation/core.py --workdir "${{ runner.temp }}/horizon-foundation-core"
       - name: Check independent original Horizon XEX encoding and parser inputs
         run: python3 tests/horizon-xex/test_fixture.py
+      - name: Check expanded original PPC encoding and independent hook census
+        run: python3 tests/horizon-expansion/test_fixture.py
       - name: Check bounded diagnostic path sanitization on synthetic ELF fixtures
         run: python3 tests/switch-horizon/test_sanitize.py
 

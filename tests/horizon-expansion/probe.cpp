@@ -10,6 +10,8 @@
 #endif
 using namespace brutal::horizon;
 namespace {
+std::array<std::atomic<bool>,std::size(xex_hooks)> seen_sites{};
+void observed(uint32_t pc){for(size_t i=0;i<std::size(xex_hooks);++i)if(xex_hooks[i]==pc)seen_sites[i]=true;}
 struct Check {
  ExpansionResult&r;unsigned stage;
  void operator()(bool b,const char* label){if(b){++r.passed;++r.stage_pass[stage-4];}else{++r.failed;++r.stage_fail[stage-4];std::fprintf(stderr,"FAIL stage %u: %s\n",stage,label);}}
@@ -49,7 +51,7 @@ void memory_checks(Check c){
 void pipeline(Check c){
  Space space;XexImage image(space,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto slot=slots.allocate();
  {GuestThread guest(space,image.life(),slots,slot,7,image.tls_template());guest.context.r3.u64=4;guest.context.lr=0x8201feed;
-  {Scope scope(guest,image.functions(),image.life().identity);image.lend(scope);ImportFrame imports(image,guest);HookFrame hooks(scope,xex_hooks);
+  {Scope scope(guest,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);ImportFrame imports(image,guest);HookFrame hooks(scope,xex_hooks,observed);
    image.invoke(scope,xex_entry);c(guest.context.r3.u64==17,"production generated entry result");c(imports.calls==1,"actual SDK compare executed");c.r.result=guest.context.r3.u32;c.r.sdk_calls+=imports.calls;}
   guest.cleanup();}
  slots.release(slot);c(image.unload(),"image unload");c(space.live()==0&&space.leases()==0,"pipeline balance");
@@ -74,7 +76,7 @@ void thread_checks(Check c){
  std::array<unsigned,4> values{},imports{};std::array<uint64_t,4> identities{};std::atomic<unsigned> live{},maximum{};
  for(unsigned i=0;i<4;++i){guests[i]=std::make_unique<GuestThread>(space,image.life(),slots,slot,7+i,image.tls_template());identities[i]=guests[i]->identity;tasks[i]=std::make_unique<GuestTask>(*guests[i]);
   c(tasks[i]->start([&,i]{auto&guest=*guests[i];guest.context.r3.u64=4;guest.context.lr=0x8201feed;
-   Scope scope(guest,image.functions(),image.life().identity);image.lend(scope);ImportFrame sdk(image,guest);HookFrame hooks(scope,xex_hooks);
+   Scope scope(guest,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);ImportFrame sdk(image,guest);HookFrame hooks(scope,xex_hooks,observed);
    auto n=++live;auto old=maximum.load();while(n>old&&!maximum.compare_exchange_weak(old,n)){}
    ready[i].signal();if(!gate.wait())throw Error(Fault::unsupported,"four worker gate");
    image.invoke(scope,xex_entry);values[i]=guest.context.r3.u32;imports[i]=sdk.calls;--live;
@@ -90,9 +92,52 @@ void thread_checks(Check c){
 }
 #endif
 
+#if STAGE_MAX >= 6
+void abi_checks(Check c){
+ Space space;XexImage image(space,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto slot=slots.allocate();GuestThread guest(space,image.life(),slots,slot,7,image.tls_template());
+ c.refuse(Fault::unsupported,[&]{Scope unsafe(guest,image.functions(),image.life().identity);},"strict functions need plan");
+ auto call=[&](uint32_t pc){guest.context.lr=0x8201feed;Scope scope(guest,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);ImportFrame sdk(image,guest);HookFrame hooks(scope,xex_hooks,observed);scope.invoke(pc);};
+ guest.context.r3.u64=0x100000002ull;guest.context.r4.u64=0x200000003ull;guest.context.xer.ca=1;guest.context.xer.so=1;guest.context.r31.u64=0xfeedfacecafebeef;
+ auto sp=guest.context.r1.u64;call(xex_add64);c(guest.context.r3.u64==0x300000005ull,"64 bit GPR result");c(guest.context.r4.u64==0x200000003ull,"GPR argument retained");c(guest.context.xer.ca==1&&guest.context.xer.so==1,"untouched XER preserved");c(guest.context.r31.u64==0xfeedfacecafebeef,"nonvolatile r31");
+ guest.context.r3.u64=0xffffffffu;guest.context.r4.u64=1;call(xex_add64);c(guest.context.r3.u64==0x100000000ull,"32 bit arguments widen in 64 bit add");
+ const auto csr=PPCFPSCRRegister::Platform::getcsr();guest.context.fpscr.csr=csr;guest.context.f1.f64=1.5;guest.context.f2.f64=2.25;guest.context.f14.f64=42.5;
+ call(xex_float_add);c(guest.context.f1.f64==3.75,"exact finite FPR return");c(guest.context.f2.f64==2.25&&guest.context.f14.f64==42.5,"FPR input and nonvolatile preservation");c(PPCFPSCRRegister::Platform::getcsr()==csr,"host FP control restored");
+ guest.context.f1.f64=std::numeric_limits<double>::infinity();c.refuse(Fault::unsupported,[&]{call(xex_float_add);},"nonfinite FPR contract rejected");
+ call(xex_nested);c(guest.context.r3.u64==6,"two finite nested loops");c(guest.context.cr0.eq&&guest.context.cr0.so,"CR comparison inherits XER SO");
+ c(guest.context.r1.u64==sp&&guest.context.r2.u64==0x82020000&&guest.context.r13.u64==guest.pcr.address&&guest.context.lr==0x8201feed,"stack r2 PCR LR preserved");
+ c.refuse(Fault::unsupported,[&]{call(xex_bad_return);},"generated invalid return refused at site");
+ {guest.context.lr=0;Scope scope(guest,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);HookFrame hooks(scope,xex_hooks,observed);c.refuse(Fault::unsupported,[&]{scope.invoke(xex_add64);},"invalid root LR");}
+ {guest.context.lr=0x8201feed;Scope scope(guest,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);HookFrame hooks(scope,xex_hooks,observed);
+  c.refuse(Fault::unsupported,[&]{Scope::load<uint32_t>(guest.context,guest.stack.address);},"unarmed memory site");
+  c.refuse(Fault::unsupported,[&]{scope.point(xex_hooks[0]);},"orphan site");
+  c.refuse(Fault::unsupported,[&]{image.functions()[0].implementation(guest.context,nullptr);},"raw function pointer bypass refused at prologue");
+  c.refuse(Fault::unsupported,[&]{Scope::indirect(guest.context,nullptr,0xdeadbeec);},"unknown indirect target");
+  PPCContext wrong{};c.refuse(Fault::no_thread,[&]{Scope::current(wrong);},"foreign PPC context");}
+ {guest.context.r3.u64=0x11223344;guest.context.r4.u64=image.section(3).address+0x400;call(xex_store);c(space.load<uint32_t>(guest.context.r4.u32)==0x11223344,"generated checked store");}
+ {GuestThread bad(space,image.life(),slots,slot,7,image.tls_template());bad.context.lr=0x8201feed;bad.context.r3.u64=1;
+  Scope scope(bad,image.functions(),image.life().identity,nullptr,[&](uint32_t pc){if(pc==0x820100cc)bad.context.ctr.u64=xex_store;},expansion_plan_ptr);image.lend(scope);ImportFrame sdk(image,bad);HookFrame hooks(scope,xex_hooks,observed);
+  c.refuse(Fault::unsupported,[&]{image.invoke(scope,xex_entry);},"known indirect target on wrong edge rejected");}
+ guest.cleanup();slots.release(slot);c(image.unload()&&space.live()==0,"ABI cleanup");
+ // Each of the four backward branches is reached under a stop request. The
+ // request is issued from the hook observer before the poll's atomic snapshot.
+ for(auto pc:{uint32_t(0x82010048),uint32_t(0x82010074),uint32_t(0x8201012c),uint32_t(0x82010138)}){
+  Space fresh;XexImage mod(fresh,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots reg;auto t=reg.allocate();GuestThread g(fresh,mod.life(),reg,t);GuestTask task(g);brutal::synthetic::CooperativeStop stop;std::atomic<bool> stopped{};unsigned visits=0;
+  uint32_t root=pc==0x82010074?xex_forever:pc>=0x82010100?xex_nested:xex_original_entry;
+  c(task.start([&]{g.context.r3.u64=3;g.context.lr=0x8201feed;Scope scope(g,mod.functions(),mod.life().identity,&stop,[&](uint32_t at){if(at==pc){++visits;stop.request();}},expansion_plan_ptr);mod.lend(scope);ImportFrame sdk(mod,g);HookFrame hooks(scope,xex_hooks,observed);try{scope.invoke(root);}catch(const Scope::Stopped&e){if(e.owner!=&scope)throw;stopped=true;stop.exited();}}),"backedge worker start");
+  c(task.join()&&!task.callback_error(),"backedge worker joined");c(stopped&&visits==1,"exact backward site observed and stopped");stop.joined();g.cleanup();stop.reclaimed();c(mod.unload()&&fresh.live()==0,"backedge cleanup");stop.unloaded();reg.release(t);
+ }
+ unsigned memory_seen=0,backward_seen=0;
+ for(size_t i=0;i<std::size(expansion_sites);++i){auto site=expansion_sites[i];if(seen_sites[i]&&(site.kind==SiteKind::read||site.kind==SiteKind::write))++memory_seen;if(seen_sites[i]&&site.kind==SiteKind::branch&&site.target<=site.pc)++backward_seen;}
+ c(memory_seen==20,"all declared scalar memory hooks observed");c(backward_seen==4,"all four backward hooks observed");
+}
+#endif
+
 }
 ExpansionResult expansion_probe(){ExpansionResult r;try{memory_checks({r,4});pipeline({r,4});
 #if STAGE_MAX >= 5
 thread_checks({r,5});
+#endif
+#if STAGE_MAX >= 6
+abi_checks({r,6});
 #endif
 }catch(const std::exception&e){std::fprintf(stderr,"ERROR: %s\n",e.what());++r.failed;}return r;}

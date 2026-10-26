@@ -5,7 +5,11 @@
 import argparse,hashlib,json,re,subprocess,sys,uuid
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT/'tests/ppc'));from watchdog import run
-sys.path.insert(0,str(ROOT/'tests/horizon-xex'));from fixture import create
+import importlib.util
+def load(name,path):
+ s=importlib.util.spec_from_file_location(name,path);m=importlib.util.module_from_spec(s);s.loader.exec_module(m);return m
+prior=load('old_xex',ROOT/'tests/horizon-xex/fixture.py')
+expanded=load('new_xex',ROOT/'tests/horizon-expansion/fixture.py')
 
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def signed(v,bits):return v-(1<<bits) if v&(1<<(bits-1)) else v
@@ -20,6 +24,7 @@ def decode(word,pc):
   if ((word>>21)&31,(word>>16)&31) not in [(4,2),(12,2)]:raise ValueError('unsupported conditional encoding')
   return ('bne ' if (word>>21)&31==4 else 'beq ')+hex(pc+signed(word&0xfffc,16))
  if op==19 and word in [0x4e800020,0x4e800421]:return 'blr' if word==0x4e800020 else 'bctrl'
+ if op==63 and (word&0x7ff)==42:return f'fadd f{rt},f{ra},f{rb}'
  if op==31:
   xo=(word>>1)&1023
   if xo==444 and rt==rb:return f'mr r{ra},r{rt}'
@@ -58,7 +63,7 @@ def main():
  body=code[start:end]+'\n'
  if hashlib.sha256(body.encode()).hexdigest()!=lock['function_sha256']:raise ValueError('SDK leaf mismatch')
  (w/'sdk-compare.inc').write_text(body)
- meta=create(w/'input',ROOT/'tests/horizon-xex/templates');cli=[tc/'rexglue','codegen',w/'input/fixture_manifest.toml'];execute(cli,'generation')
+ meta=(expanded if a.stage>=6 else prior).create(w/'input',ROOT/('tests/horizon-expansion/templates' if a.stage>=6 else 'tests/horizon-xex/templates'));cli=[tc/'rexglue','codegen',w/'input/fixture_manifest.toml'];execute(cli,'generation')
  generated=w/'input/generated';emitted=sorted([*generated.glob('*.cpp'),*generated.glob('*.h')]);fingerprints={p.name:sha(p) for p in emitted}
  execute([*cli,'--ignore-stamp'],'regeneration')
  if fingerprints!={p.name:sha(p) for p in emitted}:raise ValueError('non-deterministic production codegen')
@@ -68,13 +73,20 @@ def main():
  if cpp!=(w/'input/baseline/fixture_recomp.0.cpp').read_text():raise ValueError('generated instruction output differs from production default')
  comments=[s.strip() for s in re.findall(r'^\s*// (.*)$',cpp,re.M)]
  expected=[decode(word,meta['code_base']+4*i) for i,word in enumerate(meta['words'])]
- if comments!=expected or len(comments)!=65 or cpp.count('DEFINE_REX_FUNC(')!=6:raise ValueError('independent exact instruction correspondence failed')
+ if comments!=expected or len(comments)!=meta['instructions'] or cpp.count('DEFINE_REX_FUNC(')!=len(meta['functions']):raise ValueError('independent exact instruction correspondence failed')
  actual_hooks=[int(s,16) for s in re.findall(r'^\thorizon_point_([0-9A-F]+)\(\);$',cpp,re.M)]
  if actual_hooks!=meta['hooks']:raise ValueError('production hook census mismatch')
  counts={key:cpp.count(key+'(') for key in ['REX_LOAD_U32','REX_STORE_U32','REX_LOAD_U64','REX_STORE_U64','REX_CALL_FUNC','REX_CALL_INDIRECT_FUNC']}
  for denied in ['REX_RAW_ADDR(','REX_UNIMPLEMENTED(','REX_FATAL(','ppc_trap(','base +']:
   if denied in cpp:raise ValueError('unmediated generated operation '+denied)
- (w/'xex-data.h').write_text(data_header(meta,(w/'input/fixture.xex').read_bytes()))
+ (w/'xex-data.h').write_text(data_header(meta,(w/'input/fixture.xex').read_bytes())+'\n#include "expansion-plan.h"\n')
+ plan='#pragma once\n#include "runtime/horizon/generated.h"\n'
+ if a.stage>=6:
+  plan+=f'inline constexpr uint32_t expansion_floating={meta["functions"]["float_add"]};\n'
+  plan+='inline constexpr brutal::horizon::Site expansion_sites[]{'+','.join('{'+f"{s['pc']},{s['owner']},brutal::horizon::SiteKind::{s['kind']},{s['width']},{s['target']}"+'}' for s in meta['sites'])+'};\n'
+  plan+='inline constexpr uint32_t expansion_roots[]{'+','.join(map(str,meta['functions'].values()))+'};\ninline constexpr brutal::horizon::ControlPlan expansion_plan{expansion_sites,expansion_roots,0x8201feed};\ninline constexpr auto expansion_plan_ptr=&expansion_plan;\n'
+ else:plan+='inline constexpr const brutal::horizon::ControlPlan* expansion_plan_ptr=nullptr;\n'
+ (w/'expansion-plan.h').write_text(plan)
  (w/'hooks.cpp').write_text('#include "runtime/horizon/xex.h"\n'+''.join(f'void horizon_point_{pc:X}(){{brutal::horizon::HookFrame::poll({pc});}}\n' for pc in meta['hooks']))
  hosts=[]
  for name,flags in [('Debug',['-O0']),('Release',['-O2']),('Sanitized',['-O1','-g','-fsanitize=address,undefined','-fno-sanitize-recover=all','-fno-omit-frame-pointer'])]:
@@ -84,7 +96,8 @@ def main():
   if row['failed'] or not row['passed'] or row['remaining'] or row['leases']:raise ValueError('expansion runtime failed')
   if hosts and row!={k:v for k,v in hosts[0].items() if k!='profile'}:raise ValueError('profile result drift')
   hosts.append({'profile':name,**row})
- result={'stage':a.stage,'host':hosts,'static':{'functions':6,'instructions':65,'hooks':2,'counts':counts,'admitted_imports':1},'sources_sha256':{**sources(),**{p.relative_to(ROOT).as_posix():sha(p) for p in (ROOT/'tests/horizon-expansion').rglob('*') if p.is_file() and '__pycache__' not in str(p)}},'generation_sha256':fingerprints,'xex_sha256':sha(w/'input/fixture.xex'),'sdk_function_sha256':lock['function_sha256'],'hardware_execution':'UNKNOWN','game_executed':False}
+ census=load('independent_census',ROOT/'tests/horizon-expansion/audit.py').audit(meta,cpp) if a.stage>=6 else None
+ result={'census':census,'stage':a.stage,'host':hosts,'static':{'functions':len(meta['functions']),'instructions':meta['instructions'],'hooks':len(meta['hooks']),'counts':counts,'admitted_imports':1},'sources_sha256':{**sources(),**{p.relative_to(ROOT).as_posix():sha(p) for p in (ROOT/'tests/horizon-expansion').rglob('*') if p.is_file() and '__pycache__' not in str(p)}},'generation_sha256':fingerprints,'xex_sha256':sha(w/'input/fixture.xex'),'sdk_function_sha256':lock['function_sha256'],'hardware_execution':'UNKNOWN','game_executed':False}
  negatives=['REX_RAW_ADDR(0)','REX_LOAD_VECTOR(ctx.v0,0)','ppc_longjmp(0,0)','REX_UNIMPLEMENTED(0,"trap")','xstart(ctx.v0,base)']
  for i,expression in enumerate(negatives):
   f=w/f'negative-{i}.cpp';f.write_text('#include "fixture_pch.h"\nvoid deny(PPCContext& ctx,uint8_t* base){(void)ctx;(void)base;'+expression+';}\n')

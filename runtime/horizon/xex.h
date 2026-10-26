@@ -44,9 +44,9 @@ class XexImage {
     }
     require(le(opt+92)==16);
     for(unsigned i=0;i<16;++i)if(i!=3)require(le(opt+96+i*8)==0&&le(opt+100+i*8)==0);
-    require(le(opt+96+24)==0x20100&&le(opt+100+24)==6*8);
+    auto function_bytes=le(opt+100+24);require(le(opt+96+24)==0x20100&&function_bytes>=8&&function_bytes<=16*8&&function_bytes%8==0);
     uint32_t next=l.base+65536;
-    for(unsigned i=0;i<6;++i){auto pc=be(0x21100+i*8),encoded=be(0x21104+i*8),count=(encoded&0x3fffff00)>>8;
+    for(unsigned i=0;i<function_bytes/8;++i){auto pc=be(0x21100+i*8),encoded=be(0x21104+i*8),count=(encoded&0x3fffff00)>>8;
       require(pc==next&&count>0&&(encoded&0xc00000ff)==0x40000000&&uint64_t(pc)+count*4<=uint64_t(l.base)+0x20000);
       l.functions.push_back(pc);next=pc+count*4;
     }
@@ -62,11 +62,11 @@ class XexImage {
   XexImage(Space& space,std::span<const uint8_t> input,Policy policy,int fail_after=-1):space_(space){
     layout_=parse(input);
     if(policy.generated.image_base!=layout_.base||policy.generated.image_size!=0x40000||policy.generated.code_base!=layout_.base+0x10000||policy.generated.code_size!=65536)throw Error(Fault::argument,"generated image metadata mismatch");
-    if(policy.image.size()!=input.size()||!std::equal(input.begin(),input.end(),policy.image.begin())||policy.entry!=layout_.entry||policy.generated.functions.size()!=7)
+    if(policy.image.size()!=input.size()||!std::equal(input.begin(),input.end(),policy.image.begin())||policy.entry!=layout_.entry||policy.generated.functions.size()!=layout_.functions.size()+1)
       throw Error(Fault::argument,"image/generated-code identity mismatch");
     for(size_t i=0;i<policy.generated.functions.size();++i){auto f=policy.generated.functions[i];
-      if(!f.implementation||f.address!=(i<6?layout_.functions[i]:layout_.thunk))throw Error(Fault::argument,"generated mapping mismatch");
-      if(i==6&&(f.implementation!=__imp__RtlCompareMemoryUlong||f.name!="__imp__RtlCompareMemoryUlong"))throw Error(Fault::unsupported,"import symbol/signature admission");
+      if(!f.implementation||f.address!=(i<layout_.functions.size()?layout_.functions[i]:layout_.thunk))throw Error(Fault::argument,"generated mapping mismatch");
+      if(i==layout_.functions.size()&&(f.implementation!=__imp__RtlCompareMemoryUlong||f.name!="__imp__RtlCompareMemoryUlong"))throw Error(Fault::unsupported,"import symbol/signature admission");
     }
     functions_=policy.generated.functions;sections_.reserve(4);
     try{
@@ -103,15 +103,16 @@ class XexImage {
 class HookFrame {
  Scope& scope_;std::span<const uint32_t> sites_;HookFrame* previous_;
  inline static thread_local HookFrame* current_{};
+ std::function<void(uint32_t)> observed_;
  public:
  std::vector<unsigned> hits;
- HookFrame(Scope& scope,std::span<const uint32_t> sites):scope_(scope),sites_(sites),previous_(current_),hits(sites.size()){
+ HookFrame(Scope& scope,std::span<const uint32_t> sites,std::function<void(uint32_t)> observed={}):scope_(scope),sites_(sites),previous_(current_),observed_(std::move(observed)),hits(sites.size()){
   if(previous_||sites.empty())throw Error(Fault::argument,"hook frame admission");
   current_=this;
  }
  ~HookFrame(){if(current_!=this)std::terminate();current_=previous_;}
  static void poll(uint32_t pc){auto*self=current_;if(!self)throw Error(Fault::no_thread,"missing image hook frame");
-  for(size_t i=0;i<self->sites_.size();++i)if(self->sites_[i]==pc){++self->hits[i];self->scope_.poll(pc);return;}
+  for(size_t i=0;i<self->sites_.size();++i)if(self->sites_[i]==pc){++self->hits[i];if(self->observed_)self->observed_(pc);self->scope_.point(pc);return;}
   throw Error(Fault::unsupported,"unadmitted stop hook");
  }
 };
