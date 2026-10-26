@@ -69,7 +69,9 @@ FoundationResult foundation_probe(){
   Slots foreign_slots;auto foreign_slot=foreign_slots.allocate();check.refusal(Fault::slot,[&]{slots.validate(foreign_slot);});foreign_slots.release(foreign_slot);
   PPCContext foreign_context{};check.refusal(Fault::no_thread,[&]{Scope::load<uint32_t>(foreign_context,guest.pcr.address);});
   {Scope scope(guest,foundation_functions,foundation_module_id);check.refusal(Fault::no_thread,[&]{Scope::load<uint32_t>(other.context,guest.pcr.address);});
-   check.refusal(Fault::unsupported,[&]{scope.invoke(0xdeadbeec);});check.refusal(Fault::ownership,[&]{Scope::load<uint32_t>(guest.context,other.pcr.address);});
+   check.refusal(Fault::unsupported,[&]{scope.invoke(0xdeadbeec);});
+   auto saved_stack=guest.context.r1.u64;guest.context.r1.u64=guest.stack.address+guest.stack.size-80;
+   check.refusal(Fault::argument,[&]{scope.invoke(foundation_step);});guest.context.r1.u64=saved_stack;check.refusal(Fault::ownership,[&]{Scope::load<uint32_t>(guest.context,other.pcr.address);});
    check.refusal(Fault::ownership,[&]{guest.cleanup();});check.refusal(Fault::argument,[&]{Scope nested(guest,foundation_functions,foundation_module_id);});}
   check.group(3);
   const auto sp=guest.context.r1.u64;

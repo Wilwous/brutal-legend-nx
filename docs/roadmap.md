@@ -4,9 +4,9 @@
 VERIFIED, HARDWARE EXECUTION UNKNOWN.** The prior generated four-instruction
 probe is now externally reported at `PASS=38 FAIL=0` with normal PLUS exit;
 launch mode remains UNKNOWN. Stage 2 adds original scoped memory, native
-thread/event lifecycle and guest PCR/TLS/stack ownership. Its 107 checks pass in
+thread/event lifecycle and guest PCR/TLS/stack ownership. Its 108 checks pass in
 Debug/Release/Sanitized, with identical clean Horizon builds. Expected new
-console result: PASS108, not yet observed. [Stage 2 evidence and subset](research/switch-horizon-runtime-foundation.md).
+console result: PASS109, not yet observed. [Stage 2 evidence and subset](research/switch-horizon-runtime-foundation.md).
 
 | Independent track | Current status | Next dependency |
 | --- | --- | --- |

@@ -21,6 +21,7 @@ class Scope {
   }
  public:
   uint64_t reads{},writes{},calls{},polls{};
+  bool belongs_to(const ModuleLife& module,const Space& space)const{return guest_.belongs_to(module)&&&guest_.space()==&space;}
   Scope(GuestThread& guest,std::span<const Function> functions,uint64_t module_identity,
         synthetic::CooperativeStop* stop=nullptr,std::function<void(uint32_t)> observer={})
     :guest_(guest),execution_(guest),functions_(functions),stop_(stop),observer_(std::move(observer)){
@@ -46,6 +47,8 @@ class Scope {
   }
   static void prologue(PPCContext& context,uint8_t* base,std::string_view name){
     auto&s=current(context);if(base||context.r13.u64!=s.guest_.pcr.address)throw Error(Fault::argument,"raw base/PCR context admission");
+    if(context.r1.u64<s.guest_.stack.address+64||context.r1.u64>uint64_t(s.guest_.stack.address)+s.guest_.stack.size-128||(context.r1.u64&15))
+      throw Error(Fault::argument,"generated call stack window admission");
     if(name.starts_with("__imp__"))name.remove_prefix(7);
     for(auto f:s.functions_)if(f.name==name){s.poll(f.address);return;}
     throw Error(Fault::unsupported,"unadmitted generated function prologue");

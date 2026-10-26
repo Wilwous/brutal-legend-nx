@@ -87,7 +87,7 @@ as if its PPC epilogue or a guest exception unwind had executed.
 
 | Suite | Debug | Release | ASan+UBSan |
 | --- | ---: | ---: | ---: |
-| Actual generated foundation fixture | 107/0 | 107/0 | 107/0 |
+| Actual generated foundation fixture | 108/0 | 108/0 | 108/0 |
 | Public portable adapter CI contracts | 20/0 | 20/0 | 20/0 |
 | Previous four-instruction generated probe | 59/0 | 59/0 | 59/0 |
 | Previous native probe/UI | 27/0 | 27/0 | 27/0 |
@@ -96,36 +96,51 @@ as if its PPC epilogue or a guest exception unwind had executed.
 Additional controls: five new expected compiler refusals; eight previous expected
 compiler refusals; 45 deployment mock units, 21 original leaf encoding/package
 units and eight ELF sanitizer units pass. New fixture groups total memory19,
-native threads26, PCR/TLS14, generated execution18, stop13, ownership/rollback17.
+native threads26, PCR/TLS15, generated execution18, stop13, ownership/rollback17.
 Concurrent memory readers, synchronized increments, allocation/release and two
 independent guest contexts pass. Sanitizer findings, unexpected faults and external
 timeouts are zero in final runs. A controlled zero-time join refusal is intentional.
 This is evidence for these paths, not a proof of race freedom.
 
 Every host execution uses an external monotonic 30-second process-group watchdog.
-The final stage runner records 24.410 summed child seconds; host execution
-Debug 0.793 s / 10,010,624 bytes peak RSS, Release 0.165 s / 9,666,560 bytes,
-Sanitized 0.383 s / 30,097,408 bytes. Earlier missing-include/name-collision/GCC
+The final stage runner records 24.314 summed child seconds; host execution
+Debug 0.836 s / 9,895,936 bytes peak RSS, Release 0.165 s / 9,781,248 bytes,
+Sanitized 0.316 s / 30,228,480 bytes. Earlier missing-include/name-collision/GCC
 warning diagnostics remain private. No crashing allocation test is repeated.
 
 The unchanged pinned devkitA64/libnx image builds twice offline with identical
 NRO/ELF/object bytes. NRO **347,554 bytes**, SHA-256
-`8b1b76ed1c5659bd911eb024d0fb2280a22266575614e11081bc93f12335eebb`.
-ELF SHA-256 `01a1240f7f32ae2f858c5ea466447e0af23ae13d8850a5d2792474eef975dcac`.
+`22365d8eacd5909ee29ead7f8ac2c9e4fc5ee5b65e1f34b105ff9160beb5b12c`.
+ELF SHA-256 `95e6987e85430f51fa8a721a586ce33aa1928d93e8bb42500b4b535f124bcceb`.
 Inspection verifies AArch64 PIE, RX/R/RW load segments, no W+X, zero DT_NEEDED,
 zero unresolved strong symbols, generated alias, 16-MiB heap request and NACP/icon.
-Loaded file bytes are 230136 RX + 54804 R + 17456 RW; RW memory extent is 36304.
+Loaded file bytes are 230328 RX + 54876 R + 17456 RW; RW memory extent is 36304.
 No fixed-address/SVC protection bypass is introduced. Native allocation/protection
 behavior and launch permissions still require hardware observation.
 
 The new application is **Brutal Legend NX - Horizon Runtime Foundation**, separate
 path `sdmc:/switch/brutal-legend-nx-foundation/brutal-legend-nx-foundation.nro`.
-Its expected successful screen is **PASS=108 FAIL=0**: 107 actual checks plus
+Its expected successful screen is **PASS=109 FAIL=0**: 108 actual checks plus
 successful console initialization, primary PPC r3=12 and zero remaining guest
 allocations. The summary is computed, not hardcoded. It waits for PLUS.
 This result has not been observed on a Switch. The successful PASS38 NRO/ZIP and
 existing USB deployment sources are unchanged. A six-file ZIP is supplied locally;
 new packages never overwrite earlier probes automatically.
+
+## Stack-window recovery before Stage 3 continuation
+
+An expanded adversarial test initially produced **109 PASS / 1 FAIL** on host:
+a modified r1 made a stack-argument read land in an adjacent, otherwise admitted
+PCR allocation. No host fault, sanitizer finding or timeout occurred, but the
+stack contract was insufficient. Every generated prologue now revalidates r1
+against its owned stack window and alignment, not only initial Scope admission.
+The selected maximum stack offsets fit the reserved upper window; invalid r1
+fails before the generated helper executes. A new Stage 2 regression and the
+original Stage 3 failure assertion both cover this boundary. Explicit object/
+space association queries also support strict module binding. The initial
+Stage 2 commit and its superseded NRO/ZIP remain private checkpoints; the hashes
+and expected PASS109 above refer to the corrected foundation. Stage 3 work was
+paused until this separate recovery passed the full Stage 2 build/host gate.
 
 ## Reproduce and acceptance
 

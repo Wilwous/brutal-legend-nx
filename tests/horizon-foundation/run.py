@@ -56,7 +56,7 @@ def main():
   binary=w/('host-'+name)
   execute(['clang++','-std=c++23','-pthread','-Wall','-Wextra','-Werror',*flags,'-isystem',tc/'include','-iquote',ROOT,'-I',w,'-I',generated,ROOT/'tests/horizon-foundation/host.cpp',ROOT/'tests/horizon-foundation/probe.cpp',generated/'ppc_test_functions.cpp','-o',binary],'compile-'+name)
   row=json.loads(execute([binary],'run-'+name))
-  if row['failed'] or row['passed']!=107 or [g['passed'] for g in row['groups']]!=[19,26,14,18,13,17]:raise ValueError('host runtime failure/count drift')
+  if row['failed'] or row['passed']!=108 or [g['passed'] for g in row['groups']]!=[19,26,15,18,13,17]:raise ValueError('host runtime failure/count drift')
   hosts.append({'profile':name,**row})
  negatives=['REX_RAW_ADDR(0)','REX_LOAD_VECTOR(ctx.v0,0)','REX_QUERY_TIMEBASE()','ppc_longjmp(0,0)','foundation_82010000(ctx.v0,base)']
  for i,expression in enumerate(negatives):

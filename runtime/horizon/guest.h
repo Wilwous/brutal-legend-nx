@@ -51,6 +51,7 @@ class GuestThread {
   GuestThread(const GuestThread&)=delete;
   ~GuestThread(){if(!closed_)try{cleanup();}catch(...){std::terminate();}}
   uint64_t module_identity()const{return module_.identity;}
+  bool belongs_to(const ModuleLife& owner)const{return &module_==&owner;}
   Space& space(){return space_;}
   void set_tls(uint32_t value){slots_.validate(slot_);space_.store<uint32_t>(tls.address+static_tls_size+slot_.index*4,value);}
   uint32_t get_tls(){slots_.validate(slot_);return space_.load<uint32_t>(tls.address+static_tls_size+slot_.index*4);}
