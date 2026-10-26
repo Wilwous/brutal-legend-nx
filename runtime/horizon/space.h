@@ -64,6 +64,26 @@ class Space {
     Lease(Lease&& other)noexcept:space_(std::exchange(other.space_,nullptr)),handle_(other.handle_){}
     ~Lease(){if(space_)space_->unlease(handle_);}
   };
+  // A copied capability with a mapping epoch, never a host pointer. Permissions
+  // are rechecked on every use; decommit/recommit permanently invalidates it.
+  struct View {Handle handle;foundation::View backing;};
+  View view(uint32_t address,uint32_t size,Access access){
+    std::lock_guard lock(mutex_);auto&r=range(address,size);
+    return {r.h,memory_.translate(r.backing.guest+(address-r.h.address),size,access)};
+  }
+  std::vector<std::byte> read(const View& v){
+    std::lock_guard lock(mutex_);auto&r=owned(v.handle);
+    if(v.backing.allocation.owner!=r.backing.owner||v.backing.allocation.id!=r.backing.id)
+      throw Error(Fault::ownership,"view backing mismatch");
+    return memory_.read(v.backing);
+  }
+  void write(const View& v,std::span<const std::byte> bytes){
+    std::lock_guard lock(mutex_);auto&r=owned(v.handle);
+    if(v.backing.allocation.owner!=r.backing.owner||v.backing.allocation.id!=r.backing.id)
+      throw Error(Fault::ownership,"view backing mismatch");
+    memory_.write(v.backing,bytes);
+  }
+  size_t leases(){std::lock_guard lock(mutex_);size_t n=0;for(auto&[id,r]:regions_){(void)id;n+=r.leases;}return n;}
   std::vector<std::byte> read(uint32_t address,uint32_t size){
     std::lock_guard lock(mutex_);auto&r=range(address,size);
     return memory_.read(memory_.translate(r.backing.guest+(address-r.h.address),size,Access::read));

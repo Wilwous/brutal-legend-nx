@@ -9,7 +9,7 @@ import re
 import struct
 import subprocess
 
-def inspect():
+def inspect(identity=('Brutal Legend NX - Synthetic XEX Runtime','Wilwous','0.4.0')):
     elf=Path('probe.elf').read_bytes();nro=Path('probe.nro').read_bytes()
     assert elf[:6]==b'\x7fELF\x02\x01', 'expected ELF64 little endian'
     assert struct.unpack_from('<HH',elf,16)==(3,183), 'expected AArch64 PIE'
@@ -29,7 +29,7 @@ def inspect():
     title=nacp[:0x200].split(b'\0',1)[0].decode()
     author=nacp[0x200:0x300].split(b'\0',1)[0].decode()
     version=nacp[0x3060:0x3070].split(b'\0',1)[0].decode()
-    assert (title,author,version)==('Brutal Legend NX - Synthetic XEX Runtime','Wilwous','0.4.0')
+    assert (title,author,version)==identity
     if icon_size:
         icon=nro[size+icon_off:size+icon_off+icon_size]
         assert icon.startswith(b'\xff\xd8') and icon.endswith(b'\xff\xd9'), 'expected JPEG icon'

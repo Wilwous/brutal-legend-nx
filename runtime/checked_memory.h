@@ -19,7 +19,7 @@ class Error : public std::runtime_error {
   Error(Fault f, const char* text) : std::runtime_error(text), fault(f) {}
 };
 enum class Access { read, write };
-enum class Permission { none, read, read_write };
+enum class Permission { none, read, read_write, write };
 struct Allocation { uint64_t owner{}, id{}; uint32_t guest{}, size{}; };
 struct View { Allocation allocation; uint32_t offset{}, length{}; uint64_t epoch{}; Access access{}; };
 
@@ -35,7 +35,7 @@ class Memory {
   uint64_t cursor_{}, next_id_{1};
   static constexpr uint32_t base_ = 0x10000000;
   static void valid_permission(Permission p) {
-    if(p!=Permission::none && p!=Permission::read && p!=Permission::read_write)
+    if(p!=Permission::none && p!=Permission::read && p!=Permission::read_write && p!=Permission::write)
       throw Error(Fault::argument,"unsupported memory permission");
   }
   Region& region(const Allocation& a) {
@@ -52,7 +52,8 @@ class Memory {
     if (!r.committed) throw Error(Fault::uncommitted, "memory is reserved but not committed");
     if (v.offset > r.a.size || v.length > r.a.size-v.offset) throw Error(Fault::bounds, "view exceeds allocation");
     if (v.access != operation) throw Error(Fault::protection, "view access mode mismatch");
-    if (r.permission == Permission::none || (operation == Access::write && r.permission != Permission::read_write))
+    if ((operation == Access::read && r.permission != Permission::read && r.permission != Permission::read_write) ||
+        (operation == Access::write && r.permission != Permission::write && r.permission != Permission::read_write))
       throw Error(Fault::protection, "memory protection denies access");
     return r;
   }
