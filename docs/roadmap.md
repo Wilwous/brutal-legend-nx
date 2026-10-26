@@ -1,21 +1,17 @@
 # Research roadmap — independent Switch/Horizon feasibility
 
-**Current independent Switch track (2026-10-25): generated-leaf BUILD VERIFIED /
-HARDWARE EXECUTION UNKNOWN.** The user independently observed the existing
-native probe at `PASS=23 FAIL=0` on a real Switch: VERIFIED for that probe only.
-A separate PPC Runtime Probe now compiles/links the actual production-generated
-original four-instruction leaf with real SDK context headers and a minimal
-checked native-thread adapter. Two clean ELF/NRO builds match; 177 generated
-host assertions, eight compiler refusals and relevant existing regressions pass.
-No generated PPC execution on Switch has yet been observed. [Adapter evidence,
-contracts and exact hardware handoff](research/switch-horizon-runtime-adapter.md).
-The old successful probe and [safe USB workflow](research/switch-usb-deployment.md)
-remain regression targets; the new application uses a separate SD directory.
+**Current independent Switch track (2026-10-26): Stage 2 foundation HOST/BUILD
+VERIFIED, HARDWARE EXECUTION UNKNOWN.** The prior generated four-instruction
+probe is now externally reported at `PASS=38 FAIL=0` with normal PLUS exit;
+launch mode remains UNKNOWN. Stage 2 adds original scoped memory, native
+thread/event lifecycle and guest PCR/TLS/stack ownership. Its 107 checks pass in
+Debug/Release/Sanitized, with identical clean Horizon builds. Expected new
+console result: PASS108, not yet observed. [Stage 2 evidence and subset](research/switch-horizon-runtime-foundation.md).
 
 | Independent track | Current status | Next dependency |
 | --- | --- | --- |
-| A — Xbox XEX residency | **BLOCKED**, preserved on `research/phase-22-blocked` at `f3c6affb913f`; Phase 22 is incomplete. | Independent hardware evidence of original residency/ownership. No Xbox debugging hardware access is available; Switch builds cannot close this gate. |
-| B — original Switch/Horizon runtime | **PARTIAL feasibility**: old native probe hardware VERIFIED; new generated-leaf build/link VERIFIED, hardware UNKNOWN. | Observe the exact PPC Runtime Probe on the existing homebrew setup, including checked refusals, cleanup and PLUS exit. Guest stack/PCR/TLS and broader SDK integration remain separate later synthetic work. |
+| A — Xbox XEX residency | **BLOCKED**, preserved on `research/phase-22-blocked`; Phase 22 incomplete. | Independent original residency/ownership evidence. Switch synthetic work does not close this gate. |
+| B — Switch/Horizon runtime | Prior PASS38 probe HARDWARE VERIFIED for its original scope; Stage 2 foundation HOST/BUILD VERIFIED. | Manual Stage 2 hardware observation. Stage 3 host-side synthetic XEX preparation is eligible after this separate Stage 2 checkpoint. |
 
 The last completed core milestone remains `v0.0.21-entry-runtime-contracts`.
 The Switch track does not merge Phase 22 recovery or start private-entry
