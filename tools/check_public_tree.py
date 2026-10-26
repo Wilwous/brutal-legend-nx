@@ -18,6 +18,21 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    'runtime/horizon/xex.h',
+    'tests/horizon-xex/Makefile',
+    'tests/horizon-xex/fixture.py',
+    'tests/horizon-xex/host.cpp',
+    'tests/horizon-xex/import.cpp',
+    'tests/horizon-xex/inspect_nro.py',
+    'tests/horizon-xex/main.cpp',
+    'tests/horizon-xex/probe.cpp',
+    'tests/horizon-xex/probe.h',
+    'tests/horizon-xex/run.py',
+    'tests/horizon-xex/sdk-lock.json',
+    'tests/horizon-xex/templates/codegen/init_cpp.inja',
+    'tests/horizon-xex/templates/codegen/pch_h.inja',
+    'tests/horizon-xex/test_fixture.py',
+
     'runtime/horizon/generated.h',
     'runtime/horizon/guest.h',
     'runtime/horizon/native.h',

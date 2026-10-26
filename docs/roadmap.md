@@ -1,17 +1,19 @@
 # Research roadmap — independent Switch/Horizon feasibility
 
-**Current independent Switch track (2026-10-26): Stage 2 foundation HOST/BUILD
-VERIFIED, HARDWARE EXECUTION UNKNOWN.** The prior generated four-instruction
-probe is now externally reported at `PASS=38 FAIL=0` with normal PLUS exit;
-launch mode remains UNKNOWN. Stage 2 adds original scoped memory, native
-thread/event lifecycle and guest PCR/TLS/stack ownership. Its 108 checks pass in
-Debug/Release/Sanitized, with identical clean Horizon builds. Expected new
-console result: PASS109, not yet observed. [Stage 2 evidence and subset](research/switch-horizon-runtime-foundation.md).
+**Current independent Switch track (2026-10-26): corrected Stage 2 foundation
+HOST/BUILD VERIFIED; Stage 3 synthetic XEX profile HOST/BUILD VERIFIED, overall
+PARTIAL. Both new hardware results remain UNKNOWN.** The prior PASS38 probe and
+PLUS exit are externally verified for their original scope; launch mode is UNKNOWN.
+Stage 2's expanded stack-window check passes 108/0 per host profile and expects
+PASS109 on console. Stage 3 passes 118/0 per profile and expects PASS119, with
+six generated functions, real image loading, two production stop hooks and one
+admitted real SDK import. Image construction remains host-side and the complete
+SDK runtime/other signatures are not ported. [Foundation evidence](research/switch-horizon-runtime-foundation.md) · [Synthetic XEX evidence](research/switch-synthetic-xex-integration.md).
 
 | Independent track | Current status | Next dependency |
 | --- | --- | --- |
 | A — Xbox XEX residency | **BLOCKED**, preserved on `research/phase-22-blocked`; Phase 22 incomplete. | Independent original residency/ownership evidence. Switch synthetic work does not close this gate. |
-| B — Switch/Horizon runtime | Prior PASS38 probe HARDWARE VERIFIED for its original scope; Stage 2 foundation HOST/BUILD VERIFIED. | Manual Stage 2 hardware observation. Stage 3 host-side synthetic XEX preparation is eligible after this separate Stage 2 checkpoint. |
+| B — Switch/Horizon runtime | Prior PASS38 probe HARDWARE VERIFIED; corrected Stage 2 and selected Stage 3 HOST/BUILD VERIFIED, new hardware UNKNOWN. | Manually observe Foundation PASS109 and PLUS exit first, then Synthetic XEX PASS119. Broader SDK imports, guest exceptions and full ABI remain separate gated work. |
 
 The last completed core milestone remains `v0.0.21-entry-runtime-contracts`.
 The Switch track does not merge Phase 22 recovery or start private-entry

@@ -48,5 +48,5 @@ if __name__=='__main__':
  ap.add_argument('--application',choices=['foundation','xex'],required=True);a=ap.parse_args()
  if a.workdir.resolve()==ROOT or ROOT in a.workdir.resolve().parents:ap.error('private output required')
  if a.application=='foundation':app,title,count='brutal-legend-nx-foundation','Brutal Legend NX - Horizon Runtime Foundation',108
- else:raise SystemExit('Stage 3 packaging is not yet admitted')
+ else:app,title,count='brutal-legend-nx-xex','Brutal Legend NX - Synthetic XEX Runtime',118
  print(json.dumps(package(a.build.resolve(),a.workdir.resolve(),app,title,count),indent=2))

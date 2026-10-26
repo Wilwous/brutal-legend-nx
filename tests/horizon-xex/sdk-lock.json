@@ -1,0 +1,14 @@
+{
+  "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+  "file": "src/kernel/xboxkrnl/xboxkrnl_rtl.cpp",
+  "source_sha256": "344c48eba0f1439bf002e7e80d6e9d6e92fa2434737e14f308efc33f96d1f392",
+  "function_sha256": "3c1578f638f7e47343f2150791ee6115f6927289e37abac5341e586ddc426217",
+  "ordinal": 283,
+  "signature": "u32(mapped_void,u32,u32)",
+  "direction": "IN",
+  "admitted_source": "retained .rdata capability; aligned nonempty span <=64 bytes",
+  "unsupported_imports": [
+    "NtQueryVirtualMemory",
+    "RtlInitializeCriticalSection"
+  ]
+}
