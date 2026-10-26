@@ -44,6 +44,10 @@ class Event {
   }
 };
 class NativeThread {
+ public:
+  enum class State { empty,starting,running,exited,joined,failed };
+ private:
+  std::atomic<State> state_{State::empty};
 #ifdef __SWITCH__
   Thread thread_{};
 #else
@@ -55,7 +59,9 @@ class NativeThread {
   std::atomic<bool> callback_error_{};
   static void entry(void* raw) noexcept {
     auto& self=*static_cast<NativeThread*>(raw);
+    self.state_.store(State::running);
     try{self.work_();}catch(...){self.callback_error_=true;}
+    self.state_.store(State::exited);
     self.done_.signal();
   }
  public:
@@ -66,15 +72,16 @@ class NativeThread {
   bool start(std::function<void()> work,size_t stack=64*1024,Injection injection=Injection::none){
     if(started_||!work||stack<32*1024||stack>256*1024||(stack&4095))
       throw foundation::Error(foundation::Fault::argument,"native thread start admission");
-    if(injection==Injection::creation_failure)return false;
+    state_=State::starting;
+    if(injection==Injection::creation_failure){state_=State::failed;return false;}
     work_=std::move(work);
 #ifdef __SWITCH__
     auto rc=threadCreate(&thread_,entry,this,nullptr,stack,0x3b,-2);
-    if(R_FAILED(rc)){work_={};return false;}
+    if(R_FAILED(rc)){work_={};state_=State::failed;return false;}
     rc=threadStart(&thread_);
-    if(R_FAILED(rc)){auto closed=threadClose(&thread_);if(R_FAILED(closed))std::terminate();work_={};return false;}
+    if(R_FAILED(rc)){auto closed=threadClose(&thread_);if(R_FAILED(closed))std::terminate();work_={};state_=State::failed;return false;}
 #else
-    try{thread_=std::thread([this]{entry(this);});}catch(const std::system_error&){work_={};return false;}
+    try{thread_=std::thread([this]{entry(this);});}catch(const std::system_error&){work_={};state_=State::failed;return false;}
 #endif
     started_=true;return true;
   }
@@ -89,8 +96,9 @@ class NativeThread {
     if(!done_.wait(milliseconds))return false;
     thread_.join();
 #endif
-    joined_=true;work_={};return true;
+    joined_=true;state_=State::joined;work_={};return true;
   }
+  State state()const{return state_.load();}
   bool callback_error()const{return callback_error_.load();}
   bool joined()const{return joined_;}
 };

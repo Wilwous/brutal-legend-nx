@@ -54,5 +54,45 @@ void pipeline(Check c){
   guest.cleanup();}
  slots.release(slot);c(image.unload(),"image unload");c(space.live()==0&&space.leases()==0,"pipeline balance");
 }
+#if STAGE_MAX >= 5
+void thread_checks(Check c){
+ NativeThread state;c(state.state()==NativeThread::State::empty,"thread empty");brutal::horizon::Event entered,leave;
+ c(state.start([&]{entered.signal();if(!leave.wait())throw Error(Fault::unsupported,"state gate");}),"thread starts");c(entered.wait(),"native entered");c(state.state()==NativeThread::State::running,"thread running");c(!state.join(0),"bounded join timeout");c(state.state()==NativeThread::State::running,"timeout retains state");leave.signal();c(state.join(),"native joins");c(state.state()==NativeThread::State::joined,"thread joined");
+ NativeThread injected;c(!injected.start([]{},64*1024,NativeThread::Injection::creation_failure),"injected create failure");c(injected.state()==NativeThread::State::failed,"explicit failure state");
+ Space space;XexImage image(space,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto slot=slots.allocate();
+ // Construct over poisoned object storage, then compare the entire context with
+ // an explicitly initialized representation, including register union high bits.
+ alignas(GuestThread) std::array<std::byte,sizeof(GuestThread)> storage;storage.fill(std::byte{0xa5});
+ auto* poison=std::construct_at(reinterpret_cast<GuestThread*>(storage.data()),space,image.life(),slots,slot);
+ PPCContext expected;std::memset(static_cast<void*>(&expected),0,sizeof(expected));expected.msr=PPCContext{}.msr;expected.r1=poison->context.r1;expected.r2=poison->context.r2;expected.r13=poison->context.r13;
+ c(std::memcmp(&expected,&poison->context,sizeof(expected))==0,"all context bytes initialized");
+ auto msr=poison->context.msr;poison->context.msr=0;c.refuse(Fault::argument,[&]{GuestThread::Execution bad(*poison);},"bad MSR startup");poison->context.msr=msr;
+ poison->context.r2.u64=0;c.refuse(Fault::argument,[&]{GuestThread::Execution bad(*poison);},"bad r2 startup");poison->context.r2.u64=0x82020000;
+ space.store<uint64_t>(poison->pcr.address+0x30,0);c.refuse(Fault::argument,[&]{GuestThread::Execution bad(*poison);},"bad PCR self");space.store<uint64_t>(poison->pcr.address+0x30,poison->pcr.address);
+ poison->cleanup();std::destroy_at(poison);c(space.live()==4,"poison fixture cleanup");
+ std::array<std::unique_ptr<GuestThread>,4> guests;std::array<std::unique_ptr<GuestTask>,4> tasks;std::array<brutal::horizon::Event,4> ready;brutal::horizon::Event gate;
+ std::array<unsigned,4> values{},imports{};std::array<uint64_t,4> identities{};std::atomic<unsigned> live{},maximum{};
+ for(unsigned i=0;i<4;++i){guests[i]=std::make_unique<GuestThread>(space,image.life(),slots,slot,7+i,image.tls_template());identities[i]=guests[i]->identity;tasks[i]=std::make_unique<GuestTask>(*guests[i]);
+  c(tasks[i]->start([&,i]{auto&guest=*guests[i];guest.context.r3.u64=4;guest.context.lr=0x8201feed;
+   Scope scope(guest,image.functions(),image.life().identity);image.lend(scope);ImportFrame sdk(image,guest);HookFrame hooks(scope,xex_hooks);
+   auto n=++live;auto old=maximum.load();while(n>old&&!maximum.compare_exchange_weak(old,n)){}
+   ready[i].signal();if(!gate.wait())throw Error(Fault::unsupported,"four worker gate");
+   image.invoke(scope,xex_entry);values[i]=guest.context.r3.u32;imports[i]=sdk.calls;--live;
+  }),"guest worker starts");}
+ for(auto&e:ready){c(e.wait(),"guest worker ready");}c(maximum==4&&live==4,"four simultaneously active guests");
+ c.refuse(Fault::ownership,[&]{guests[0]->cleanup();},"cleanup before join");c.refuse(Fault::ownership,[&]{slots.release(slot);},"pinned TLS registration");
+ gate.signal();
+ for(unsigned i=0;i<4;++i){c(tasks[i]->join(),"guest worker join");c(!tasks[i]->callback_error(),"guest callback success");c(values[i]==17+i&&imports[i]==1,"isolated TLS and real concurrent SDK calls");c(guests[i]->get_tls()==8+i,"TLS update isolated");}
+ for(unsigned i=0;i<4;++i){for(unsigned j=0;j<i;++j)c(identities[i]!=identities[j],"unique synthetic identities");guests[i]->cleanup();++c.r.workers;c.r.sdk_calls+=imports[i];}
+ c.refuse(Fault::no_thread,[&]{Scope::current(guests[0]->context);},"native thread-local binding removed");
+ slots.release(slot);c(image.unload(),"thread image unload");c(space.live()==0&&space.leases()==0,"thread final balance");
+ for(unsigned repeat=0;repeat<4;++repeat){Space fresh;ModuleLife module(0x8000+repeat);Slots registry;auto token=registry.allocate();GuestThread guest(fresh,module,registry,token);GuestTask task(guest);c(task.start([&]{GuestThread::Execution execution(guest);guest.set_tls(100+repeat);}),"repeat guest start");c(task.join()&&!task.callback_error(),"repeat join");c(guest.get_tls()==100+repeat,"repeat TLS");guest.cleanup();registry.release(token);c(module.close()&&fresh.live()==0,"repeat cleanup");}
 }
-ExpansionResult expansion_probe(){ExpansionResult r;try{memory_checks({r,4});pipeline({r,4});}catch(const std::exception&e){std::fprintf(stderr,"ERROR: %s\n",e.what());++r.failed;}return r;}
+#endif
+
+}
+ExpansionResult expansion_probe(){ExpansionResult r;try{memory_checks({r,4});pipeline({r,4});
+#if STAGE_MAX >= 5
+thread_checks({r,5});
+#endif
+}catch(const std::exception&e){std::fprintf(stderr,"ERROR: %s\n",e.what());++r.failed;}return r;}
