@@ -14,6 +14,7 @@ class Space {
   struct Handle {uint64_t owner{},id{};uint32_t address{},size{};};
  private:
   struct Region {Handle h;foundation::Allocation backing;size_t leases{};};
+  inline static std::atomic<size_t> live_total_{},lease_total_{};
   foundation::Memory memory_;std::mutex mutex_;std::map<uint64_t,Region> regions_;
   inline static std::atomic<uint64_t> serial_{1};
   uint64_t owner_{serial_.fetch_add(1)},next_{1};
@@ -28,11 +29,11 @@ class Space {
     for(auto& [id,r]:regions_){(void)id;if(address>=r.h.address&&uint64_t(address)+size<=uint64_t(r.h.address)+r.h.size)return r;}
     throw Error(Fault::bounds,"guest span is not resident in one owned region");
   }
-  void unlease(Handle h)noexcept{try{std::lock_guard lock(mutex_);auto& r=owned(h);if(!r.leases)std::terminate();--r.leases;}catch(...){std::terminate();}}
+  void unlease(Handle h)noexcept{try{std::lock_guard lock(mutex_);auto& r=owned(h);if(!r.leases)std::terminate();--r.leases;--lease_total_;}catch(...){std::terminate();}}
  public:
   explicit Space(uint32_t capacity=4*1024*1024):memory_(capacity){}
   Space(const Space&)=delete;
-  ~Space(){for(auto&[id,r]:regions_){(void)id;if(r.leases)std::terminate();}}
+  ~Space(){for(auto&[id,r]:regions_){(void)id;if(r.leases)std::terminate();}live_total_-=regions_.size();}
   Handle reserve(uint32_t size,uint32_t guest=0){
     std::lock_guard lock(mutex_);
     if(guest&&(guest&4095))throw Error(Fault::argument,"guest mapping alignment");
@@ -40,33 +41,34 @@ class Space {
     auto a=memory_.reserve(size);uint32_t address=guest?guest:a.guest;
     try{
       for(auto&[id,r]:regions_){(void)id;if(address<uint64_t(r.h.address)+r.h.size&&r.h.address<uint64_t(address)+size)throw Error(Fault::ownership,"overlapping guest mapping");}
-      Handle h{owner_,next_,address,size};regions_.emplace(next_,Region{h,a});++next_;return h;
+      Handle h{owner_,next_,address,size};regions_.emplace(next_,Region{h,a});++next_;++live_total_;return h;
     }catch(...){memory_.release(a);throw;}
   }
   Handle allocate(uint32_t size,uint32_t guest=0){auto h=reserve(size,guest);try{commit(h);return h;}catch(...){release(h);throw;}}
   void commit(Handle h,Permission p=Permission::read_write){std::lock_guard lock(mutex_);memory_.commit(owned(h).backing,p);}
   void protect(Handle h,Permission p){std::lock_guard lock(mutex_);memory_.protect(owned(h).backing,p);}
   void decommit(Handle h){std::lock_guard lock(mutex_);auto&r=owned(h);if(r.leases)throw Error(Fault::ownership,"active memory lease");memory_.decommit(r.backing);}
-  void release(Handle h){std::lock_guard lock(mutex_);auto&r=owned(h);if(r.leases)throw Error(Fault::ownership,"active memory lease");memory_.release(r.backing);regions_.erase(h.id);}
+  void release(Handle h){std::lock_guard lock(mutex_);auto&r=owned(h);if(r.leases)throw Error(Fault::ownership,"active memory lease");memory_.release(r.backing);regions_.erase(h.id);--live_total_;}
   void release_all(std::span<const Handle> handles){
     std::lock_guard lock(mutex_);
     for(size_t i=0;i<handles.size();++i){
       if(owned(handles[i]).leases)throw Error(Fault::ownership,"active lease prevents transactional release");
       for(size_t j=0;j<i;++j)if(handles[i].id==handles[j].id)throw Error(Fault::argument,"duplicate release token");
     }
-    for(auto h:handles){memory_.release(owned(h).backing);regions_.erase(h.id);}
+    for(auto h:handles){memory_.release(owned(h).backing);regions_.erase(h.id);--live_total_;}
   }
   class Lease {
     Space* space_{};Handle handle_{};
    public:
-    Lease(Space& space,Handle h):space_(&space),handle_(h){std::lock_guard lock(space.mutex_);++space.owned(h).leases;}
+    Lease(Space& space,Handle h):space_(&space),handle_(h){std::lock_guard lock(space.mutex_);++space.owned(h).leases;++lease_total_;}
     Lease(const Lease&)=delete;Lease&operator=(const Lease&)=delete;
     Lease(Lease&& other)noexcept:space_(std::exchange(other.space_,nullptr)),handle_(other.handle_){}
     ~Lease(){if(space_)space_->unlease(handle_);}
   };
   // A copied capability with a mapping epoch, never a host pointer. Permissions
   // are rechecked on every use; decommit/recommit permanently invalidates it.
-  struct View {Handle handle;foundation::View backing;};
+  class View {friend class Space;Handle handle;foundation::View backing;View(Handle h,foundation::View v):handle(h),backing(v){}
+   public: View(const View&)=default;};
   View view(uint32_t address,uint32_t size,Access access){
     std::lock_guard lock(mutex_);auto&r=range(address,size);
     return {r.h,memory_.translate(r.backing.guest+(address-r.h.address),size,access)};
@@ -83,6 +85,17 @@ class Space {
       throw Error(Fault::ownership,"view backing mismatch");
     memory_.write(v.backing,bytes);
   }
+  // Trusted bounded leaf transaction only: callback must not retain scratch or
+  // reenter Space. No guest pointer is exposed; callback failure publishes nothing.
+  template<class F> void update(const View& input,const View& output,F transform){
+    std::lock_guard lock(mutex_);auto&r=owned(input.handle);auto&o=owned(output.handle);
+    if(r.h.id!=o.h.id||input.backing.allocation.id!=r.backing.id||input.backing.allocation.owner!=r.backing.owner||
+       output.backing.allocation.id!=r.backing.id||output.backing.allocation.owner!=r.backing.owner||
+       input.backing.offset!=output.backing.offset||input.backing.length!=output.backing.length)
+      throw Error(Fault::ownership,"INOUT view mismatch");
+    memory_.validate(input.backing,Access::read);memory_.validate(output.backing,Access::write);
+    auto scratch=memory_.read(input.backing);transform(std::span(scratch));memory_.write(output.backing,scratch);
+  }
   size_t leases(){std::lock_guard lock(mutex_);size_t n=0;for(auto&[id,r]:regions_){(void)id;n+=r.leases;}return n;}
   std::vector<std::byte> read(uint32_t address,uint32_t size){
     std::lock_guard lock(mutex_);auto&r=range(address,size);
@@ -95,6 +108,7 @@ class Space {
   }
   template<class T> T load(uint32_t address){auto bytes=read(address,sizeof(T));T value=0;for(auto b:bytes)value=T((value<<8)|std::to_integer<unsigned>(b));return value;}
   template<class T> void store(uint32_t address,T value){std::array<std::byte,sizeof(T)> bytes{};for(size_t i=0;i<sizeof(T);++i){bytes[sizeof(T)-1-i]=std::byte(value&255);value=T(value>>8);}write(address,bytes);}
+  static std::pair<size_t,size_t> totals(){return {live_total_.load(),lease_total_.load()};}
   size_t live(){std::lock_guard lock(mutex_);return regions_.size();}
 };
 // Admission closes before memory can be reclaimed. This is original fixture

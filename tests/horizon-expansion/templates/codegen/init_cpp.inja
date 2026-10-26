@@ -7,5 +7,5 @@ extern const brutal::horizon::Function xex_generated_functions[]{
 {% for fn in functions %} { {{ fn.address }}, {{ fn.name }}, "{{ fn.name }}", true, {{ fn.address }}==expansion_floating },
 {% endfor %}};
 extern const brutal::horizon::GeneratedXex xex_generated{
- {{ image_base }}, {{ image_size }}, {{ code_base }}, {{ code_size }}, xex_generated_functions
+ {{ image_base }}, {{ image_size }}, {{ code_base }}, {{ code_size }}, xex_generated_functions, expansion_initializer
 };

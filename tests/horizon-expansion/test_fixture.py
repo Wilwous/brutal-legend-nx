@@ -18,6 +18,10 @@ class Original(unittest.TestCase):
  def test_backedges(self):self.assertEqual(self.m['backedges'],[0x82010048,0x82010074,0x8201012c,0x82010138])
  def test_determinism(self):
   other=Path(self.temp.name)/'other';create(other,Path(__file__).parent/'templates');self.assertEqual(hashlib.sha256((self.path/'fixture.xex').read_bytes()).digest(),hashlib.sha256((other/'fixture.xex').read_bytes()).digest())
+ def test_two_import_shape(self):
+  m=create(Path(self.temp.name)/'two',Path(__file__).parent/'templates',initialize=True);self.assertEqual((len(m['functions']),m['instructions'],len(m['hooks']),len(m['memory_sites'])),(11,99,52,25))
+ def test_two_import_ordinals(self):
+  path=Path(self.temp.name)/'two';m=create(path,Path(__file__).parent/'templates',initialize=True);b=(path/'fixture.xex').read_bytes();self.assertEqual(struct.unpack_from('>IIII',b,0x31000),(0x11b,0x100011b,0x12e,0x100012e));self.assertEqual(struct.unpack_from('>I',b,44)[0],m['entry'])
  def skeleton(self):
   # An original auditor unit fixture, not a replacement generated caller.
   text='';sites=set(self.m['hooks'])

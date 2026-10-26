@@ -1,0 +1,13 @@
+{
+  "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+  "files": {
+    "include/rex/system/xobject.h": "a6bb24d43aea373e0ced84fd3b4edeb4ad2ee57c092308604b5d32796f1f0f6e",
+    "src/kernel/xboxkrnl/xboxkrnl_rtl.cpp": "344c48eba0f1439bf002e7e80d6e9d6e92fa2434737e14f308efc33f96d1f392",
+    "src/kernel/xboxkrnl/export_table.inc": "efe1609d2609007e38a905ea8a18ce68228d15610d2bc85d08a6e832fe224950"
+  },
+  "header_sha256": "b56d4752d2532f9af7933f5a8b0cefbacededd00a51a7681365fd2fc9c98b55b",
+  "body_sha256": "f6dcfab9b56d51b14d3f3849ced9b1dd55ff577d4347e4920ef0629fb161fe34",
+  "ordinal": 302,
+  "signature": "void(ppc_ptr_t<X_RTL_CRITICAL_SECTION>)",
+  "contract": "INOUT 28 aligned bytes in retained writable image data; initialize only; no Enter/Leave"
+}

@@ -7,6 +7,11 @@ CXXFLAGS := $(ARCH) -std=gnu++23 -O2 -g -ffunction-sections -fdata-sections -fex
 LDFLAGS := $(ARCH) -specs=$(DEVKITPRO)/libnx/switch.specs -Wl,-Map,probe.map -L$(DEVKITPRO)/libnx/lib
 LD := $(CXX)
 OFILES := main.o probe.o leaf.o mapping.o hooks.o import.o
+ifeq ($(shell test $(STAGE_MAX) -ge 7 && echo yes),yes)
+OFILES += initialize.o
+endif
+initialize.o: $(REPO)/tests/horizon-expansion/import.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 all: probe.nro
 main.o: $(REPO)/tests/horizon-expansion/main.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@

@@ -10,6 +10,8 @@
 #endif
 using namespace brutal::horizon;
 namespace {
+template<class T>concept ExposesRelease=requires(T v){v.handle;};
+static_assert(!ExposesRelease<Space::View>);
 std::array<std::atomic<bool>,std::size(xex_hooks)> seen_sites{};
 void observed(uint32_t pc){for(size_t i=0;i<std::size(xex_hooks);++i)if(xex_hooks[i]==pc)seen_sites[i]=true;}
 struct Check {
@@ -35,7 +37,7 @@ void memory_checks(Check c){
  c(s.leases()==0,"lease balanced");s.decommit(a);s.commit(a);c(s.load<uint64_t>(a.address)==0,"recommit zeroes");
  c.refuse(Fault::stale,[&]{s.read(read);},"epoch stale read");c.refuse(Fault::stale,[&]{s.write(write,bytes);},"epoch stale write");
  auto fresh=s.view(a.address,8,Access::read);c.refuse(Fault::ownership,[&]{foreign.read(fresh);},"foreign view");
- auto forged=fresh;forged.backing.allocation.id++;c.refuse(Fault::ownership,[&]{s.read(forged);},"forged backing");
+ c.refuse(Fault::protection,[&]{s.write(fresh,bytes);},"read capability cannot write");
  s.release(a);c.refuse(Fault::stale,[&]{s.read(fresh);},"released view");c.refuse(Fault::stale,[&]{s.release(a);},"double free");
  c.refuse(Fault::bounds,[&]{s.read(a.address,4);},"freed address");
  c.refuse(Fault::bounds,[&]{s.reserve(8192,0xfffff000);},"address wrap");c.refuse(Fault::argument,[&]{s.reserve(4,0x90000001);},"alignment");
@@ -52,7 +54,7 @@ void pipeline(Check c){
  Space space;XexImage image(space,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto slot=slots.allocate();
  {GuestThread guest(space,image.life(),slots,slot,7,image.tls_template());guest.context.r3.u64=4;guest.context.lr=0x8201feed;
   {Scope scope(guest,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);ImportFrame imports(image,guest);HookFrame hooks(scope,xex_hooks,observed);
-   image.invoke(scope,xex_entry);c(guest.context.r3.u64==17,"production generated entry result");c(imports.calls==1,"actual SDK compare executed");c.r.result=guest.context.r3.u32;c.r.sdk_calls+=imports.calls;}
+   image.invoke(scope,xex_entry);c(guest.context.r3.u64==(STAGE_MAX>=7?18:17),"production generated entry result");c(imports.calls==(STAGE_MAX>=7?2:1),"actual SDK leaves executed");c.r.result=guest.context.r3.u32;c.r.sdk_calls+=imports.calls;}
   guest.cleanup();}
  slots.release(slot);c(image.unload(),"image unload");c(space.live()==0&&space.leases()==0,"pipeline balance");
 }
@@ -84,7 +86,7 @@ void thread_checks(Check c){
  for(auto&e:ready){c(e.wait(),"guest worker ready");}c(maximum==4&&live==4,"four simultaneously active guests");
  c.refuse(Fault::ownership,[&]{guests[0]->cleanup();},"cleanup before join");c.refuse(Fault::ownership,[&]{slots.release(slot);},"pinned TLS registration");
  gate.signal();
- for(unsigned i=0;i<4;++i){c(tasks[i]->join(),"guest worker join");c(!tasks[i]->callback_error(),"guest callback success");c(values[i]==17+i&&imports[i]==1,"isolated TLS and real concurrent SDK calls");c(guests[i]->get_tls()==8+i,"TLS update isolated");}
+ for(unsigned i=0;i<4;++i){c(tasks[i]->join(),"guest worker join");c(!tasks[i]->callback_error(),"guest callback success");c(values[i]==(STAGE_MAX>=7?18u:17u)+i&&imports[i]==(STAGE_MAX>=7?2u:1u),"isolated TLS and real concurrent SDK calls");c(guests[i]->get_tls()==8+i,"TLS update isolated");}
  for(unsigned i=0;i<4;++i){for(unsigned j=0;j<i;++j)c(identities[i]!=identities[j],"unique synthetic identities");guests[i]->cleanup();++c.r.workers;c.r.sdk_calls+=imports[i];}
  c.refuse(Fault::no_thread,[&]{Scope::current(guests[0]->context);},"native thread-local binding removed");
  slots.release(slot);c(image.unload(),"thread image unload");c(space.live()==0&&space.leases()==0,"thread final balance");
@@ -128,16 +130,52 @@ void abi_checks(Check c){
  }
  unsigned memory_seen=0,backward_seen=0;
  for(size_t i=0;i<std::size(expansion_sites);++i){auto site=expansion_sites[i];if(seen_sites[i]&&(site.kind==SiteKind::read||site.kind==SiteKind::write))++memory_seen;if(seen_sites[i]&&site.kind==SiteKind::branch&&site.target<=site.pc)++backward_seen;}
- c(memory_seen==20,"all declared scalar memory hooks observed");c(backward_seen==4,"all four backward hooks observed");
+ c(memory_seen==(STAGE_MAX>=7?25u:20u),"all declared scalar memory hooks observed");c(backward_seen==4,"all four backward hooks observed");
+}
+#endif
+
+#if STAGE_MAX >= 7
+void import_checks(Check c){
+ c(!ExposesRelease<Space::View>,"temporary view hides release authority");
+ Space space;XexImage image(space,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto slot=slots.allocate();
+ const auto address=image.section(3).address+0x800;
+ std::array<std::byte,28> initial;initial.fill(std::byte{0x5a});space.write(address,initial);
+ auto execute=[&](uint32_t pointer,bool reject=false){GuestThread guest(space,image.life(),slots,slot,7,image.tls_template());guest.context.lr=0x8201feed;guest.context.r3.u64=4;
+  Scope scope(guest,image.functions(),image.life().identity,nullptr,[&](uint32_t pc){if(pc==xex_entry+32)guest.context.r3.u64=pointer;},expansion_plan_ptr);image.lend(scope);ImportFrame imports(image,guest);HookFrame hooks(scope,xex_hooks,observed);
+  if(reject){c.refuse(Fault::bounds,[&]{image.invoke(scope,xex_entry);},"invalid INOUT pointer refused");c(imports.calls==1&&imports.initialized==0&&imports.trace_events==0,"refusal does not enter initializer");}
+  else{image.invoke(scope,xex_entry);c(guest.context.r3.u64==18,"generated two-import result");c(imports.calls==2&&imports.initialized==1&&imports.trace_events==1,"two actual SDK calls and trace");c.r.sdk_calls+=imports.calls;}
+ };
+ execute(address);auto expected=initial;expected[0]=std::byte{1};expected[1]=std::byte{};for(unsigned i=4;i<8;++i)expected[i]=std::byte{};for(unsigned i=16;i<20;++i)expected[i]=std::byte{0xff};for(unsigned i=20;i<28;++i)expected[i]=std::byte{};
+ c(space.read(address,28)==std::vector<std::byte>(expected.begin(),expected.end()),"actual SDK INOUT bytes and untouched fields preserved");
+ for(auto bad:{uint32_t(0),address+1,image.section(2).address+0x200,image.section(3).address+65516,uint32_t(0xfffffff0)}){execute(bad,true);c(space.read(address,28)==std::vector<std::byte>(expected.begin(),expected.end()),"rejected call failure atomic");}
+ image.admit_import(0x12e,XexImage::Signature::initialize_cs_inout);c(true,"exact signature admitted");c.refuse(Fault::unsupported,[&]{image.admit_import(0x12e,XexImage::Signature::typed_vector);},"vector import denied");c.refuse(Fault::unsupported,[&]{image.admit_import(0xee,XexImage::Signature::initialize_cs_inout);},"query memory still denied");
+ // Original generated OUT-only fixture. This is not an additional SDK export.
+ {GuestThread out(space,image.life(),slots,slot);auto output=space.allocate(4096);space.protect(output,brutal::foundation::Permission::write);out.context.r3.u64=0x12345678;out.context.r4.u64=output.address;out.context.lr=0x8201feed;
+  {Scope scope(out,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);scope.lend(output);HookFrame hooks(scope,xex_hooks,observed);scope.invoke(xex_store);c(scope.writes==1&&scope.reads==0,"OUT requires no input read");}
+  space.protect(output,brutal::foundation::Permission::read);c(space.load<uint32_t>(output.address)==0x12345678,"generated OUT bytes");space.release(output);out.cleanup();}
+ auto buffer=space.allocate(4096);auto in=space.view(buffer.address,28,Access::read),out=space.view(buffer.address,28,Access::write);unsigned entered=0;
+ space.protect(buffer,brutal::foundation::Permission::read);c.refuse(Fault::protection,[&]{space.update(in,out,[&](auto){++entered;});},"INOUT requires write before SDK");c(entered==0,"no callback after preflight refusal");
+ space.protect(buffer,brutal::foundation::Permission::read_write);auto before=space.read(buffer.address,28);c.refuse(Fault::unsupported,[&]{space.update(in,out,[&](auto bytes){bytes[0]=std::byte{7};throw Error(Fault::unsupported,"original rollback fixture");});},"transform exception");c(space.read(buffer.address,28)==before,"transaction rollback publishes nothing");space.release(buffer);
+ auto wrong=xex_generated;wrong.initializer=nullptr;{Space other;c.refuse(Fault::unsupported,[&]{XexImage denied(other,xex_bytes,{xex_bytes,wrong,xex_entry});},"missing initializer binding");c(other.live()==0,"binding failure before allocation");}
+ slots.release(slot);c(image.unload()&&space.live()==0,"import cleanup");
+ // Request stop and close admission while a call is admitted and its image/data
+ // leases are live. The accepted SDK leaf finishes; the next hook observes stop.
+ {Space s;XexImage mod(s,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots registry;auto t=registry.allocate();GuestThread guest(s,mod.life(),registry,t,7,mod.tls_template());GuestTask task(guest);brutal::synthetic::CooperativeStop stop;brutal::horizon::Event ready,release;std::atomic<bool> stopped{};unsigned committed=0;
+  c(task.start([&]{guest.context.lr=0x8201feed;guest.context.r3.u64=4;Scope scope(guest,mod.functions(),mod.life().identity,&stop,{},expansion_plan_ptr);mod.lend(scope);ImportFrame imports(mod,guest);HookFrame hooks(scope,xex_hooks,observed);imports.admitted=[&]{ready.signal();if(!release.wait())throw Error(Fault::unsupported,"admitted SDK gate");};try{mod.invoke(scope,xex_entry);}catch(const Scope::Stopped&e){if(e.owner!=&scope)throw;stopped=true;stop.exited();}committed=imports.initialized;}),"admitted SDK worker starts");
+  c(ready.wait(),"SDK admission active");c(!mod.unload(),"unload held by admitted import");c.refuse(Fault::stale,[&]{mod.admit_import(0x12e,XexImage::Signature::initialize_cs_inout);},"new import after closing denied");c(!task.join(0),"active SDK join timeout retains ownership");c(stop.request(),"stop request during admitted call");release.signal();c(task.join()&&!task.callback_error(),"SDK stopped worker joined");c(stopped&&committed==1,"accepted SDK call commits before safe stop");stop.joined();guest.cleanup();stop.reclaimed();c(mod.unload()&&s.live()==0&&s.leases()==0,"admitted call cleanup");stop.unloaded();registry.release(t);
+ }
 }
 #endif
 
 }
-ExpansionResult expansion_probe(){ExpansionResult r;try{memory_checks({r,4});pipeline({r,4});
+ExpansionResult expansion_probe(){ExpansionResult r;const auto start_sdk=ImportFrame::sdk_completed.load();const auto start_memory=Space::totals();try{memory_checks({r,4});pipeline({r,4});
 #if STAGE_MAX >= 5
 thread_checks({r,5});
 #endif
 #if STAGE_MAX >= 6
 abi_checks({r,6});
 #endif
-}catch(const std::exception&e){std::fprintf(stderr,"ERROR: %s\n",e.what());++r.failed;}return r;}
+#if STAGE_MAX >= 7
+import_checks({r,7});
+#endif
+}catch(const std::exception&e){std::fprintf(stderr,"ERROR: %s\n",e.what());++r.failed;}r.sdk_calls=unsigned(ImportFrame::sdk_completed.load()-start_sdk);auto end_memory=Space::totals();r.remaining=unsigned(end_memory.first-start_memory.first);r.leases=unsigned(end_memory.second-start_memory.second);if(r.remaining||r.leases)++r.failed;return r;}

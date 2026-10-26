@@ -5,14 +5,15 @@
 #include <algorithm>
 namespace brutal::horizon {
 REX_EXTERN(__imp__RtlCompareMemoryUlong);
-struct GeneratedXex {uint32_t image_base,image_size,code_base,code_size;std::span<const Function> functions;};
+REX_EXTERN(__imp__RtlInitializeCriticalSection);
+struct GeneratedXex {uint32_t image_base,image_size,code_base,code_size;std::span<const Function> functions;PPCFunc* initializer{};};
 // Intentionally exact unencrypted/uncompressed original-fixture family.
 // No decryption, arbitrary PE virtual-size adoption, relocation or title loader.
 class XexImage {
  public:
-  struct Layout {uint32_t base{},entry{},tls{},slots{},static_size{},raw_size{},thunk{};std::vector<uint32_t> functions;};
+  struct Layout {uint32_t base{},entry{},tls{},slots{},static_size{},raw_size{},thunk{};bool initialize{};std::vector<uint32_t> functions;};
   struct Policy {std::span<const uint8_t> image;const GeneratedXex& generated;uint32_t entry;};
-  enum class Signature { compare_u32_read_words,typed_vector,unverified };
+  enum class Signature { compare_u32_read_words,initialize_cs_inout,typed_vector,unverified };
  private:
   std::mutex unload_mutex_;
   Space& space_;ModuleLife life_{0x58455833};Layout layout_{};
@@ -53,21 +54,24 @@ class XexImage {
     require(std::find(l.functions.begin(),l.functions.end(),l.entry)!=l.functions.end());
     l.slots=be(0x380);l.tls=be(0x384);l.static_size=be(0x388);l.raw_size=be(0x38c);
     require(l.slots==64&&l.tls==l.base+0x20000&&l.static_size==32&&l.raw_size==16);
-    require(be(0x400)==0x4c&&be(0x404)==16&&be(0x408)==1);
+    l.initialize=be(0x400)==0x54;require((be(0x400)==0x4c||l.initialize)&&be(0x404)==16&&be(0x408)==1);
     constexpr std::string_view library="xboxkrnl.exe";require(std::equal(library.begin(),library.end(),data.begin()+0x40c)&&data[0x418]==0);
-    require(be(0x41c)==48&&number(data,0x41c+38,false,2)==2&&be(0x444)==l.base+0x30000&&be(0x448)==l.base+0x30004);
+    require(be(0x41c)==(l.initialize?56:48)&&number(data,0x41c+38,false,2)==(l.initialize?4:2)&&be(0x444)==l.base+0x30000&&be(0x448)==l.base+0x30004);
     if(be(0x31000)!=0x11b||be(0x31004)!=0x100011b)throw Error(Fault::unsupported,"unadmitted XEX import ordinal/type");
+    if(l.initialize){require(be(0x44c)==l.base+0x30008&&be(0x450)==l.base+0x3000c);
+      if(be(0x31008)!=0x12e||be(0x3100c)!=0x100012e)throw Error(Fault::unsupported,"unadmitted initializer ordinal/type");}
     l.thunk=l.base+0x30004;return l;
   }
   XexImage(Space& space,std::span<const uint8_t> input,Policy policy,int fail_after=-1):space_(space){
     layout_=parse(input);
     if(policy.generated.image_base!=layout_.base||policy.generated.image_size!=0x40000||policy.generated.code_base!=layout_.base+0x10000||policy.generated.code_size!=65536)throw Error(Fault::argument,"generated image metadata mismatch");
-    if(policy.image.size()!=input.size()||!std::equal(input.begin(),input.end(),policy.image.begin())||policy.entry!=layout_.entry||policy.generated.functions.size()!=layout_.functions.size()+1)
+    if(policy.image.size()!=input.size()||!std::equal(input.begin(),input.end(),policy.image.begin())||policy.entry!=layout_.entry||policy.generated.functions.size()!=layout_.functions.size()+(layout_.initialize?2:1))
       throw Error(Fault::argument,"image/generated-code identity mismatch");
     for(size_t i=0;i<policy.generated.functions.size();++i){auto f=policy.generated.functions[i];
-      if(!f.implementation||f.address!=(i<layout_.functions.size()?layout_.functions[i]:layout_.thunk))throw Error(Fault::argument,"generated mapping mismatch");
+      if(!f.implementation||f.address!=(i<layout_.functions.size()?layout_.functions[i]:layout_.thunk+8*(i-layout_.functions.size())))throw Error(Fault::argument,"generated mapping mismatch");
       if(i==layout_.functions.size()&&(f.implementation!=__imp__RtlCompareMemoryUlong||f.name!="__imp__RtlCompareMemoryUlong"))throw Error(Fault::unsupported,"import symbol/signature admission");
     }
+    if(layout_.initialize){auto f=policy.generated.functions.back();if(!policy.generated.initializer||f.implementation!=policy.generated.initializer||f.name!="__imp__RtlInitializeCriticalSection")throw Error(Fault::unsupported,"initializer symbol binding");}
     functions_=policy.generated.functions;sections_.reserve(4);
     try{
       for(unsigned i=0;i<4;++i){if(int(i)==fail_after)throw Error(Fault::exhausted,"injected image initialization failure");
@@ -85,7 +89,7 @@ class XexImage {
   std::vector<std::byte> tls_template(){ModuleLife::Lease admission(life_);if(!loaded_)throw Error(Fault::stale,"image unloaded");return space_.read(layout_.tls,layout_.raw_size);}
   void lend(Scope& scope){ModuleLife::Lease admission(life_);if(!scope.belongs_to(life_,space_))throw Error(Fault::argument,"foreign module/space call scope");if(!loaded_)throw Error(Fault::stale,"image unloaded");for(auto h:sections_)scope.lend(h);}
   void invoke(Scope& scope,uint32_t entry){ModuleLife::Lease admission(life_);if(!scope.belongs_to(life_,space_))throw Error(Fault::argument,"foreign module/space entry scope");if(!loaded_||entry!=layout_.entry)throw Error(Fault::argument,"XEX entry admission");scope.invoke(entry);}
-  void admit_import(uint32_t ordinal,Signature signature){if(ordinal!=0x11b||signature!=Signature::compare_u32_read_words)throw Error(Fault::unsupported,"unverified import or ABI signature");}
+  void admit_import(uint32_t ordinal,Signature signature){ModuleLife::Lease admission(life_);if(!((ordinal==0x11b&&signature==Signature::compare_u32_read_words)||(layout_.initialize&&ordinal==0x12e&&signature==Signature::initialize_cs_inout)))throw Error(Fault::unsupported,"unverified import or ABI signature");}
   // A specific retained read-only image capability, not a generic raw pointer.
  private:
   friend class ImportFrame;
@@ -94,6 +98,12 @@ class XexImage {
     auto h=sections_.at(2);if(!size||size>64||(address&3)||(size&3)||address<h.address||uint64_t(address)+size>uint64_t(h.address)+h.size)
       throw Error(Fault::bounds,"compare IN capability bounds/alignment");
     return space_.read(address,size);
+  }
+  Space::Handle initialize_capability(uint32_t address){
+    if(!loaded_||!layout_.initialize)throw Error(Fault::unsupported,"initializer not bound");
+    auto h=sections_.at(3);if((address&3)||address<h.address||uint64_t(address)+28>uint64_t(h.address)+h.size||address<h.address+0x100)
+      throw Error(Fault::bounds,"initializer INOUT bounds/alignment/ownership");
+    return h;
   }
  public:
   struct SectionView {uint32_t address,size;};
@@ -120,7 +130,8 @@ class ImportFrame {
  XexImage& image_;GuestThread& guest_;ModuleLife::Lease module_;Space::Lease input_pin_;
  inline static thread_local ImportFrame* current_{};
  public:
- unsigned calls{};
+ inline static std::atomic<uint64_t> sdk_entered{},sdk_completed{};
+ unsigned calls{},initialized{},trace_events{};std::function<void()> admitted;
  ImportFrame(XexImage& image,GuestThread& guest):image_(image),guest_(guest),module_(image.life()),input_pin_(guest.space(),image.sections_.at(2)){
   Scope::current(guest.context);image.admit_import(0x11b,XexImage::Signature::compare_u32_read_words);
   if(current_||!guest.belongs_to(image.life())||&guest.space()!=&image.space_)throw Error(Fault::argument,"import context/module binding");
@@ -128,6 +139,8 @@ class ImportFrame {
  }
  ~ImportFrame(){if(current_!=this)std::terminate();current_=nullptr;}
  static ImportFrame& current(PPCContext& context){if(!current_||&current_->guest_.context!=&context)throw Error(Fault::no_thread,"unbound import frame");Scope::current(context);return *current_;}
+ static void trace(uint32_t address){if(!current_||address!=current_->guest_.context.r3.u32)throw Error(Fault::no_thread,"SDK trace context");++current_->trace_events;}
  uint32_t compare(uint32_t source,uint32_t size,uint32_t pattern);
+ void initialize(uint32_t address);
 };
 }
