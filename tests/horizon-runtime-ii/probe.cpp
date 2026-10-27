@@ -3,6 +3,9 @@
 #include "probe.h"
 #include "runtime/horizon/xex.h"
 #include "xex-data.h"
+#if STAGE_MAX >= 10
+#include "runtime/horizon/query.h"
+#endif
 #include <bit>
 #include <limits>
 #include <cstdio>
@@ -25,7 +28,11 @@ void foundation(Check c){
 }
 void abi(Check c){
  Space space;XexImage image(space,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto t=slots.allocate();GuestThread guest(space,image.life(),slots,t,7,image.tls_template());auto sp=guest.context.r1.u64;
- auto call=[&](uint32_t pc){guest.context.lr=0x8201feed;Scope scope(guest,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);ImportFrame imports(image,guest);HookFrame hooks(scope,xex_hooks,observed);scope.invoke(pc);};
+ auto call=[&](uint32_t pc){guest.context.lr=0x8201feed;Scope scope(guest,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);ImportFrame imports(image,guest);
+#if STAGE_MAX >= 10
+ QueryFrame query(image,guest);
+#endif
+ HookFrame hooks(scope,xex_hooks,observed);scope.invoke(pc);};
  c(space.read(guest.tls.address,16)==image.tls_template(),"XEX TLS template");c(space.load<uint32_t>(guest.pcr.address)==guest.tls.address&&space.load<uint64_t>(guest.pcr.address+0x30)==guest.pcr.address,"PCR TLS/self");
  const std::array<std::array<uint64_t,3>,8> inputs{{{0,0,0},{1,2,3},{0xffffffffu,1,0},{0xffffffffu,0xffffffffu,1},{0x100000000ull,0,0},{UINT64_MAX,1,0},{0x12345678ffffffffull,0x80000000u,0x7fffffffu},{0x80000000u,0,0xffffffffu}}};
  for(auto args:inputs){
@@ -54,7 +61,11 @@ void abi(Check c){
 }
 void threads_and_stop(Check c){
  Space space;XexImage image(space,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto t=slots.allocate();std::array<std::unique_ptr<GuestThread>,4> guests;std::array<std::unique_ptr<GuestTask>,4> tasks;std::array<brutal::horizon::Event,4> ready;brutal::horizon::Event release;std::array<unsigned,4> result{};
- for(unsigned i=0;i<4;++i){guests[i]=std::make_unique<GuestThread>(space,image.life(),slots,t,7+i,image.tls_template());tasks[i]=std::make_unique<GuestTask>(*guests[i]);c(tasks[i]->start([&,i]{auto&g=*guests[i];g.context.r3.u64=4;g.context.lr=0x8201feed;Scope scope(g,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);ImportFrame imports(image,g);HookFrame hooks(scope,xex_hooks,observed);ready[i].signal();if(!release.wait())throw Error(Fault::unsupported,"II worker gate");image.invoke(scope,xex_entry);result[i]=g.context.r3.u32;}),"concurrent generated worker starts");}
+ for(unsigned i=0;i<4;++i){guests[i]=std::make_unique<GuestThread>(space,image.life(),slots,t,7+i,image.tls_template());tasks[i]=std::make_unique<GuestTask>(*guests[i]);c(tasks[i]->start([&,i]{auto&g=*guests[i];g.context.r3.u64=4;g.context.lr=0x8201feed;Scope scope(g,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);ImportFrame imports(image,g);
+#if STAGE_MAX >= 10
+ QueryFrame query(image,g);
+#endif
+ HookFrame hooks(scope,xex_hooks,observed);ready[i].signal();if(!release.wait())throw Error(Fault::unsupported,"II worker gate");image.invoke(scope,xex_entry);result[i]=g.context.r3.u32;}),"concurrent generated worker starts");}
  for(auto&e:ready){c(e.wait(),"four native thread-local scopes active");}c.refuse(Fault::ownership,[&]{guests[0]->cleanup();},"guest cannot outlive active execution");release.signal();
  for(unsigned i=0;i<4;++i){c(tasks[i]->join()&&!tasks[i]->callback_error(),"native worker join");c(result[i]==24+i&&guests[i]->get_tls()==8+i,"isolated TLS and generated results");guests[i]->cleanup();}c.r.workers=4;slots.release(t);c(image.unload()&&space.live()==0,"concurrent image cleanup");
  for(auto pc:{uint32_t(0x82010048),uint32_t(0x82010074),uint32_t(0x8201012c),uint32_t(0x82010138)}){
@@ -63,6 +74,56 @@ void threads_and_stop(Check c){
   c(task.start([&]{g.context.r3.u64=3;g.context.lr=0x8201feed;Scope scope(g,mod.functions(),mod.life().identity,&stop,[&](uint32_t at){if(at==pc)stop.request();},expansion_plan_ptr);mod.lend(scope);HookFrame hooks(scope,xex_hooks,observed);try{scope.invoke(root);}catch(const Scope::Stopped&e){if(e.owner!=&scope)throw;stopped=true;stop.exited();}}),"backedge worker starts");c(task.join()&&!task.callback_error()&&stopped,"each of four backedges stops");stop.joined();g.cleanup();stop.reclaimed();c(mod.unload()&&s.live()==0,"stop cleanup");stop.unloaded();reg.release(slot);
  }
 }
+#if STAGE_MAX >= 10
+void services(Check c){
+ Space space;XexImage image(space,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto slot=slots.allocate();auto target=space.reserve(8192),output=space.allocate(8192);auto pointer=output.address+4096-12;
+ auto invoke=[&](uint32_t address,uint32_t destination,uint32_t kind){
+  GuestThread guest(space,image.life(),slots,slot,7,image.tls_template());guest.context.r3.u64=address;guest.context.r4.u64=destination;guest.context.r5.u64=kind;guest.context.lr=0x8201feed;
+  Scope scope(guest,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);scope.lend(target);scope.lend(output);QueryFrame frame(image,guest);HookFrame hooks(scope,xex_hooks,observed);scope.invoke(xex_query_only);
+  return std::array<uint32_t,4>{guest.context.r3.u32,frame.entered,frame.returned,frame.committed};
+ };
+ auto fields=[&]{std::array<uint32_t,7> result{};for(unsigned i=0;i<7;++i)result[i]=space.load<uint32_t>(pointer+4*i);return result;};
+ auto row=invoke(target.address,pointer,0);c(row==std::array<uint32_t,4>{0,1,1,1},"actual SDK reserve query and OUT commit");c(fields()==std::array<uint32_t,7>{target.address,target.address,1,8192,0x2000,1,0x20000},"independent reserved metadata oracle");
+ space.commit(target);row=invoke(target.address,pointer,0);c(row[0]==0&&row[3]==1,"committed query succeeds");c(fields()==std::array<uint32_t,7>{target.address,target.address,4,8192,0x1000,4,0x20000},"committed state and current/initial permissions");
+ row=invoke(target.address+4096,pointer,0);c(fields()==std::array<uint32_t,7>{target.address+4096,target.address,4,4096,0x1000,4,0x20000},"page-aligned interior query translation");
+ space.protect(target,brutal::foundation::Permission::read);invoke(target.address,pointer,0);c(fields()[2]==4&&fields()[5]==2,"allocation protection preserved across protect");
+ space.protect(target,brutal::foundation::Permission::none);invoke(target.address,pointer,0);c(fields()[4]==0x1000&&fields()[5]==1,"no-access committed metadata is not a readable page");c.refuse(Fault::protection,[&]{space.read(target.address,4);},"query success does not bypass guest protection");
+ space.protect(target,brutal::foundation::Permission::read_write);space.decommit(target);invoke(target.address,pointer,0);c(fields()[4]==0x2000&&fields()[5]==4,"decommit preserves stored protection like selected SDK heap");space.commit(target);
+ auto before=space.read(pointer,28);row=invoke(target.address,pointer,UINT32_MAX);c(row==std::array<uint32_t,4>{0xc000000d,1,1,0},"actual SDK invalid selector status");c(space.read(pointer,28)==before,"SDK error leaves OUT untouched");
+ for(auto kind:{1u,2u})c.refuse(Fault::unsupported,[&]{invoke(target.address,pointer,kind);},"unverified selectors remain denied");
+ for(auto bad:{uint32_t(0),pointer+1,output.address+8192-24}){before=space.read(pointer,28);c.refuse(bad==output.address+8192-24?Fault::ownership:Fault::bounds,[&]{invoke(target.address,bad,0);},"bad OUT pointer refused");c(space.read(pointer,28)==before,"preflight refusal atomicity");}
+ c.refuse(Fault::bounds,[&]{invoke(target.address+1,pointer,0);},"unaligned query address");c.refuse(Fault::ownership,[&]{invoke(0xdeadb000,pointer,0);},"foreign address not introspected");c.refuse(Fault::unsupported,[&]{invoke(image.section(1).address,pointer,0);},"unrepresented executable permission denied");
+ space.protect(output,brutal::foundation::Permission::read);c.refuse(Fault::protection,[&]{invoke(target.address,pointer,0);},"OUT requires write before SDK");space.protect(output,brutal::foundation::Permission::write);row=invoke(target.address,pointer,0);c(row[0]==0&&row[3]==1,"OUT-only write-only storage accepted without read");space.protect(output,brutal::foundation::Permission::read_write);
+ space.protect(target,brutal::foundation::Permission::write);c.refuse(Fault::unsupported,[&]{invoke(target.address,pointer,0);},"write-only query not mapped to fake RW");space.protect(target,brutal::foundation::Permission::read_write);
+ image.admit_import(0xee,XexImage::Signature::query_basic28);c(true,"exact query import signature");c.refuse(Fault::unsupported,[&]{image.admit_import(0xee,XexImage::Signature::unverified);},"unverified query ABI");
+ auto wrong=xex_generated;wrong.query=nullptr;{Space other;c.refuse(Fault::unsupported,[&]{XexImage bad(other,xex_bytes,{xex_bytes,wrong,xex_entry});},"query code/image symbol identity");c(other.live()==0,"binding failure allocates no guest image");}
+ {ModuleLife alias(image.life().identity);GuestThread foreign(space,alias,slots,slot);
+  {Scope scope(foreign,image.functions(),alias.identity,nullptr,{},expansion_plan_ptr);c.refuse(Fault::argument,[&]{QueryFrame denied(image,foreign);},"query frame belongs to actual image object");}
+  foreign.cleanup();c(alias.close(),"foreign synthetic identity cleanup");}
+ space.release(target);space.release(output);slots.release(slot);c(image.unload()&&space.live()==0&&space.leases()==0,"service resources balanced");
+ // Bounded worker tests: ownership survives active query; close admission/stop,
+ // or change OUT protection before publication. No guest continuation on error.
+ for(bool cancel:{true,false}){
+  Space s;XexImage mod(s,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots registry;auto t=registry.allocate();auto in=s.allocate(4096),out=s.allocate(4096);std::array<std::byte,28> marker;marker.fill(std::byte{0xa5});s.write(out.address,marker);GuestThread guest(s,mod.life(),registry,t);GuestTask task(guest);brutal::synthetic::CooperativeStop stop;brutal::horizon::Event ready,release;bool stopped=false;unsigned entered=0,returned=0,committed=0;
+  c(task.start([&]{guest.context.r3.u64=in.address;guest.context.r4.u64=out.address;guest.context.r5.u64=0;guest.context.lr=0x8201feed;Scope scope(guest,mod.functions(),mod.life().identity,&stop,{},expansion_plan_ptr);mod.lend(scope);scope.lend(in);scope.lend(out);QueryFrame frame(mod,guest);HookFrame hooks(scope,xex_hooks,observed);frame.admitted=[&]{ready.signal();if(!release.wait())throw Error(Fault::unsupported,"active query gate");};
+   try{scope.invoke(xex_query_only);}catch(const Scope::Stopped&e){if(e.owner!=&scope)throw;stopped=true;stop.exited();}
+   catch(...){entered=frame.entered;returned=frame.returned;committed=frame.committed;throw;}
+   entered=frame.entered;returned=frame.returned;committed=frame.committed;
+  }),"active query worker starts");
+  c(ready.wait(),"query admitted with retained pointers");c.refuse(Fault::ownership,[&]{s.decommit(in);},"query input cannot decommit while leased");c(!task.join(0),"failed join retains resources");
+  if(cancel){c(!mod.unload(),"image unload refused during query");c.refuse(Fault::stale,[&]{mod.admit_import(0xee,XexImage::Signature::query_basic28);},"new query denied after closing");c(stop.request(),"stop requested during query");}
+  else{s.protect(out,brutal::foundation::Permission::read);}
+  release.signal();c(task.join(),"query worker joins");
+  if(cancel){c(stopped&&!task.callback_error()&&entered==1&&returned==1&&committed==1,"accepted actual SDK query commits then stops");stop.joined();}
+  else{c(task.callback_error()&&entered==1&&returned==1&&committed==0,"actual SDK return cannot silently publish success after OUT refusal");c(s.read(out.address,28)==std::vector<std::byte>(marker.begin(),marker.end()),"failed OUT publication preserves marker");}
+  guest.cleanup();if(cancel)stop.reclaimed();s.release(in);s.release(out);registry.release(t);c(mod.unload()&&s.live()==0&&s.leases()==0,"query worker final cleanup");if(cancel)stop.unloaded();
+ }
+}
+#endif
+
 }
 RuntimeIIResult runtime_ii_probe(unsigned cycles,bool tracing){(void)tracing;RuntimeIIResult r;if(cycles<1||cycles>8)throw Error(Fault::argument,"II test budget");const auto sdk=ImportFrame::sdk_completed.load(),entries=Scope::guest_entries.load();for(auto&s:observed_sites)s=false;try{foundation({r,0});abi({r,1});threads_and_stop({r,1});
- unsigned memory_seen=0,back_seen=0;for(size_t i=0;i<std::size(expansion_sites);++i){auto site=expansion_sites[i];if(observed_sites[i]&&(site.kind==SiteKind::read||site.kind==SiteKind::write))++memory_seen;if(observed_sites[i]&&site.kind==SiteKind::branch&&site.target<=site.pc)++back_seen;}Check c{r,1};c(memory_seen==34,"all declared memory hooks observed");c(back_seen==4,"all declared backedges observed");}catch(const std::exception&e){std::fprintf(stderr,"II error: %s\n",e.what());++r.failed;}r.sdk_calls=unsigned(ImportFrame::sdk_completed.load()-sdk);r.guest_entries=unsigned(Scope::guest_entries.load()-entries);const auto totals=Space::totals();r.remaining=unsigned(totals.first);r.leases=unsigned(totals.second);if(r.remaining||r.leases)++r.failed;return r;}
+#if STAGE_MAX >= 10
+ services({r,2});
+#endif
+ unsigned memory_seen=0,back_seen=0;for(size_t i=0;i<std::size(expansion_sites);++i){auto site=expansion_sites[i];if(observed_sites[i]&&(site.kind==SiteKind::read||site.kind==SiteKind::write))++memory_seen;if(observed_sites[i]&&site.kind==SiteKind::branch&&site.target<=site.pc)++back_seen;}Check c{r,1};c(memory_seen==(STAGE_MAX>=10?37u:34u),"all declared memory hooks observed");c(back_seen==4,"all declared backedges observed");}catch(const std::exception&e){std::fprintf(stderr,"II error: %s\n",e.what());++r.failed;}r.sdk_calls=unsigned(ImportFrame::sdk_completed.load()-sdk);r.guest_entries=unsigned(Scope::guest_entries.load()-entries);const auto totals=Space::totals();r.remaining=unsigned(totals.first);r.leases=unsigned(totals.second);if(r.remaining||r.leases)++r.failed;return r;}

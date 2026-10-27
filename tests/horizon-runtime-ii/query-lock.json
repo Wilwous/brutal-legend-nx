@@ -1,0 +1,19 @@
+{
+  "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+  "files": {
+    "include/rex/system/xmemory.h": "b03dfafe98e807e7b010302e2d8b34d81e84643065c083d5d9ce583dfe329947",
+    "include/rex/system/xtypes.h": "f8bbb8b0a8a4f283e8791e3588298da1df31c0a5c0dc9d8d9ef9568169212384",
+    "src/system/xmemory.cpp": "6227385655290db64fafa8f13b93f2d5f7563c33c8a9230bd02e4067c09adf10",
+    "src/kernel/xboxkrnl/xboxkrnl_memory.cpp": "2000bd1d9761c72fb206a18cb0b91f1d9e129c20355cfdb0bfc8c7eaf5acb243",
+    "src/kernel/xboxkrnl/export_table.inc": "efe1609d2609007e38a905ea8a18ce68228d15610d2bc85d08a6e832fe224950"
+  },
+  "types_sha256": "f836130c07690b2cf4db77c7f9144dfa0dba4fb355f7d924646ae276cb7dc1ff",
+  "leaf_sha256": "65c82c561e1492c63d73763d574717c2a9101b6c40423b7761a4b0e1b681917a",
+  "signature": "u32(u32,ppc_ptr_t<X_MEMORY_BASIC_INFORMATION>,u32)",
+  "ordinal": 238,
+  "classes": [
+    0
+  ],
+  "negative_selector": 4294967295,
+  "scope": "retained uniform whole-page non-executable private Space regions; checked 28-byte OUT; no raw host VM query"
+}

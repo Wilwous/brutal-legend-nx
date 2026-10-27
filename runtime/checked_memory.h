@@ -112,6 +112,8 @@ class Memory {
     }
     throw Error(Fault::bounds,"guest address is not owned by a live allocation");
   }
+  struct Info {bool committed;Permission permission;};
+  Info info(const Allocation& a){std::lock_guard lock(mutex_);auto&r=region(a);return {r.committed,r.permission};}
   void validate(const View& v,Access access){std::lock_guard lock(mutex_);check(v,access);}
   std::vector<std::byte> read(const View& v) {
     std::lock_guard lock(mutex_);check(v,Access::read);

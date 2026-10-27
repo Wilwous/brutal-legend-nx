@@ -12,6 +12,11 @@ OFILES += initialize.o
 endif
 initialize.o: $(REPO)/tests/horizon-expansion/import.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+ifeq ($(shell test $(STAGE_MAX) -ge 10 && echo yes),yes)
+OFILES += query.o
+endif
+query.o: $(REPO)/tests/horizon-runtime-ii/query.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 all: probe.nro
 main.o: $(REPO)/tests/horizon-runtime-ii/main.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@

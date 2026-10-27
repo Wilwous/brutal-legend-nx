@@ -13,7 +13,7 @@ class Space {
  public:
   struct Handle {uint64_t owner{},id{};uint32_t address{},size{};};
  private:
-  struct Region {Handle h;foundation::Allocation backing;size_t leases{};};
+  struct Region {Handle h;foundation::Allocation backing;size_t leases{};Permission initial{Permission::none};bool initialized{};};
   inline static std::atomic<size_t> live_total_{},lease_total_{};
   foundation::Memory memory_;std::mutex mutex_;std::map<uint64_t,Region> regions_;
   inline static std::atomic<uint64_t> serial_{1};
@@ -45,7 +45,7 @@ class Space {
     }catch(...){memory_.release(a);throw;}
   }
   Handle allocate(uint32_t size,uint32_t guest=0){auto h=reserve(size,guest);try{commit(h);return h;}catch(...){release(h);throw;}}
-  void commit(Handle h,Permission p=Permission::read_write){std::lock_guard lock(mutex_);memory_.commit(owned(h).backing,p);}
+  void commit(Handle h,Permission p=Permission::read_write){std::lock_guard lock(mutex_);auto&r=owned(h);memory_.commit(r.backing,p);if(!r.initialized){r.initial=p;r.initialized=true;}}
   void protect(Handle h,Permission p){std::lock_guard lock(mutex_);memory_.protect(owned(h).backing,p);}
   void decommit(Handle h){std::lock_guard lock(mutex_);auto&r=owned(h);if(r.leases)throw Error(Fault::ownership,"active memory lease");memory_.decommit(r.backing);}
   void release(Handle h){std::lock_guard lock(mutex_);auto&r=owned(h);if(r.leases)throw Error(Fault::ownership,"active memory lease");memory_.release(r.backing);regions_.erase(h.id);--live_total_;}
@@ -65,6 +65,18 @@ class Space {
     Lease(Lease&& other)noexcept:space_(std::exchange(other.space_,nullptr)),handle_(other.handle_){}
     ~Lease(){if(space_)space_->unlease(handle_);}
   };
+  Lease pin(uint32_t address,uint32_t size){
+    Handle h;{std::lock_guard lock(mutex_);h=range(address,size).h;}
+    // A release between lookup and acquisition makes this exact token stale;
+    // it cannot pin a later allocation at the same logical address.
+    return Lease(*this,h);
+  }
+  struct Query {uint32_t base,allocation_base,allocation_size,region_size;bool committed;Permission initial,current;};
+  Query query(uint32_t address){
+    std::lock_guard lock(mutex_);auto&r=range(address,1);auto info=memory_.info(r.backing);
+    if((address&4095)||(r.h.address&4095)||(r.h.size&4095))throw Error(Fault::unsupported,"query requires whole guest pages");
+    return {address,r.h.address,r.h.size,r.h.size-(address-r.h.address),info.committed,r.initial,info.permission};
+  }
   // A copied capability with a mapping epoch, never a host pointer. Permissions
   // are rechecked on every use; decommit/recommit permanently invalidates it.
   class View {friend class Space;Handle handle;foundation::View backing;View(Handle h,foundation::View v):handle(h),backing(v){}

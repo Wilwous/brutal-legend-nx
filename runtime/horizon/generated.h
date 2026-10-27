@@ -70,6 +70,7 @@ class Scope {
     for(auto old:loans_)if(h.address<uint64_t(old.address)+old.size&&old.address<uint64_t(h.address)+h.size)throw Error(Fault::ownership,"overlapping scope capability");
     Space::Lease lease(guest_.space(),h);loans_.push_back(h);pins_.push_back(std::move(lease));
   }
+  void admit_range(uint32_t address,uint32_t size){permitted(address,size);}
   void import_target(uint32_t address){if(plan_&&(active_.empty()||active_.back()!=address))throw Error(Fault::unsupported,"import bypassed admitted call edge");}
   static Scope& current(PPCContext& context){if(!current_||&current_->guest_.context!=&context)throw Error(Fault::no_thread,"missing or foreign generated thread context");return *current_;}
   void poll(uint32_t address){

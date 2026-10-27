@@ -78,6 +78,7 @@ def main():
   if hashlib.sha256(header.encode()).hexdigest()!=init_lock['header_sha256'] or hashlib.sha256(body.encode()).hexdigest()!=init_lock['body_sha256']:raise ValueError('initializer extraction fingerprint changed')
   if 'XE_EXPORT(xboxkrnl, 0x0000012E, RtlInitializeCriticalSection,' not in (a.sdk_source/'src/kernel/xboxkrnl/export_table.inc').read_text():raise ValueError('ordinal evidence changed')
   (w/'sdk-initialize.inc').write_text(header+body)
+ if a.stage>=10:load('sdk_query',ROOT/'tests/horizon-runtime-ii/sdk_query.py').extract(a.sdk_source,w)
  meta=expanded.create(w/'input',ROOT/'tests/horizon-runtime-ii/templates',query=a.stage>=10);cli=[tc/'rexglue','codegen',w/'input/fixture_manifest.toml'];execute(cli,'generation')
  generated=w/'input/generated';emitted=sorted([*generated.glob('*.cpp'),*generated.glob('*.h')]);fingerprints={p.name:sha(p) for p in emitted}
  execute([*cli,'--ignore-stamp'],'regeneration')
@@ -97,6 +98,7 @@ def main():
  (w/'xex-data.h').write_text(data_header(meta,(w/'input/fixture.xex').read_bytes())+'\n#include "expansion-plan.h"\n')
  plan='#pragma once\n#include "runtime/horizon/generated.h"\n'
  if a.stage>=6:
+  plan+='REX_EXTERN(__imp__NtQueryVirtualMemory);\ninline constexpr PPCFunc* ii_query='+('__imp__NtQueryVirtualMemory' if a.stage>=10 else 'nullptr')+';\n'
   plan+='REX_EXTERN(__imp__RtlInitializeCriticalSection);\ninline constexpr PPCFunc* expansion_initializer='+('__imp__RtlInitializeCriticalSection' if a.stage>=7 else 'nullptr')+';\n'
   plan+=f'inline constexpr uint32_t expansion_floating={meta["functions"]["float_add"]},ii_floating_mul={meta["functions"]["float_mul"]};\n'
   plan+='inline constexpr brutal::horizon::Site expansion_sites[]{'+','.join('{'+f"{s['pc']},{s['owner']},brutal::horizon::SiteKind::{s['kind']},{s['width']},{s['target']}"+'}' for s in meta['sites'])+'};\n'
@@ -107,7 +109,7 @@ def main():
  hosts=[];stress=[]
  for name,flags in [('Debug',['-O0']),('Release',['-O2']),('Sanitized',['-O1','-g','-fsanitize=address,undefined','-fno-sanitize-recover=all','-fno-omit-frame-pointer'])]:
   binary=w/('host-'+name)
-  execute(['clang++','-std=c++23','-pthread','-Wall','-Wextra','-Werror',*flags,'-DSTAGE_MAX='+str(a.stage),'-isystem',tc/'include','-iquote',ROOT,'-I',w,'-I',generated,ROOT/'tests/horizon-runtime-ii/host.cpp',ROOT/'tests/horizon-runtime-ii/probe.cpp',ROOT/'tests/horizon-xex/import.cpp',*([ROOT/'tests/horizon-expansion/import.cpp'] if a.stage>=7 else []),generated/'fixture_recomp.0.cpp',generated/'fixture_init.cpp',w/'hooks.cpp','-o',binary],'compile-'+name)
+  execute(['clang++','-std=c++23','-pthread','-Wall','-Wextra','-Werror',*flags,'-DSTAGE_MAX='+str(a.stage),'-isystem',tc/'include','-iquote',ROOT,'-I',w,'-I',generated,ROOT/'tests/horizon-runtime-ii/host.cpp',ROOT/'tests/horizon-runtime-ii/probe.cpp',ROOT/'tests/horizon-xex/import.cpp',*([ROOT/'tests/horizon-expansion/import.cpp'] if a.stage>=7 else []),*([ROOT/'tests/horizon-runtime-ii/query.cpp'] if a.stage>=10 else []),generated/'fixture_recomp.0.cpp',generated/'fixture_init.cpp',w/'hooks.cpp','-o',binary],'compile-'+name)
   row=json.loads(execute([binary],'run-'+name))
   if row['failed'] or not row['passed'] or row['remaining'] or row['leases']:raise ValueError('expansion runtime failed')
   if hosts and row!={k:v for k,v in hosts[0].items() if k!='profile'}:raise ValueError('profile result drift')
@@ -118,7 +120,7 @@ def main():
    if stress and heavy!={k:v for k,v in stress[0].items() if k!='profile'}:raise ValueError('stress profile drift')
    stress.append({'profile':name,**heavy})
  census=load('independent_census',ROOT/'tests/horizon-runtime-ii/audit.py').audit(meta,cpp) if a.stage>=6 else None
- result={'stress':stress,'census':census,'stage':a.stage,'host':hosts,'static':{'functions':len(meta['functions']),'instructions':meta['instructions'],'hooks':len(meta['hooks']),'counts':counts,'admitted_imports':2 if a.stage>=7 else 1},'sources_sha256':{**sources(),**{p.relative_to(ROOT).as_posix():sha(p) for p in (ROOT/'tests/horizon-runtime-ii').rglob('*') if p.is_file() and '__pycache__' not in str(p)}},'generation_sha256':fingerprints,'xex_sha256':sha(w/'input/fixture.xex'),'sdk_function_sha256':lock['function_sha256'],'hardware_execution':'UNKNOWN','game_executed':False}
+ result={'stress':stress,'census':census,'stage':a.stage,'host':hosts,'static':{'functions':len(meta['functions']),'instructions':meta['instructions'],'hooks':len(meta['hooks']),'counts':counts,'admitted_imports':3 if a.stage>=10 else 2},'sources_sha256':{**sources(),**{p.relative_to(ROOT).as_posix():sha(p) for p in (ROOT/'tests/horizon-runtime-ii').rglob('*') if p.is_file() and '__pycache__' not in str(p)}},'generation_sha256':fingerprints,'xex_sha256':sha(w/'input/fixture.xex'),'sdk_function_sha256':lock['function_sha256'],'hardware_execution':'UNKNOWN','game_executed':False}
  negatives=['REX_RAW_ADDR(0)','REX_LOAD_VECTOR(ctx.v0,0)','ppc_longjmp(0,0)','REX_UNIMPLEMENTED(0,"trap")','xstart(ctx.v0,base)']
  for i,expression in enumerate(negatives):
   f=w/f'negative-{i}.cpp';f.write_text('#include "fixture_pch.h"\nvoid deny(PPCContext& ctx,uint8_t* base){(void)ctx;(void)base;'+expression+';}\n')

@@ -24,7 +24,7 @@ def create(path,templates,query=False):
  body+=[bl(previous),x(3,14,3,444),d(14,3,0,1),d(14,4,0,2),d(14,5,0,3)]
  body+=[bl(functions['integer_flags']),x(3,14,3,266)]
  if query:
-  body+=[x(3,14,3,444),d(15,3,0,0x8203),d(24,3,3,0x800),d(15,4,0,0x8203),d(24,4,4,0xa00),d(14,5,0,0)]
+  body+=[x(3,14,3,444),d(15,3,0,0x8203),d(24,3,3,0),d(15,4,0,0x8203),d(24,4,4,0xa00),d(14,5,0,0)]
   body+=[bl(0x82030014),d(11,0,3,0),0x4082000c,x(14,3,14,444),0x48000008,d(14,3,0,-1)]
  body +=[d(58,14,1,16),d(32,0,1,68),spr(0,8,True),d(14,1,1,64),0x4e800020]
  function('xex_entry',body);m['entry']=functions['xex_entry']
