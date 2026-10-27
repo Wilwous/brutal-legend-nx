@@ -51,6 +51,7 @@ class Scope {
     throw Error(Fault::ownership,"generated guest range has no retained capability");
   }
  public:
+  inline static std::atomic<uint64_t> guest_entries{};
   uint64_t reads{},writes{},calls{},polls{};
   bool belongs_to(const ModuleLife& module,const Space& space)const{return guest_.belongs_to(module)&&&guest_.space()==&space;}
   Scope(GuestThread& guest,std::span<const Function> functions,uint64_t module_identity,
@@ -94,7 +95,7 @@ class Scope {
     if(context.r1.u64<s.guest_.stack.address+64||context.r1.u64>uint64_t(s.guest_.stack.address)+s.guest_.stack.size-128||(context.r1.u64&15))
       throw Error(Fault::argument,"generated call stack window admission");
     if(name.starts_with("__imp__"))name.remove_prefix(7);
-    for(auto f:s.functions_)if(f.name==name){if(s.plan_&&(s.active_.empty()||s.active_.back()!=f.address))throw Error(Fault::unsupported,"prologue without admitted dispatch");s.poll(f.address);return;}
+    for(auto f:s.functions_)if(f.name==name){if(s.plan_&&(s.active_.empty()||s.active_.back()!=f.address))throw Error(Fault::unsupported,"prologue without admitted dispatch");++guest_entries;s.poll(f.address);return;}
     throw Error(Fault::unsupported,"unadmitted generated function prologue");
   }
   template<class T>static T load(PPCContext& context,uint32_t address){auto&s=current(context);s.memory_site(Access::read,sizeof(T));s.permitted(address,sizeof(T));auto v=s.guest_.space().load<T>(address);++s.reads;return v;}

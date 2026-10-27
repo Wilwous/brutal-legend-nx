@@ -1,0 +1,21 @@
+{
+  "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+  "files": {
+    "src/codegen/builders/arithmetic.cpp": "5dafb71e8581e28dbbc812bf52cf93d2d5b8e3a5f93394a57e3a20c2c348e3ec",
+    "src/codegen/builders/floating_point.cpp": "b34b8684a0695f2b25516a3ea0792db78a0997d4ec641335d618980dfaeb067d",
+    "src/codegen/builders/helpers.h": "6b4bb2b7f778b6ba38baf999bf59c219e3b4e1a1f220fffee6f25159a6071429",
+    "src/codegen/builders/memory.cpp": "25eea3b4470eeb7495f635f4a278a8fa57199e3c2c2a927ae77c14e4aa9d942a",
+    "include/rex/ppc/function.h": "a29ead371e3dcf1aa109f112dd3e0f919718858e7bb853bdf8a6cef9e5b45427",
+    "include/rex/ppc/context.h": "5f84d78c38cf626cf4c8107293cd9824f6e8cf81225f201b608505698273dc36"
+  },
+  "blocked": [
+    "typed-vector marshalling",
+    "general callbacks requiring ThreadState/kernel memory",
+    "reservation atomics",
+    "partial vectors with raw addresses",
+    "OE overflow forms",
+    "computed non-call branches"
+  ],
+  "selected_msr": "0x0200a000",
+  "carry_contract": "CA32; modulo-64 GPR result; OE=0 only"
+}

@@ -56,6 +56,8 @@ jobs:
         run: python3 tests/horizon-expansion/test_deploy.py
       - name: Check integrated package provenance on original unit fixtures
         run: python3 tests/horizon-expansion/test_package.py
+      - name: Check original Runtime II ABI and instruction policy fixtures
+        run: python3 tests/horizon-runtime-ii/test_fixture.py
       - name: Check bounded diagnostic path sanitization on synthetic ELF fixtures
         run: python3 tests/switch-horizon/test_sanitize.py
 
