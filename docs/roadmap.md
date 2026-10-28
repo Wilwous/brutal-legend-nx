@@ -1,39 +1,27 @@
-# Research roadmap — mandatory Switch hardware acceptance next
+# Research roadmap — title readiness evidence
 
-**2026-10-28: final host-only batch Stages12–15 HOST VERIFIED / BUILD VERIFIED
-in the declared original-synthetic scope; HARDWARE UNKNOWN. STOP runtime feature
-expansion until actual Nintendo Switch acceptance.** No Stage16 or game integration
-is authorized by synthetic results. [Consolidated candidate/report](research/switch-hardware-acceptance.md).
+## Stages16–19 scope (2026-10-28)
 
-Stage12 adds selected cntlzw/rotate/full-block VMX; reservation atomics, partial
-vectors and typed-vector ABI remain BLOCKED. Stage13 admits real bounded fill as
-the fourth SDK contract. Stage14 verifies lifecycle/ownership/contextual traces.
-Stage15 supplies a responsive native-controller UI and a separate acceptance app.
-The final fixture is21 functions/203 instructions/49 memory sites/97 hooks/four
-backedges. Debug/Release/ASan+UBSan each pass423/0 smoke and759/0 stress; native
-controller/trace-off smoke agree. Two clean AArch64 builds match. Expected new
-console total427/0, result197650, SDK entered64/completed61 and allocations0/leases0
-is an expectation only; it has not been observed on Switch.
+Stage15 Candidate0.15.0 build80407778989c is **HARDWARE VERIFIED** by the user's
+observed PASS427/FAIL0, result197650, SDK64/61, allocations0/leases0 and normal
+PLUS return to hbmenu. The recorded raw libnx type0 maps to Application; the
+human launch description does not establish Title Override or firmware identity.
+Historical candidate manifests and artifacts remain unchanged.
+
+[Stage16 compatibility matrix and ranked dependencies](research/switch-title-compatibility-matrix.md)
+separates synthetic proof from original-title obligations. No original game
+instructions may execute in Stages16–19; no new game-derived binaries are built.
 
 | Independent track | Current status | Required next evidence |
 | --- | --- | --- |
-| A — Xbox XEX residency | Phase22/G4/G8 **BLOCKED**, G5 **UNKNOWN**, preserved on research/phase-22-blocked. | Independent original residency/ownership evidence; no debug hardware available. Synthetic results cannot close this gate. |
-| B — Horizon runtime | Selected Stages2–15 HOST/BUILD VERIFIED; general Xbox runtime PARTIAL; new hardware UNKNOWN. | Connect real Switch, deploy the final acceptance app safely, photograph the complete result/build/applet-type screen and confirm normal PLUS return to hbmenu. |
+| A — Xbox residency / exceptions | Phase22/G4/G8 BLOCKED; G5 UNKNOWN; protected branch unchanged | Independent Xbox owner, commitment, content, permission and lifetime evidence plus required exceptional transfer semantics. No debug Xbox access is available. |
+| B — Horizon runtime | Stage15 finite synthetic workload HARDWARE VERIFIED; general Xbox runtime PARTIAL | Targeted independent P0 research; no routine console test for documentation or host-only metadata experiments. |
 
-Only the old PASS38/r3=42/PLUS probe has external PPC hardware evidence; Stage8,
-RuntimeII and the new candidate remain HARDWARE UNKNOWN. The new destination is
-`switch/brutal-legend-nx-acceptance/`; every older NRO/package is preserved.
-No intermediate hardware tests are required, but this final test is mandatory
-before further expansion. Native scheduling, actual stack/TLS/joins/SVC permissions
-and teardown remain hardware gates. The logical checked arena is not complete
-physical Horizon VM isolation. Full Xbox ABI/scheduler and guest unwind remain
-unsupported. Direct production re-entry to named xstart has an observed symbol
-blocker. Original game execution remains **NO-GO**.
-
-The core milestone remains v0.0.21-entry-runtime-contracts; this track neither
-completes Phase22 nor starts Phase23. No main merge, completion tag or GitHub
-Release. After candidate delivery: hardware acceptance only, then a scoped
-response to actual results rather than another host-only feature batch.
+Full Xbox ABI/scheduler, typed-vector signatures, reservation atomics, partial
+vectors, guest dispatch/unwind and physical guest isolation remain unsupported or
+unverified. Existing software guest checks and strict loader/binder remain intact.
+The core baseline stays Phase21; Phase22 remains BLOCKED, no Phase23 starts.
+No main merge, completion tag or Release.
 
 ## Historical core baseline
 
