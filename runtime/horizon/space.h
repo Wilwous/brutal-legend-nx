@@ -127,8 +127,10 @@ class Space {
 // ownership, not a scheduler or an Xbox object handle implementation.
 class ModuleLife {
   std::mutex mutex_;size_t leases_{};bool closing_{},alive_{true};
+  diagnostic::Trace* trace_{diagnostic::current_trace()};
+  inline static std::atomic<uint64_t> next_instance_{1};
  public:
-  const uint64_t identity;
+  const uint64_t identity;const uint64_t instance{next_instance_.fetch_add(1)};
   explicit ModuleLife(uint64_t id):identity(id){if(!id)throw Error(Fault::argument,"module identity");}
   ~ModuleLife(){if(leases_)std::terminate();}
   class Lease {
@@ -138,6 +140,6 @@ class ModuleLife {
     Lease(const Lease&)=delete;
     ~Lease(){std::lock_guard lock(module_->mutex_);--module_->leases_;}
   };
-  bool close(){std::lock_guard lock(mutex_);closing_=true;if(leases_)return false;alive_=false;return true;}
+  bool close(){std::lock_guard lock(mutex_);closing_=true;diagnostic::emit_for(trace_,diagnostic::Kind::module_close,instance,diagnostic::context.thread,uint32_t(leases_));if(leases_)return false;alive_=false;return true;}
 };
 }

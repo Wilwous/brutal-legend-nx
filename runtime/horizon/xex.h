@@ -93,7 +93,7 @@ class XexImage {
   std::vector<std::byte> tls_template(){ModuleLife::Lease admission(life_);if(!loaded_)throw Error(Fault::stale,"image unloaded");return space_.read(layout_.tls,layout_.raw_size);}
   void lend(Scope& scope){ModuleLife::Lease admission(life_);if(!scope.belongs_to(life_,space_))throw Error(Fault::argument,"foreign module/space call scope");if(!loaded_)throw Error(Fault::stale,"image unloaded");for(auto h:sections_)scope.lend(h);}
   void invoke(Scope& scope,uint32_t entry){ModuleLife::Lease admission(life_);if(!scope.belongs_to(life_,space_))throw Error(Fault::argument,"foreign module/space entry scope");if(!loaded_||entry!=layout_.entry)throw Error(Fault::argument,"XEX entry admission");scope.invoke(entry);}
-  void admit_import(uint32_t ordinal,Signature signature){ModuleLife::Lease admission(life_);if(!((ordinal==0x11b&&signature==Signature::compare_u32_read_words)||(layout_.initialize&&ordinal==0x12e&&signature==Signature::initialize_cs_inout)||(layout_.query&&ordinal==0xee&&signature==Signature::query_basic28)))throw Error(Fault::unsupported,"unverified import or ABI signature");}
+  void admit_import(uint32_t ordinal,Signature signature){try{ModuleLife::Lease admission(life_);if(!((ordinal==0x11b&&signature==Signature::compare_u32_read_words)||(layout_.initialize&&ordinal==0x12e&&signature==Signature::initialize_cs_inout)||(layout_.query&&ordinal==0xee&&signature==Signature::query_basic28)))throw Error(Fault::unsupported,"unverified import or ABI signature");}catch(const Error&){diagnostic::emit(diagnostic::Kind::import_rejected,ordinal);throw;}}
   // A specific retained read-only image capability, not a generic raw pointer.
  private:
   friend class ImportFrame;
@@ -112,7 +112,7 @@ class XexImage {
  public:
   struct SectionView {uint32_t address,size;};
   SectionView section(unsigned index){ModuleLife::Lease admission(life_);if(!loaded_||index>=sections_.size())throw Error(Fault::stale,"section capability unavailable");return {sections_[index].address,sections_[index].size};}
-  bool unload(){std::lock_guard lock(unload_mutex_);if(!life_.close())return false;if(loaded_){space_.release_all(sections_);sections_.clear();loaded_=false;}return true;}
+  bool unload(){std::lock_guard lock(unload_mutex_);if(!life_.close())return false;if(loaded_){space_.release_all(sections_);sections_.clear();loaded_=false;diagnostic::emit_for(diagnostic::current_trace(),diagnostic::Kind::module_unload,life_.instance,diagnostic::context.thread,uint32_t(space_.live()),uint32_t(space_.leases()));}return true;}
 };
 class HookFrame {
  Scope& scope_;std::span<const uint32_t> sites_;HookFrame* previous_;

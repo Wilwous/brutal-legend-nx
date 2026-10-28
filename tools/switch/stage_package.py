@@ -27,7 +27,7 @@ def package(build,work,app,title,expected):
            'sources_sha256':r['sources_sha256'],'host_passed':expected*3,'host_failed':0,'expected_console_passed':expected+1,
            'hardware_execution':'UNKNOWN','game_code_included':False,'build':r['switch']}
  (appdir/'build-info.json').write_text(json.dumps(manifest,indent=2,sort_keys=True)+'\n');(appdir/'SHA256SUMS').write_text(sha(appdir/nro)+'  '+nro+'\n')
- shutil.copyfile(ROOT/'LICENSE',appdir/'LICENSE.txt');shutil.copyfile(ROOT/('tests/horizon-expansion/NOTICE.txt' if app=='brutal-legend-nx-runtime' else 'tests/horizon-runtime/NOTICE.txt'),appdir/'THIRD_PARTY.txt')
+ shutil.copyfile(ROOT/'LICENSE',appdir/'LICENSE.txt');shutil.copyfile(ROOT/('tests/horizon-runtime-ii/NOTICE.txt' if app=='brutal-legend-nx-runtime-ii' else 'tests/horizon-expansion/NOTICE.txt' if app=='brutal-legend-nx-runtime' else 'tests/horizon-runtime/NOTICE.txt'),appdir/'THIRD_PARTY.txt')
  (appdir/'README.txt').write_text(title+'\nOriginal synthetic fixture. NOT the game.\nCopy switch/ to SD root. Keep all earlier probes.\nBUILD VERIFIED; HARDWARE EXECUTION UNKNOWN.\nExpected successful console summary: PASS='+str(expected+1)+' FAIL=0. This has not yet been observed.\nLaunch using the existing homebrew setup; prefer Title Override. Photograph the complete screen, launch mode and platform versions. Press PLUS to exit.\nSafely eject SD storage before leaving Hekate USB Mass Storage.\nSource: https://github.com/Wilwous/brutal-legend-nx/tree/research/switch-horizon-feasibility\n')
  names=sorted(str(p.relative_to(work/'package')) for p in appdir.iterdir())
  def archive(target):

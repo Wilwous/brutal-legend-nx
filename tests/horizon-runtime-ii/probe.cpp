@@ -3,6 +3,9 @@
 #include "probe.h"
 #include "runtime/horizon/xex.h"
 #include "xex-data.h"
+#if STAGE_MAX >= 11
+#include "ii-metadata.h"
+#endif
 #if STAGE_MAX >= 10
 #include "runtime/horizon/query.h"
 #endif
@@ -17,6 +20,14 @@ using namespace brutal::horizon;
 namespace {
 std::array<std::atomic<bool>,std::size(xex_hooks)> observed_sites{};
 void observed(uint32_t pc){for(size_t i=0;i<std::size(xex_hooks);++i)if(xex_hooks[i]==pc)observed_sites[i]=true;}
+// Exception-safe ownership for the fixture's four finite gate-controlled workers.
+// On partial startup or controller failure, release the gate and join every
+// started worker before the arrays and captured data can be destroyed.
+struct BatchGuard {
+ std::array<std::unique_ptr<GuestTask>,4>&tasks;brutal::horizon::Event&gate;std::array<bool,4> started{},joined{};
+ BatchGuard(std::array<std::unique_ptr<GuestTask>,4>&t,brutal::horizon::Event&g):tasks(t),gate(g){}
+ ~BatchGuard(){try{gate.signal();for(unsigned i=0;i<4;++i)if(started[i]&&!joined[i]){if(!tasks[i]||!tasks[i]->join())std::terminate();joined[i]=true;}}catch(...){std::terminate();}}
+};
 struct Check {RuntimeIIResult&r;unsigned group;
  void operator()(bool ok,const char*label){if(ok){++r.passed;++r.group_pass[group];}else{++r.failed;++r.group_fail[group];std::fprintf(stderr,"FAIL group %u: %s\n",group,label);}}
  template<class F>void refuse(Fault fault,F fn,const char*label){try{fn();(*this)(false,label);}catch(const Error&e){(*this)(e.fault==fault,label);++r.refusals;}catch(...){(*this)(false,label);}}
@@ -60,14 +71,14 @@ void abi(Check c){
  guest.cleanup();slots.release(t);c(image.unload()&&space.live()==0,"ABI image cleanup");
 }
 void threads_and_stop(Check c){
- Space space;XexImage image(space,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto t=slots.allocate();std::array<std::unique_ptr<GuestThread>,4> guests;std::array<std::unique_ptr<GuestTask>,4> tasks;std::array<brutal::horizon::Event,4> ready;brutal::horizon::Event release;std::array<unsigned,4> result{};
- for(unsigned i=0;i<4;++i){guests[i]=std::make_unique<GuestThread>(space,image.life(),slots,t,7+i,image.tls_template());tasks[i]=std::make_unique<GuestTask>(*guests[i]);c(tasks[i]->start([&,i]{auto&g=*guests[i];g.context.r3.u64=4;g.context.lr=0x8201feed;Scope scope(g,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);ImportFrame imports(image,g);
+ Space space;XexImage image(space,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto t=slots.allocate();std::array<std::unique_ptr<GuestThread>,4> guests;std::array<std::unique_ptr<GuestTask>,4> tasks;std::array<brutal::horizon::Event,4> ready;brutal::horizon::Event release;std::array<unsigned,4> result{};BatchGuard batch(tasks,release);
+ for(unsigned i=0;i<4;++i){guests[i]=std::make_unique<GuestThread>(space,image.life(),slots,t,7+i,image.tls_template());tasks[i]=std::make_unique<GuestTask>(*guests[i]);c(batch.started[i]=tasks[i]->start([&,i]{auto&g=*guests[i];g.context.r3.u64=4;g.context.lr=0x8201feed;Scope scope(g,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);ImportFrame imports(image,g);
 #if STAGE_MAX >= 10
  QueryFrame query(image,g);
 #endif
  HookFrame hooks(scope,xex_hooks,observed);ready[i].signal();if(!release.wait())throw Error(Fault::unsupported,"II worker gate");image.invoke(scope,xex_entry);result[i]=g.context.r3.u32;}),"concurrent generated worker starts");}
- for(auto&e:ready){c(e.wait(),"four native thread-local scopes active");}c.refuse(Fault::ownership,[&]{guests[0]->cleanup();},"guest cannot outlive active execution");release.signal();
- for(unsigned i=0;i<4;++i){c(tasks[i]->join()&&!tasks[i]->callback_error(),"native worker join");c(result[i]==24+i&&guests[i]->get_tls()==8+i,"isolated TLS and generated results");guests[i]->cleanup();}c.r.workers=4;slots.release(t);c(image.unload()&&space.live()==0,"concurrent image cleanup");
+ for(unsigned i=0;i<4;++i){c(batch.started[i]&&ready[i].wait(),"four native thread-local scopes active");}c.refuse(Fault::ownership,[&]{guests[0]->cleanup();},"guest cannot outlive active execution");release.signal();
+ for(unsigned i=0;i<4;++i){c(batch.started[i]&&(batch.joined[i]=tasks[i]->join())&&!tasks[i]->callback_error(),"native worker join");c(result[i]==24+i&&guests[i]->get_tls()==8+i,"isolated TLS and generated results");guests[i]->cleanup();}c.r.workers=4;slots.release(t);c(image.unload()&&space.live()==0,"concurrent image cleanup");
  for(auto pc:{uint32_t(0x82010048),uint32_t(0x82010074),uint32_t(0x8201012c),uint32_t(0x82010138)}){
   Space s;XexImage mod(s,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots reg;auto slot=reg.allocate();GuestThread g(s,mod.life(),reg,slot);GuestTask task(g);brutal::synthetic::CooperativeStop stop;bool stopped=false;
   const auto root=pc==0x82010074?xex_forever:pc>=0x82010100?xex_nested:xex_original_entry;
@@ -121,9 +132,71 @@ void services(Check c){
 }
 #endif
 
+#if STAGE_MAX >= 11
+void diagnostic_cases(Check c){
+ using brutal::diagnostic::Kind;using brutal::diagnostic::Trace;using brutal::diagnostic::Binding;
+ for(unsigned mode=0;mode<8;++mode){auto trace=std::make_unique<Trace>(ii_metadata);uint64_t identity=0,module=0;Kind expected=Kind::refusal;uint32_t expected_pc=0;
+  {Binding binding(trace.get(),0,0);Space space;XexImage image(space,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto slot=slots.allocate();GuestThread guest(space,image.life(),slots,slot,7,image.tls_template());identity=guest.identity;module=guest.module_instance();guest.context.r3.u64=4;guest.context.lr=0x8201feed;
+   if(mode==5){guest.context.msr=0;c.refuse(Fault::argument,[&]{Scope denied(guest,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);},"incomplete context diagnostic");expected=Kind::abi_rejected;}
+   else if(mode>=6){GuestTask task(guest);
+    if(mode==7){c(!task.start([]{},NativeThread::Injection::creation_failure),"injected native creation failure");c.refuse(Fault::argument,[&]{task.join(0);},"unstarted join is not success");expected=Kind::refusal;}
+    else{expected=Kind::callback_failure;c(task.start([&]{Scope scope(guest,image.functions(),image.life().identity,nullptr,[](uint32_t){throw Error(Fault::unsupported,"original callback failure");},expansion_plan_ptr);scope.invoke(xex_add64);}),"diagnostic callback worker starts");c(task.join()&&task.callback_error(),"callback exception propagated to owner");}
+   }else{
+    auto record=space.allocate(4);guest.context.r3.u64=record.address;
+    {Scope scope(guest,image.functions(),image.life().identity,nullptr,[&](uint32_t pc){if(mode==1&&pc==0x820100cc)guest.context.ctr.u64=0xdeadbeec;if(mode==3&&pc==xex_record_pair)Scope::deny_exception(guest.context);if(mode==4&&pc==xex_record_pair)Scope::deny_instruction(guest.context);},expansion_plan_ptr);image.lend(scope);scope.lend(record);ImportFrame imports(image,guest);QueryFrame query(image,guest);HookFrame hooks(scope,xex_hooks,observed);
+     if(mode==0){expected_pc=xex_record_pair+4;c.refuse(Fault::ownership,[&]{scope.invoke(xex_record_pair);},"invalid memory path captured");c(guest.context.r3.u64==record.address,"no continuation after memory refusal");}
+     if(mode==1){expected=Kind::branch_rejected;expected_pc=0x820100cc;guest.context.r3.u64=4;c.refuse(Fault::unsupported,[&]{image.invoke(scope,xex_entry);},"invalid branch path captured");c(guest.context.r3.u64==12,"unknown target never entered");}
+     if(mode==2){expected=Kind::branch_rejected;expected_pc=xex_bad_return+8;c.refuse(Fault::unsupported,[&]{scope.invoke(xex_bad_return);},"bad return path captured");}
+     if(mode==3){expected=Kind::exceptional_rejected;expected_pc=xex_record_pair;c.refuse(Fault::unsupported,[&]{scope.invoke(xex_record_pair);},"synthetic exceptional hook refuses");c(scope.reads==0,"no read after exceptional refusal");}
+     if(mode==4){expected=Kind::instruction_rejected;expected_pc=xex_record_pair;c.refuse(Fault::unsupported,[&]{scope.invoke(xex_record_pair);},"synthetic unsupported instruction gate refuses");c(scope.reads==0,"no read after instruction refusal");}
+    }space.release(record);
+   }
+   guest.cleanup();slots.release(slot);c(image.unload()&&space.live()==0&&space.leases()==0,"diagnostic case cleanup");
+  }
+  auto events=trace->snapshot();bool found=false,cleanup=false;
+  for(auto event:events){if(event.kind==expected&&event.thread==identity&&event.module==module&&(expected_pc==0||event.pc==expected_pc))found=true;if(event.kind==Kind::cleanup&&event.thread==identity)cleanup=true;}
+  c(found,"structured reason/module/thread/site matches actual refusal");c(cleanup,"cleanup recorded after refusal");c(trace->metadata.image==ii_metadata.image&&trace->metadata.codegen==ii_metadata.codegen&&trace->metadata.sdk==ii_metadata.sdk,"image/codegen/SDK fingerprints retained");c(trace->dropped()==0&&!trace->broken(),"bounded case diagnostic integrity");c.r.diagnostics+=unsigned(events.size());c.r.dropped+=unsigned(trace->dropped());
+ }
 }
-RuntimeIIResult runtime_ii_probe(unsigned cycles,bool tracing){(void)tracing;RuntimeIIResult r;if(cycles<1||cycles>8)throw Error(Fault::argument,"II test budget");const auto sdk=ImportFrame::sdk_completed.load(),entries=Scope::guest_entries.load();for(auto&s:observed_sites)s=false;try{foundation({r,0});abi({r,1});threads_and_stop({r,1});
+void hardening(Check c,unsigned cycles){
+ uint32_t seed=0xb11d;auto random=[&]{seed^=seed<<13;seed^=seed>>17;seed^=seed<<5;return seed;};
+ for(unsigned round=0;round<cycles;++round){Space space;XexImage image(space,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto t=slots.allocate();std::array<std::unique_ptr<GuestThread>,4> guests;std::array<std::unique_ptr<GuestTask>,4> tasks;std::array<brutal::horizon::Event,4> ready;brutal::horizon::Event gate;std::array<unsigned,4> values{},expected{};BatchGuard batch(tasks,gate);
+  for(unsigned i=0;i<4;++i){auto start=7+random()%32,count=random()%8;expected[i]=start+count+13;guests[i]=std::make_unique<GuestThread>(space,image.life(),slots,t,start,image.tls_template());tasks[i]=std::make_unique<GuestTask>(*guests[i]);c(batch.started[i]=tasks[i]->start([&,i,count]{auto&g=*guests[i];g.context.r3.u64=count;g.context.lr=0x8201feed;Scope scope(g,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);ImportFrame imports(image,g);QueryFrame query(image,g);HookFrame hooks(scope,xex_hooks,observed);ready[i].signal();if(!gate.wait())throw Error(Fault::unsupported,"II stress gate");image.invoke(scope,xex_entry);values[i]=g.context.r3.u32;}),"hardening worker starts");}
+  for(unsigned i=0;i<4;++i){c(batch.started[i]&&ready[i].wait(),"four concurrent import scopes ready");}gate.signal();for(unsigned i=0;i<4;++i){c(batch.started[i]&&(batch.joined[i]=tasks[i]->join())&&!tasks[i]->callback_error(),"hardening join succeeds");c(values[i]==expected[i],"seeded multicall oracle");guests[i]->cleanup();}slots.release(t);c(image.unload()&&space.live()==0&&space.leases()==0,"load/unload round balanced");
+ }
+ {Space s;ModuleLife module(0x4949);Slots slots;auto slot=slots.allocate();std::array<std::unique_ptr<GuestThread>,4> guests;std::array<std::unique_ptr<GuestTask>,4> tasks;std::array<brutal::horizon::Event,4> ready;brutal::horizon::Event gate;
+  {BatchGuard batch(tasks,gate);for(unsigned i=0;i<4;++i){guests[i]=std::make_unique<GuestThread>(s,module,slots,slot);tasks[i]=std::make_unique<GuestTask>(*guests[i]);batch.started[i]=tasks[i]->start([&,i]{GuestThread::Execution execution(*guests[i]);ready[i].signal();if(!gate.wait())throw Error(Fault::unsupported,"partial startup gate");guests[i]->set_tls(i);},i==2?NativeThread::Injection::creation_failure:NativeThread::Injection::none);c(batch.started[i]==(i!=2),"partial startup result");}for(unsigned i=0;i<4;++i){if(batch.started[i])c(ready[i].wait(),"partial startup worker active");}}
+  for(unsigned i=0;i<4;++i){c(!tasks[i]->callback_error(),"partial startup cleanup callback");guests[i]->cleanup();}slots.release(slot);c(module.close()&&s.live()==0&&s.leases()==0,"partial native startup rolls back after joining");
+ }
+ for(int stage=0;stage<4;++stage){Space s;c.refuse(Fault::exhausted,[&]{XexImage failed(s,xex_bytes,{xex_bytes,xex_generated,xex_entry},stage);},"partial image initialization refuses");c(s.live()==0,"transactional image rollback");}
+ {Space s(16384);std::array<Space::Handle,4> all;for(auto&h:all)h=s.allocate(4096);c.refuse(Fault::exhausted,[&]{s.allocate(1);},"bounded allocation pressure");s.release_all(all);c(s.live()==0,"allocation pressure cleanup");}
+ {Space s;XexImage image(s,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto t=slots.allocate();GuestThread retained(s,image.life(),slots,t);auto pointer=image.functions()[0].implementation;c(!image.unload(),"active module owner prevents final unload");c.refuse(Fault::stale,[&]{Scope denied(retained,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);},"closed module rejects stale scope");c.refuse(Fault::no_thread,[&]{pointer(retained.context,nullptr);},"unbound stale native function pointer cannot enter guest");retained.cleanup();slots.release(t);c(image.unload()&&s.live()==0,"stale-reference cleanup");}
+}
+#endif
+
+}
+RuntimeIIResult runtime_ii_probe(unsigned cycles,bool tracing){RuntimeIIResult r;
+#if STAGE_MAX >= 11
+ std::unique_ptr<brutal::diagnostic::Trace> trace;try{if(tracing)trace=std::make_unique<brutal::diagnostic::Trace>(ii_metadata);}catch(const std::bad_alloc&){std::fprintf(stderr,"diagnostic buffer allocation failed\n");r.failed=1;return r;}brutal::diagnostic::Binding root_trace(trace.get(),0,0);
+#else
+ (void)tracing;
+#endif
+constexpr unsigned budget=
+#ifdef __SWITCH__
+1;
+#else
+8;
+#endif
+ if(cycles<1||cycles>budget){throw Error(Fault::argument,"II test budget");}
+ const auto sdk=ImportFrame::sdk_completed.load(),sdk_entered=ImportFrame::sdk_entered.load(),entries=Scope::guest_entries.load();for(auto&s:observed_sites){s=false;}try{foundation({r,0});abi({r,1});threads_and_stop({r,1});
 #if STAGE_MAX >= 10
  services({r,2});
 #endif
- unsigned memory_seen=0,back_seen=0;for(size_t i=0;i<std::size(expansion_sites);++i){auto site=expansion_sites[i];if(observed_sites[i]&&(site.kind==SiteKind::read||site.kind==SiteKind::write))++memory_seen;if(observed_sites[i]&&site.kind==SiteKind::branch&&site.target<=site.pc)++back_seen;}Check c{r,1};c(memory_seen==(STAGE_MAX>=10?37u:34u),"all declared memory hooks observed");c(back_seen==4,"all declared backedges observed");}catch(const std::exception&e){std::fprintf(stderr,"II error: %s\n",e.what());++r.failed;}r.sdk_calls=unsigned(ImportFrame::sdk_completed.load()-sdk);r.guest_entries=unsigned(Scope::guest_entries.load()-entries);const auto totals=Space::totals();r.remaining=unsigned(totals.first);r.leases=unsigned(totals.second);if(r.remaining||r.leases)++r.failed;return r;}
+#if STAGE_MAX >= 11
+ diagnostic_cases({r,3});hardening({r,3},cycles);
+#endif
+ unsigned memory_seen=0,back_seen=0;for(size_t i=0;i<std::size(expansion_sites);++i){auto site=expansion_sites[i];if(observed_sites[i]&&(site.kind==SiteKind::read||site.kind==SiteKind::write))++memory_seen;if(observed_sites[i]&&site.kind==SiteKind::branch&&site.target<=site.pc)++back_seen;}Check c{r,1};c(memory_seen==(STAGE_MAX>=10?37u:34u),"all declared memory hooks observed");c(back_seen==4,"all declared backedges observed");}catch(const std::exception&e){std::fprintf(stderr,"II error: %s\n",e.what());++r.failed;}r.sdk_calls=unsigned(ImportFrame::sdk_completed.load()-sdk);r.sdk_entered=unsigned(ImportFrame::sdk_entered.load()-sdk_entered);for(auto f:xex_generated.functions){if(f.name.starts_with("__imp__"))++r.imports;}r.guest_entries=unsigned(Scope::guest_entries.load()-entries);const auto totals=Space::totals();r.remaining=unsigned(totals.first);r.leases=unsigned(totals.second);if(r.remaining||r.leases)++r.failed;
+#if STAGE_MAX >= 11
+ if(trace){auto events=trace->snapshot();r.diagnostics+=unsigned(events.size());r.dropped+=unsigned(trace->dropped());if(trace->broken()||r.dropped)++r.failed;}
+#endif
+ return r;}

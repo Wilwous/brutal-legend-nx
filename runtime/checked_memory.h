@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 Wilwous
 #pragma once
+#include "diagnostics.h"
 #include <algorithm>
 #include <atomic>
 #include <cstddef>
@@ -16,7 +17,7 @@ enum class Fault { argument, exhausted, ownership, stale, bounds, protection, un
 class Error : public std::runtime_error {
  public:
   Fault fault;
-  Error(Fault f, const char* text) : std::runtime_error(text), fault(f) {}
+  Error(Fault f, const char* text) : std::runtime_error(text), fault(f) {diagnostic::emit(diagnostic::Kind::refusal,uint32_t(f));}
 };
 enum class Access { read, write };
 enum class Permission { none, read, read_write, write };

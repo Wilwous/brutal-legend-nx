@@ -12,9 +12,11 @@ uint32_t ImportFrame::compare(uint32_t source,uint32_t size,uint32_t pattern){
  auto input=image_.compare_input(source,size); // one atomic checked span snapshot
  std::array<rex::be<uint32_t>,16> scratch{};
  for(size_t i=0;i<size/4;++i){uint32_t value=0;for(unsigned j=0;j<4;++j)value=(value<<8)|std::to_integer<unsigned>(input[i*4+j]);scratch[i]=value;}
- ++sdk_entered;
+ ++sdk_entered;diagnostic::emit(diagnostic::Kind::import_enter,0x11b);
  auto result=rex::kernel::xboxkrnl::RtlCompareMemoryUlong_entry(mapped_void(scratch.data(),source),size,pattern);
+ diagnostic::emit(diagnostic::Kind::import_return,0x11b);
  if(result>size/4)throw Error(Fault::unsupported,"SDK compare result outside admitted contract");
+ diagnostic::emit(diagnostic::Kind::import_commit,0x11b);
  ++calls;++sdk_completed;return result;
 }
 extern "C" void __imp__RtlCompareMemoryUlong(PPCContext& context,uint8_t* base){

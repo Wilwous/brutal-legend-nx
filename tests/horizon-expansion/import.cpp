@@ -20,10 +20,12 @@ void ImportFrame::initialize(uint32_t address){
  guest_.space().update(input,output,[&](std::span<std::byte> bytes){
   alignas(8) rex::kernel::xboxkrnl::X_RTL_CRITICAL_SECTION scratch;
   static_assert(sizeof(scratch)==28);std::memcpy(&scratch,bytes.data(),sizeof(scratch));
-  ++sdk_entered;
+  ++sdk_entered;diagnostic::emit(diagnostic::Kind::import_enter,0x12e);
   rex::kernel::xboxkrnl::RtlInitializeCriticalSection_entry(ppc_ptr_t<rex::kernel::xboxkrnl::X_RTL_CRITICAL_SECTION>(&scratch,address));
+  diagnostic::emit(diagnostic::Kind::import_return,0x12e);
   std::memcpy(bytes.data(),&scratch,sizeof(scratch));
  });
+ diagnostic::emit(diagnostic::Kind::import_commit,0x12e);
  ++calls;++initialized;++sdk_completed; // Only count a completed, committed SDK call.
 }
 extern "C" void __imp__RtlInitializeCriticalSection(PPCContext& context,uint8_t* base){

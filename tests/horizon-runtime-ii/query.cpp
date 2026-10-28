@@ -44,10 +44,10 @@ uint32_t QueryFrame::query(uint32_t address,uint32_t output,uint32_t kind){
  struct Clear {std::optional<Space::Query>&info;~Clear(){info.reset();}} clear{snapshot_};
  if(admitted)admitted();
  alignas(8) rex::kernel::xboxkrnl::X_MEMORY_BASIC_INFORMATION scratch{};static_assert(sizeof(scratch)==28);
- ++entered;++ImportFrame::sdk_entered;
+ ++entered;++ImportFrame::sdk_entered;diagnostic::emit(diagnostic::Kind::import_enter,0xee);
  using rex::X_STATUS;
- auto status=rex::kernel::xboxkrnl::NtQueryVirtualMemory_entry(address,ppc_ptr_t<rex::kernel::xboxkrnl::X_MEMORY_BASIC_INFORMATION>(&scratch,output),kind);++returned;
- if(status==X_STATUS_SUCCESS){guest_.space().write(view,std::as_bytes(std::span(&scratch,1)));++committed;}
+ auto status=rex::kernel::xboxkrnl::NtQueryVirtualMemory_entry(address,ppc_ptr_t<rex::kernel::xboxkrnl::X_MEMORY_BASIC_INFORMATION>(&scratch,output),kind);++returned;diagnostic::emit(diagnostic::Kind::import_return,0xee,status);
+ if(status==X_STATUS_SUCCESS){guest_.space().write(view,std::as_bytes(std::span(&scratch,1)));++committed;diagnostic::emit(diagnostic::Kind::import_commit,0xee);}
  else if(status!=X_STATUS_INVALID_PARAMETER)throw Error(Fault::unsupported,"unverified SDK query status");
  ++ImportFrame::sdk_completed;return status;
 }

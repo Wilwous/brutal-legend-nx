@@ -29,6 +29,7 @@ class Slots {
 // host_stash, PRCB scheduling, fibers or arbitrary Xbox TLS exports are provided.
 class GuestThread {
   Space& space_;ModuleLife& module_;Slots& slots_;Slots::Token slot_;
+  diagnostic::Trace* trace_{};
   std::unique_ptr<ModuleLife::Lease> module_lease_;std::unique_ptr<Slots::Pin> slot_lease_;
   std::vector<Space::Handle> allocations_;
   bool closed_{},active_{},native_pending_{};
@@ -40,7 +41,7 @@ class GuestThread {
   Space::Handle stack{},pcr{},tls{};
   static constexpr uint32_t static_tls_size=32;
   GuestThread(Space& space,ModuleLife& module,Slots& slots,Slots::Token slot,uint32_t seed=7,
-              std::span<const std::byte> initial={}):space_(space),module_(module),slots_(slots),slot_(slot),module_lease_(std::make_unique<ModuleLife::Lease>(module)),slot_lease_(std::make_unique<Slots::Pin>(slots,slot)){
+              std::span<const std::byte> initial={},diagnostic::Trace* trace=diagnostic::current_trace()):space_(space),module_(module),slots_(slots),slot_(slot),trace_(trace),module_lease_(std::make_unique<ModuleLife::Lease>(module)),slot_lease_(std::make_unique<Slots::Pin>(slots,slot)){
     static_assert(std::is_trivially_copyable_v<PPCContext>);
     // Aggregate initialization does not guarantee all bytes of every union.
     // Zero the complete representation, then restore the verified SDK MSR default.
@@ -53,11 +54,14 @@ class GuestThread {
       if(!initial.empty())space_.write(tls.address,initial);
       space_.store<uint32_t>(pcr.address,tls.address);space_.store<uint64_t>(pcr.address+0x30,pcr.address);
       space_.store<uint32_t>(tls.address+static_tls_size+slot_.index*4,seed);
+      diagnostic::emit_for(trace_,diagnostic::Kind::thread_create,module_.instance,identity);
       context.r1.u64=(stack.address+stack.size-256)&~15u;context.r2.u64=0x82020000;context.r13.u64=pcr.address;
     }catch(...){for(auto h:allocations_)space_.release(h);throw;}
   }
   GuestThread(const GuestThread&)=delete;
   ~GuestThread(){if(!closed_)try{cleanup();}catch(...){std::terminate();}}
+  diagnostic::Trace* trace()const{return trace_;}
+  uint64_t module_instance()const{return module_.instance;}
   uint64_t module_identity()const{return module_.identity;}
   bool belongs_to(const ModuleLife& owner)const{return &module_==&owner;}
   Space& space(){return space_;}
@@ -75,7 +79,7 @@ class GuestThread {
       std::lock_guard lock(t.mutex_);t.slots_.validate(t.slot_);
       if(t.closed_||t.active_||t.context.r13.u64!=t.pcr.address||t.context.r2.u64!=0x82020000||t.context.msr!=PPCContext{}.msr||
          t.space_.load<uint64_t>(t.pcr.address+0x30)!=t.pcr.address||t.space_.load<uint32_t>(t.pcr.address)!=t.tls.address||t.context.r1.u64<t.stack.address+64||
-         t.context.r1.u64>uint64_t(t.stack.address)+t.stack.size-128||(t.context.r1.u64&15))throw Error(Fault::argument,"guest startup/context admission");
+         t.context.r1.u64>uint64_t(t.stack.address)+t.stack.size-128||(t.context.r1.u64&15)){diagnostic::emit(diagnostic::Kind::abi_rejected);throw Error(Fault::argument,"guest startup/context admission");}
       for(auto h:t.allocations_){pins_.emplace_back(t.space_,h);}
       t.active_=true;
     }
@@ -83,10 +87,11 @@ class GuestThread {
     ~Execution(){std::lock_guard lock(thread_.mutex_);pins_.clear();thread_.active_=false;}
   };
   void cleanup(){
+    diagnostic::Binding binding(trace_,module_.instance,identity);
     std::lock_guard lock(mutex_);if(closed_)return;
     if(active_||native_pending_)throw Error(Fault::ownership,"guest cleanup before native join or active call return");
     space_.release_all(allocations_);
-    allocations_.clear();slot_lease_.reset();module_lease_.reset();closed_=true;
+    allocations_.clear();slot_lease_.reset();module_lease_.reset();closed_=true;auto counts=Space::totals();diagnostic::emit(diagnostic::Kind::cleanup,uint32_t(counts.first),uint32_t(counts.second));
   }
 };
 // Native ownership is kept until a successful join; a timeout returns failure
@@ -96,12 +101,13 @@ class GuestTask {
  public:
   explicit GuestTask(GuestThread& guest):guest_(guest){}
   bool start(std::function<void()> callback,NativeThread::Injection injection=NativeThread::Injection::none){
+    if(!callback)throw Error(Fault::argument,"empty guest callback");
     if(pending_||native_.joined())throw Error(Fault::argument,"guest task start lifecycle");
     guest_.native_pending(true);
-    try{if(!native_.start(std::move(callback),64*1024,injection)){guest_.native_pending(false);return false;}pending_=true;return true;}
+    try{if(!native_.start([this,fn=std::move(callback)]{diagnostic::Binding binding(guest_.trace(),guest_.module_instance(),guest_.identity);diagnostic::emit(diagnostic::Kind::thread_start);try{fn();}catch(...){diagnostic::emit(diagnostic::Kind::callback_failure);throw;}diagnostic::emit(diagnostic::Kind::thread_exit);},64*1024,injection)){guest_.native_pending(false);return false;}pending_=true;return true;}
     catch(...){guest_.native_pending(false);throw;}
   }
-  bool join(uint64_t timeout=2000){if(!native_.join(timeout))return false;guest_.native_pending(false);pending_=false;return true;}
+  bool join(uint64_t timeout=2000){diagnostic::Binding binding(guest_.trace(),guest_.module_instance(),guest_.identity);if(!native_.join(timeout)){diagnostic::emit(diagnostic::Kind::join,0);return false;}guest_.native_pending(false);pending_=false;diagnostic::emit(diagnostic::Kind::join,1);return true;}
   bool callback_error()const{return native_.callback_error();}
   ~GuestTask(){if(pending_)std::terminate();}
 };

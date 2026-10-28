@@ -1,4 +1,17 @@
-# Integrated Horizon synthetic runtime — Stages 4–8
+# Integrated Horizon synthetic runtime — current Runtime II and preserved Stage 8
+
+2026-10-28: Stages 9–11 are HOST/BUILD VERIFIED in their declared subset;
+HARDWARE UNKNOWN. [Runtime II evidence, commands and limitations](switch-runtime-diagnostics.md)
+records 268/0 smoke, 387/0 stress per profile, 17 functions/158 instructions,
+37 memory-sites/76 hooks and three admitted real SDK imports. Expected new screen
+is PASS269/FAIL0, result=24, SDK entered38/completed37, guest entries155, allocations0,
+leases0. The separate `brutal-legend-nx-runtime-ii` package preserves Stage 8 and all
+older probes. This expected screen has not been observed on hardware.
+
+Xbox Phase 22 BLOCKED; G4/G8 BLOCKED, G5 UNKNOWN; original game execution NO-GO.
+The following Stage 4–8 record is preserved as historical evidence and regression.
+
+## Preserved Stage 4–8 checkpoint
 
 2026-10-27. **HOST VERIFIED / BUILD VERIFIED / HARDWARE UNKNOWN.** The result is
 PARTIAL as an Xbox runtime. Original game execution is NO-GO; Xbox Phase 22 stays

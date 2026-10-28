@@ -60,6 +60,12 @@ jobs:
         run: python3 tests/horizon-runtime-ii/test_fixture.py
       - name: Check portable Runtime II query metadata contracts
         run: python3 tests/horizon-runtime-ii/query_core.py --workdir "${{ runner.temp }}/runtime-ii-query"
+      - name: Check portable Runtime II bounded diagnostic contracts
+        run: python3 tests/horizon-runtime-ii/diagnostics_core.py --workdir "${{ runner.temp }}/runtime-ii-diagnostics"
+      - name: Check Runtime II package and separate USB destination on mocks
+        run: |
+          python3 tests/horizon-runtime-ii/test_package.py
+          python3 tests/horizon-runtime-ii/test_deploy.py
       - name: Check bounded diagnostic path sanitization on synthetic ELF fixtures
         run: python3 tests/switch-horizon/test_sanitize.py
 

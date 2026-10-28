@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 Wilwous
 #pragma once
+#include "diagnostics.h"
 #include <atomic>
 #include <stdexcept>
 namespace brutal::synthetic {
@@ -14,7 +15,7 @@ class CooperativeStop {
   void advance(State from,State to){if(!state_.compare_exchange_strong(from,to))throw std::logic_error("stop lifecycle order");}
  public:
   State state()const{return state_.load();}
-  bool request(){auto from=State::running;return state_.compare_exchange_strong(from,State::requested);}
+  bool request(){auto from=State::running;auto accepted=state_.compare_exchange_strong(from,State::requested);diagnostic::emit(diagnostic::Kind::stop_request,accepted);return accepted;}
   bool safe_boundary(){auto from=State::requested;return state_.compare_exchange_strong(from,State::boundary);}
   void exited(){advance(State::boundary,State::exited);}
   void joined(){advance(State::exited,State::joined);}
