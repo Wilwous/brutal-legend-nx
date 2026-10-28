@@ -1,0 +1,156 @@
+{
+  "repository": "xenia-project/xenia",
+  "revision": "95a5c3ee250f80c3b9d139658649d9ffb6db3eec",
+  "files": [
+    {
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/LICENSE",
+      "sha256": "369ea6b0f7ba57544067e9d470ca82a927da787fb0a749b11cb55f1fd0ba47ae",
+      "bytes": 1481
+    },
+    {
+      "path": "src/xenia/cpu/xex_module.cc",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/cpu/xex_module.cc",
+      "sha256": "36a30e1bc54b9854cbd2572b74e366e733460c5df6edf2b29542de36575858f2",
+      "bytes": 57708
+    },
+    {
+      "path": "src/xenia/cpu/xex_module.h",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/cpu/xex_module.h",
+      "sha256": "49a26f2fee8a48f640f3b816c9b4ede07c1426d0c28bc749a838de6264597fd2",
+      "bytes": 6933
+    },
+    {
+      "path": "src/xenia/memory.cc",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/memory.cc",
+      "sha256": "f29ceea394bda0910eab039d06e3f2142339b0a9c3cb8b703666cc399e70afb8",
+      "bytes": 69821
+    },
+    {
+      "path": "src/xenia/memory.h",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/memory.h",
+      "sha256": "ec9b3cdfc328265e088025741a25f946add98c52344382571b52715c67fdc18e",
+      "bytes": 21368
+    },
+    {
+      "path": "src/xenia/kernel/user_module.cc",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/kernel/user_module.cc",
+      "sha256": "fcc297e2d1a77a8f3dbb1901721ed06a9ce1865bfcce7779409a3cc0c1258582",
+      "bytes": 28563
+    },
+    {
+      "path": "src/xenia/kernel/util/xex2_info.h",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/kernel/util/xex2_info.h",
+      "sha256": "3df4a38e4a05f5d6e2a55be566727380dafeea683b2564093915ba515f89b9a9",
+      "bytes": 20131
+    },
+    {
+      "path": "src/xenia/base/byte_order.h",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/base/byte_order.h",
+      "sha256": "e1d7dc39df372c143f1cd2a440ec9569085d3496fbec72727dd78b6346ea3f63",
+      "bytes": 3683
+    },
+    {
+      "path": "src/xenia/base/platform.h",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/base/platform.h",
+      "sha256": "bb1b62c236cda5d5b1755665010b54b3124c4d6997097c358876cda92bfb9b04",
+      "bytes": 3254
+    },
+    {
+      "path": "src/xenia/base/assert.h",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/base/assert.h",
+      "sha256": "9e71ea274113dee5d8bfb84457139a487e3c4cee38bccd24a4ab0f5002743773",
+      "bytes": 3071
+    },
+    {
+      "path": "src/xenia/base/memory_posix.cc",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/base/memory_posix.cc",
+      "sha256": "2b1809b2bee3c26157c3b21cf54daf9cd404065c65aa4336dcb43c0f78c71f59",
+      "bytes": 5810
+    },
+    {
+      "path": "src/xenia/base/memory.h",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/base/memory.h",
+      "sha256": "d70bd94c7fe9068facfd514ae505f8b3964278953f363af9b6f62ef62498a3b4",
+      "bytes": 16230
+    },
+    {
+      "path": "src/xenia/cpu/ppc/ppc_context.h",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/cpu/ppc/ppc_context.h",
+      "sha256": "9acd682d4ba3cb6261dfd6da5613504e68b8d4643320a630436bfdcda76fd3f4",
+      "bytes": 9528
+    },
+    {
+      "path": "src/xenia/kernel/xboxkrnl/xboxkrnl_rtl.cc",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/kernel/xboxkrnl/xboxkrnl_rtl.cc",
+      "sha256": "42f1cc29c9da611dda3c31d3d9c4629761ad041780a987c42f20f1dea137be9d",
+      "bytes": 24191
+    },
+    {
+      "path": "src/xenia/kernel/xthread.cc",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/kernel/xthread.cc",
+      "sha256": "5542763d8edcd08df500384a7b05011699262dc4b56ece756002c8fc99c04f49",
+      "bytes": 36010
+    },
+    {
+      "path": "third_party/pe/pe_image.h",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/third_party/pe/pe_image.h",
+      "sha256": "e9edba88c845a5082aca7d10d6f0ce8956f1b2ab49ad38e5a5914161b4b370c2",
+      "bytes": 40326
+    },
+    {
+      "path": "third_party/crypto/rijndael-alg-fst.h",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/third_party/crypto/rijndael-alg-fst.h",
+      "sha256": "0426f17b905cfd137e5be3337da02903c635a3095daff399eedadc9986dcbde5",
+      "bytes": 1963
+    },
+    {
+      "path": "third_party/crypto/rijndael-alg-fst.c",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/third_party/crypto/rijndael-alg-fst.c",
+      "sha256": "01da895812eafb9ddd4522acb45a51b3d4671db0fdf3e90061ea2edefe9a4ed9",
+      "bytes": 63666
+    },
+    {
+      "path": "src/xenia/kernel/xboxkrnl/xboxkrnl_error.cc",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/kernel/xboxkrnl/xboxkrnl_error.cc",
+      "sha256": "e0ac3f50ce4b7410557280f6fefb23c04b5ff717b9d563791bd2adc19b367b18",
+      "bytes": 28068
+    },
+    {
+      "path": "src/xenia/base/math.h",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/base/math.h",
+      "sha256": "0f292350604bb35f6223438581b3535fb7a2cd50aff8ac64477b2a9e8ee647b4",
+      "bytes": 14957
+    },
+    {
+      "path": "premake5.lua",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/premake5.lua",
+      "sha256": "12016cf9f10cc5db7fe7fb7948aacaa6d16181c90270497fb74af85511b13c2a",
+      "bytes": 8431
+    },
+    {
+      "path": "src/xenia/kernel/xboxkrnl/xboxkrnl_debug.cc",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/kernel/xboxkrnl/xboxkrnl_debug.cc",
+      "sha256": "bd099abbb984a5e07aa048397893982904ad7a0934ee93154d9fb6e3441265c6",
+      "bytes": 5174
+    },
+    {
+      "path": "src/xenia/base/exception_handler_posix.cc",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/base/exception_handler_posix.cc",
+      "sha256": "3b9a8b874edec442284d8c1a32f858ea0c5a594b0c94c78e5adb612b8905b351",
+      "bytes": 11681
+    },
+    {
+      "path": "src/xenia/cpu/processor.cc",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/cpu/processor.cc",
+      "sha256": "002a5e8d419b8a334cbc20d6216d4d575b6c015fcc8a5cb607589b2465c58965",
+      "bytes": 42038
+    },
+    {
+      "path": "src/xenia/kernel/kernel_state.cc",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/kernel/kernel_state.cc",
+      "sha256": "0cd0cf42c9dd4d48fbea5d19956d970723891b269bf4e544e026122948108880",
+      "bytes": 29817
+    }
+  ]
+}

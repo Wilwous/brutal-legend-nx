@@ -18,6 +18,7 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    'tests/loader-observation/reference-lock.json',
     'tests/compatibility-services/contracts.cpp',
     'tests/compatibility-services/run.py',
     'tools/audit_xex_residency.py',
