@@ -87,6 +87,7 @@ class GuestThread {
     ~Execution(){std::lock_guard lock(thread_.mutex_);pins_.clear();thread_.active_=false;}
   };
   void cleanup(){
+    diagnostic::PhaseBinding phase{8};
     diagnostic::Binding binding(trace_,module_.instance,identity);
     std::lock_guard lock(mutex_);if(closed_)return;
     if(active_||native_pending_)throw Error(Fault::ownership,"guest cleanup before native join or active call return");

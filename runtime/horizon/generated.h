@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Wilwous
 #pragma once
 #include "guest.h"
+#include "probe_control.h"
 #include "runtime/cooperative_stop.h"
 #include <string_view>
 #include <concepts>
@@ -15,7 +16,7 @@ class Scope {
  public:
   struct Stopped {const Scope* owner;};
  private:
-  GuestThread& guest_;diagnostic::Binding trace_binding_;GuestThread::Execution execution_;
+  GuestThread& guest_;diagnostic::Binding trace_binding_;diagnostic::PhaseBinding entry_phase_{4};GuestThread::Execution execution_;
   std::span<const Function> functions_;std::vector<Space::Handle> loans_;std::vector<Space::Lease> pins_;
   synthetic::CooperativeStop* stop_{};std::function<void(uint32_t)> observer_;
   inline static thread_local Scope* current_{};
@@ -29,6 +30,7 @@ class Scope {
       throw Error(Fault::unsupported,"unadmitted generated memory site");
   }
   void dispatch(Function f,bool indirect=false){
+    diagnostic::PhaseBinding execution_phase{5};
     if(f.finite_fpr&&(!std::isfinite(guest_.context.f1.f64)||!std::isfinite(guest_.context.f2.f64)))throw Error(Fault::unsupported,"unadmitted nonfinite FPR arguments");
     if(!plan_){++calls;diagnostic::emit(diagnostic::Kind::function_enter,f.address);f.implementation(guest_.context,nullptr);return;}
     uint32_t expected=plan_->exit;
@@ -76,7 +78,7 @@ class Scope {
   static void deny_instruction(PPCContext& ctx){current(ctx);diagnostic::emit(diagnostic::Kind::instruction_rejected);throw Error(Fault::unsupported,"unsupported guest instruction denied");}
   static Scope& current(PPCContext& context){if(!current_||&current_->guest_.context!=&context)throw Error(Fault::no_thread,"missing or foreign generated thread context");return *current_;}
   void poll(uint32_t address){
-    ++polls;if(observer_)observer_(address);
+    ++polls;ProbeControl::poll();if(observer_)observer_(address);
     if(!stop_)return;
     auto state=stop_->state();
     if(state==synthetic::CooperativeStop::State::requested){if(!stop_->safe_boundary())throw Error(Fault::unsupported,"stop transition race");diagnostic::emit(diagnostic::Kind::stop_observed,address);throw Stopped{this};}

@@ -9,9 +9,12 @@
 #endif
 #include <cstdio>
 #include <set>
+#if STAGE_MAX >= 14
+#include "runtime/horizon/lifecycle.h"
+#endif
 using namespace brutal::horizon;
 namespace {
-struct Check {RuntimeIIResult&r;void operator()(bool ok,const char*label){if(ok){++r.passed;++r.group_pass[3];}else{++r.failed;++r.group_fail[3];std::fprintf(stderr,"acceptance FAIL: %s\n",label);}}
+struct Check {RuntimeIIResult&r;void operator()(bool ok,const char*label){if(ok){++r.passed;++r.group_pass[3];}else{++r.failed;++r.group_fail[3];report_failure(label);}}
  template<class F>void refuses(Fault f,F fn,const char*label){try{fn();(*this)(false,label);}catch(const Error&e){(*this)(e.fault==f,label);++r.refusals;}}
 };
 void semantics(Check c){
@@ -77,11 +80,45 @@ void services(Check c){
 }
 #endif
 
+#if STAGE_MAX >= 14
+void reliability(Check c,unsigned rounds){
+ using P=Lifecycle::Phase;
+ for(unsigned round=0;round<rounds;++round){Lifecycle state;Space s(512*1024);state.advance(P::initialized);XexImage image(s,xex_bytes,{xex_bytes,xex_generated,xex_entry});state.advance(P::image,s.live(),s.leases());Slots slots;auto token=slots.allocate();
+  std::array<std::unique_ptr<GuestThread>,4> guests;std::array<std::unique_ptr<GuestTask>,4> tasks;std::array<Space::Handle,4> outputs;std::array<brutal::horizon::Event,4> ready,loop_ready;std::array<brutal::synthetic::CooperativeStop,4> stops;brutal::horizon::Event run,finish;std::array<bool,4> started{},joined{},stopped{},results{};
+  // Guard is declared after all callback captures and before starting workers.
+  struct Guard {decltype(tasks)&t;decltype(started)&a;decltype(joined)&j;decltype(stops)&stop;brutal::horizon::Event&run,&finish;~Guard(){try{run.signal();for(unsigned i=0;i<4;++i)if(a[i]&&!j[i])stop[i].request();finish.signal();for(unsigned i=0;i<4;++i)if(a[i]&&!j[i]){if(!t[i]->join())std::terminate();j[i]=true;}}catch(...){std::terminate();}}} guard{tasks,started,joined,stops,run,finish};
+  for(unsigned i=0;i<4;++i){guests[i]=std::make_unique<GuestThread>(s,image.life(),slots,token,round*4+i,image.tls_template());outputs[i]=s.allocate(4096);tasks[i]=std::make_unique<GuestTask>(*guests[i]);}state.advance(P::contexts,s.live(),s.leases());
+  for(unsigned i=0;i<4;++i)c(started[i]=tasks[i]->start([&,i]{brutal::diagnostic::PhaseBinding phase{uint32_t(P::running)};auto&g=*guests[i];g.context.lr=0x8201feed;g.context.f1.f64=1.5;g.context.f2.f64=2;Scope scope(g,image.functions(),image.life().identity,&stops[i],[&](uint32_t pc){if(pc==0x82010074){loop_ready[i].signal();if(!finish.wait())throw Error(Fault::unsupported,"acceptance stop gate");}},expansion_plan_ptr);image.lend(scope);scope.lend(outputs[i]);ImportFrame imports(image,g);QueryFrame query(image,g);FillFrame fill(image,g);HookFrame hooks(scope,xex_hooks);ready[i].signal();if(!run.wait())throw Error(Fault::unsupported,"acceptance running gate");scope.invoke(xex_acceptance_multicall);bool correct=g.context.r3.u64==197650+round*4+i-7&&g.context.f1.f64==3&&g.get_tls()==round*4+i+1;g.context.r3.u64=outputs[i].address;g.context.r4.u64=64;g.context.r5.u64=0x55110000+i;g.context.lr=0x8201feed;scope.invoke(xex_fill_only);results[i]=correct&&s.load<uint32_t>(outputs[i].address)==0x55110000+i;g.context.lr=0x8201feed;try{scope.invoke(xex_forever);}catch(const Scope::Stopped&e){if(e.owner!=&scope)throw;stopped[i]=true;stops[i].exited();}}),"lifecycle native worker created");
+  for(unsigned i=0;i<4;++i){c(started[i]&&ready[i].wait(),"lifecycle contexts admitted before run gate");}state.advance(P::entry,s.live(),s.leases());state.advance(P::running,s.live(),s.leases());run.signal();for(unsigned i=0;i<4;++i)c(loop_ready[i].wait(),"generated multicall SDK completed before stop");
+  c(!tasks[0]->join(0),"failed early join retains live contexts");c.refuses(Fault::ownership,[&]{guests[0]->cleanup();},"cleanup while running refused");c.refuses(Fault::ownership,[&]{s.release(outputs[0]);},"active generated buffer release refused");c(!image.unload(),"active module close cannot unload");c.refuses(Fault::stale,[&]{image.admit_import(0xee,XexImage::Signature::query_basic28);},"new import refused after close");
+  for(auto&stop:stops){c(stop.request(),"each worker stop accepted");}state.advance(P::stop_requested,s.live(),s.leases());finish.signal();for(unsigned i=0;i<4;++i){c(joined[i]=tasks[i]->join(),"actual native join succeeds");c(!tasks[i]->callback_error()&&stopped[i]&&results[i],"worker result TLS stop callback contracts");stops[i].joined();}state.advance(P::joined,s.live(),s.leases());
+  for(unsigned i=0;i<4;++i){guests[i]->cleanup();s.release(outputs[i]);stops[i].reclaimed();}slots.release(token);state.advance(P::cleanup,s.live(),s.leases());c(image.unload(),"image unload follows final cleanup");state.advance(P::unloaded,s.live(),s.leases());for(auto&stop:stops)stop.unloaded();state.advance(P::terminated,s.live(),s.leases());c(state.state()==P::terminated&&s.live()==0&&s.leases()==0,"complete lifecycle ends balanced");
+  // Drain only after every worker has joined and all module resources reclaimed.
+  // Preserve overflow as a failure; never enlarge the buffer or hide dropped events.
+  if(auto*trace=brutal::diagnostic::current_trace()){c.r.diagnostics+=unsigned(trace->snapshot().size());c.r.dropped+=unsigned(trace->dropped());if(trace->dropped()||trace->broken())++c.r.failed;trace->clear();}
+
+ }
+ {Space s;XexImage image(s,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto token=slots.allocate();GuestThread g(s,image.life(),slots,token);auto h=s.allocate(4096);g.context.r3.u64=h.address;g.context.r4.u64=h.address+16;g.context.r5.u64=h.address+32;g.context.lr=0x8201feed;auto before=s.read(h.address+32,32);ProbeControl local;
+  {ProbeControl::Local selected(local);Scope scope(g,image.functions(),image.life().identity,nullptr,[&](uint32_t pc){if(pc==xex_vector_blocks)local.request_cancel();},expansion_plan_ptr);image.lend(scope);scope.lend(h);HookFrame hooks(scope,xex_hooks);c.refuses(Fault::unsupported,[&]{scope.invoke(xex_vector_blocks);},"probe cancellation refuses next generated safe point");c(scope.writes==0&&s.read(h.address+32,32)==before,"cancellation never publishes unchecked output");}s.release(h);g.cleanup();slots.release(token);c(image.unload()&&s.live()==0,"cancelled guest cleanup before UI ownership release");}
+ // Controlled serial traces compare after numeric owner normalization. Concurrent
+ // interleavings are not claimed to have a deterministic total event order.
+ std::vector<brutal::diagnostic::Event> previous;
+ for(unsigned trial=0;trial<2;++trial){auto trace=std::make_unique<brutal::diagnostic::Trace>(ii_metadata);brutal::diagnostic::Binding root(trace.get(),0,0);Space s;XexImage image(s,xex_bytes,{xex_bytes,xex_generated,xex_entry});Slots slots;auto token=slots.allocate();GuestThread g(s,image.life(),slots,token);auto h=s.allocate(4096);s.protect(h,brutal::foundation::Permission::read);trace->clear();
+  {brutal::diagnostic::PhaseBinding phase{uint32_t(P::running)};g.context.r3.u64=7;g.context.r4.u64=h.address;g.context.lr=0x8201feed;Scope scope(g,image.functions(),image.life().identity,nullptr,{},expansion_plan_ptr);image.lend(scope);scope.lend(h);HookFrame hooks(scope,xex_hooks);c.refuses(Fault::protection,[&]{scope.invoke(xex_store);},"controlled canonical refusal");}
+  auto events=trace->snapshot();bool identity=false;for(auto e:events)if(e.kind==brutal::diagnostic::Kind::refusal)identity|=e.pc==xex_store&&e.phase==uint32_t(P::running)&&e.allocation_owner&&e.allocation_id==h.id&&e.module==g.module_instance()&&e.thread==g.identity;c(identity,"failure identifies guest site phase allocation module and thread");auto normalized=brutal::diagnostic::canonical(events);if(trial)c(previous==normalized,"controlled trace matches across independent owners");else previous=normalized;c(trace->dropped()==0&&!trace->broken(),"controlled trace remains bounded");
+  s.release(h);g.cleanup();slots.release(token);c(image.unload()&&s.live()==0,"canonical case cleanup");c.r.diagnostics+=unsigned(trace->snapshot().size());
+ }
 }
-RuntimeIIResult acceptance_probe(unsigned cycles,bool tracing){auto r=runtime_ii_probe(cycles,tracing);auto completed=ImportFrame::sdk_completed.load(),entered=ImportFrame::sdk_entered.load(),entries=Scope::guest_entries.load();std::unique_ptr<brutal::diagnostic::Trace> trace;if(tracing)trace=std::make_unique<brutal::diagnostic::Trace>(ii_metadata);brutal::diagnostic::Binding binding(trace.get(),0,0);
- try{semantics({r});
-#if STAGE_MAX >= 13
- services({r});
 #endif
- }catch(const std::exception&e){std::fprintf(stderr,"acceptance error: %s\n",e.what());++r.failed;}
- r.sdk_calls+=unsigned(ImportFrame::sdk_completed.load()-completed);r.sdk_entered+=unsigned(ImportFrame::sdk_entered.load()-entered);r.guest_entries+=unsigned(Scope::guest_entries.load()-entries);auto total=Space::totals();r.remaining=unsigned(total.first);r.leases=unsigned(total.second);if(r.remaining||r.leases)++r.failed;if(trace){r.diagnostics+=unsigned(trace->snapshot().size());r.dropped+=unsigned(trace->dropped());if(trace->broken()||r.dropped)++r.failed;}return r;}
+
+}
+RuntimeIIResult acceptance_probe(unsigned cycles,bool tracing){ProbeControl::mark(1);auto r=runtime_ii_probe(cycles,tracing);auto completed=ImportFrame::sdk_completed.load(),entered=ImportFrame::sdk_entered.load(),entries=Scope::guest_entries.load();std::unique_ptr<brutal::diagnostic::Trace> trace;if(tracing)trace=std::make_unique<brutal::diagnostic::Trace>(ii_metadata);brutal::diagnostic::Binding binding(trace.get(),0,0);
+ try{ProbeControl::mark(2);semantics({r});
+#if STAGE_MAX >= 13
+ ProbeControl::mark(3);services({r});
+#endif
+#if STAGE_MAX >= 14
+ ProbeControl::mark(4);reliability({r},cycles);
+#endif
+ }catch(const std::exception&e){report_failure(e.what());++r.failed;}
+ r.sdk_calls+=unsigned(ImportFrame::sdk_completed.load()-completed);r.sdk_entered+=unsigned(ImportFrame::sdk_entered.load()-entered);r.guest_entries+=unsigned(Scope::guest_entries.load()-entries);auto total=Space::totals();r.remaining=unsigned(total.first);r.leases=unsigned(total.second);if(r.remaining||r.leases)++r.failed;if(trace){r.diagnostics+=unsigned(trace->snapshot().size());r.dropped+=unsigned(trace->dropped());if(trace->broken()||r.dropped)++r.failed;}ProbeControl::mark(5);return r;}

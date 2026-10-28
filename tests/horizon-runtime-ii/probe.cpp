@@ -29,7 +29,7 @@ struct BatchGuard {
  ~BatchGuard(){try{gate.signal();for(unsigned i=0;i<4;++i)if(started[i]&&!joined[i]){if(!tasks[i]||!tasks[i]->join())std::terminate();joined[i]=true;}}catch(...){std::terminate();}}
 };
 struct Check {RuntimeIIResult&r;unsigned group;
- void operator()(bool ok,const char*label){if(ok){++r.passed;++r.group_pass[group];}else{++r.failed;++r.group_fail[group];std::fprintf(stderr,"FAIL group %u: %s\n",group,label);}}
+ void operator()(bool ok,const char*label){if(ok){++r.passed;++r.group_pass[group];}else{++r.failed;++r.group_fail[group];report_failure(label);}}
  template<class F>void refuse(Fault fault,F fn,const char*label){try{fn();(*this)(false,label);}catch(const Error&e){(*this)(e.fault==fault,label);++r.refusals;}catch(...){(*this)(false,label);}}
 };
 void foundation(Check c){
@@ -177,7 +177,7 @@ void hardening(Check c,unsigned cycles){
 }
 RuntimeIIResult runtime_ii_probe(unsigned cycles,bool tracing){RuntimeIIResult r;
 #if STAGE_MAX >= 11
- std::unique_ptr<brutal::diagnostic::Trace> trace;try{if(tracing)trace=std::make_unique<brutal::diagnostic::Trace>(ii_metadata);}catch(const std::bad_alloc&){std::fprintf(stderr,"diagnostic buffer allocation failed\n");r.failed=1;return r;}brutal::diagnostic::Binding root_trace(trace.get(),0,0);
+ std::unique_ptr<brutal::diagnostic::Trace> trace;try{if(tracing)trace=std::make_unique<brutal::diagnostic::Trace>(ii_metadata);}catch(const std::bad_alloc&){report_failure("diagnostic buffer allocation failed");r.failed=1;return r;}brutal::diagnostic::Binding root_trace(trace.get(),0,0);
 #else
  (void)tracing;
 #endif
@@ -195,7 +195,7 @@ constexpr unsigned budget=
 #if STAGE_MAX >= 11
  diagnostic_cases({r,3});hardening({r,3},cycles);
 #endif
- unsigned memory_seen=0,back_seen=0;for(size_t i=0;i<std::size(expansion_sites);++i){auto site=expansion_sites[i];if(observed_sites[i]&&(site.kind==SiteKind::read||site.kind==SiteKind::write))++memory_seen;if(observed_sites[i]&&site.kind==SiteKind::branch&&site.target<=site.pc)++back_seen;}Check c{r,1};c(memory_seen==(STAGE_MAX>=10?37u:34u),"all declared memory hooks observed");c(back_seen==4,"all declared backedges observed");}catch(const std::exception&e){std::fprintf(stderr,"II error: %s\n",e.what());++r.failed;}r.sdk_calls=unsigned(ImportFrame::sdk_completed.load()-sdk);r.sdk_entered=unsigned(ImportFrame::sdk_entered.load()-sdk_entered);for(auto f:xex_generated.functions){if(f.name.starts_with("__imp__"))++r.imports;}r.guest_entries=unsigned(Scope::guest_entries.load()-entries);const auto totals=Space::totals();r.remaining=unsigned(totals.first);r.leases=unsigned(totals.second);if(r.remaining||r.leases)++r.failed;
+ unsigned memory_seen=0,back_seen=0;for(size_t i=0;i<std::size(expansion_sites);++i){auto site=expansion_sites[i];if(observed_sites[i]&&(site.kind==SiteKind::read||site.kind==SiteKind::write))++memory_seen;if(observed_sites[i]&&site.kind==SiteKind::branch&&site.target<=site.pc)++back_seen;}Check c{r,1};c(memory_seen==(STAGE_MAX>=10?37u:34u),"all declared memory hooks observed");c(back_seen==4,"all declared backedges observed");}catch(const std::exception&e){report_failure(e.what());++r.failed;}r.sdk_calls=unsigned(ImportFrame::sdk_completed.load()-sdk);r.sdk_entered=unsigned(ImportFrame::sdk_entered.load()-sdk_entered);for(auto f:xex_generated.functions){if(f.name.starts_with("__imp__"))++r.imports;}r.guest_entries=unsigned(Scope::guest_entries.load()-entries);const auto totals=Space::totals();r.remaining=unsigned(totals.first);r.leases=unsigned(totals.second);if(r.remaining||r.leases)++r.failed;
 #if STAGE_MAX >= 11
  if(trace){auto events=trace->snapshot();r.diagnostics+=unsigned(events.size());r.dropped+=unsigned(trace->dropped());if(trace->broken()||r.dropped)++r.failed;}
 #endif

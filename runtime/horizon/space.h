@@ -82,17 +82,17 @@ class Space {
   class View {friend class Space;Handle handle;foundation::View backing;View(Handle h,foundation::View v):handle(h),backing(v){}
    public: View(const View&)=default;};
   View view(uint32_t address,uint32_t size,Access access){
-    std::lock_guard lock(mutex_);auto&r=range(address,size);
+    std::lock_guard lock(mutex_);auto&r=range(address,size);diagnostic::AllocationBinding allocation(owner_,r.h.id);
     return {r.h,memory_.translate(r.backing.guest+(address-r.h.address),size,access)};
   }
   std::vector<std::byte> read(const View& v){
-    std::lock_guard lock(mutex_);auto&r=owned(v.handle);
+    std::lock_guard lock(mutex_);auto&r=owned(v.handle);diagnostic::AllocationBinding allocation(owner_,r.h.id);
     if(v.backing.allocation.owner!=r.backing.owner||v.backing.allocation.id!=r.backing.id)
       throw Error(Fault::ownership,"view backing mismatch");
     return memory_.read(v.backing);
   }
   void write(const View& v,std::span<const std::byte> bytes){
-    std::lock_guard lock(mutex_);auto&r=owned(v.handle);
+    std::lock_guard lock(mutex_);auto&r=owned(v.handle);diagnostic::AllocationBinding allocation(owner_,r.h.id);
     if(v.backing.allocation.owner!=r.backing.owner||v.backing.allocation.id!=r.backing.id)
       throw Error(Fault::ownership,"view backing mismatch");
     memory_.write(v.backing,bytes);
@@ -100,7 +100,7 @@ class Space {
   // Trusted bounded leaf transaction only: callback must not retain scratch or
   // reenter Space. No guest pointer is exposed; callback failure publishes nothing.
   template<class F> void update(const View& input,const View& output,F transform){
-    std::lock_guard lock(mutex_);auto&r=owned(input.handle);auto&o=owned(output.handle);
+    std::lock_guard lock(mutex_);auto&r=owned(input.handle);auto&o=owned(output.handle);diagnostic::AllocationBinding allocation(owner_,r.h.id);
     if(r.h.id!=o.h.id||input.backing.allocation.id!=r.backing.id||input.backing.allocation.owner!=r.backing.owner||
        output.backing.allocation.id!=r.backing.id||output.backing.allocation.owner!=r.backing.owner||
        input.backing.offset!=output.backing.offset||input.backing.length!=output.backing.length)
@@ -110,12 +110,12 @@ class Space {
   }
   size_t leases(){std::lock_guard lock(mutex_);size_t n=0;for(auto&[id,r]:regions_){(void)id;n+=r.leases;}return n;}
   std::vector<std::byte> read(uint32_t address,uint32_t size){
-    std::lock_guard lock(mutex_);auto&r=range(address,size);
+    std::lock_guard lock(mutex_);auto&r=range(address,size);diagnostic::AllocationBinding allocation(owner_,r.h.id);
     return memory_.read(memory_.translate(r.backing.guest+(address-r.h.address),size,Access::read));
   }
   void write(uint32_t address,std::span<const std::byte> bytes){
     if(bytes.empty()||bytes.size()>UINT32_MAX)throw Error(Fault::bounds,"invalid guest write size");
-    std::lock_guard lock(mutex_);auto&r=range(address,uint32_t(bytes.size()));
+    std::lock_guard lock(mutex_);auto&r=range(address,uint32_t(bytes.size()));diagnostic::AllocationBinding allocation(owner_,r.h.id);
     memory_.write(memory_.translate(r.backing.guest+(address-r.h.address),uint32_t(bytes.size()),Access::write),bytes);
   }
   template<class T> T load(uint32_t address){auto bytes=read(address,sizeof(T));T value=0;for(auto b:bytes)value=T((value<<8)|std::to_integer<unsigned>(b));return value;}
