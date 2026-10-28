@@ -118,7 +118,7 @@ def main():
  sdk_id=hashlib.sha256(json.dumps({'revision':compat['sdk_revision'],'files':sdk_files},sort_keys=True,separators=(',',':')).encode()).hexdigest()
  def octets(digest):return '{'+','.join(str(b) for b in bytes.fromhex(digest))+'}'
  build_id=hashlib.sha256(json.dumps({**sources(),**{p.relative_to(ROOT).as_posix():sha(p) for p in (ROOT/'tests/horizon-acceptance').rglob('*') if p.is_file() and '__pycache__' not in str(p)}},sort_keys=True,separators=(',',':')).encode()).hexdigest()
- (w/'ii-metadata.h').write_text('#pragma once\n#include "runtime/diagnostics.h"\ninline constexpr brutal::diagnostic::Metadata ii_metadata{'+','.join(octets(v) for v in [sha(w/'input/fixture.xex'),codegen_id,sdk_id])+'};\ninline constexpr char ii_build_id[]=\"'+build_id[:12]+'\";\n')
+ (w/'ii-metadata.h').write_text('#pragma once\n#include "runtime/diagnostics.h"\ninline constexpr brutal::diagnostic::Metadata ii_metadata{'+','.join(octets(v) for v in [sha(w/'input/fixture.xex'),codegen_id,sdk_id])+'};\ninline constexpr char ii_build_id[]=\"'+build_id[:12]+'\";\n'+'inline constexpr unsigned acceptance_functions='+str(len(meta['functions']))+',acceptance_instructions='+str(meta['instructions'])+',acceptance_memory_sites='+str(len(meta['memory_sites']))+',acceptance_hooks='+str(len(meta['hooks']))+';\n')
  (w/'hooks.cpp').write_text('#include "runtime/horizon/xex.h"\n'+''.join(f'void horizon_point_{pc:X}(){{brutal::horizon::HookFrame::poll({pc});}}\n' for pc in meta['hooks']))
  hosts=[];stress=[]
  for name,flags in [('Debug',['-O0']),('Release',['-O2']),('Sanitized',['-O1','-g','-fsanitize=address,undefined','-fno-sanitize-recover=all','-fno-omit-frame-pointer'])]:
@@ -128,6 +128,9 @@ def main():
   if row['failed'] or not row['passed'] or row['remaining'] or row['leases']:raise ValueError('expansion runtime failed')
   if hosts and row!={k:v for k,v in hosts[0].items() if k!='profile'}:raise ValueError('profile result drift')
   hosts.append({'profile':name,**row})
+  if a.stage==15:
+   controlled=json.loads(execute([binary,'--controller'],'controller-'+name))
+   if controlled!=row:raise ValueError('native UI-controller path differs from direct smoke')
   if a.stage>=12:
    heavy=json.loads(execute([binary,'--stress'],'stress-'+name))
    if heavy['failed'] or heavy['remaining'] or heavy['leases']:raise ValueError('bounded stress failed')

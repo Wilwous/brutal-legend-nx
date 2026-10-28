@@ -103,7 +103,7 @@ def rename_new(parent,source,dest):
         os.link(source,dest,src_dir_fd=parent,dst_dir_fd=parent,follow_symlinks=False)
         os.unlink(source,dir_fd=parent)
 def deployment_names(application):
-    if application not in {APP,'brutal-legend-nx-ppc','brutal-legend-nx-runtime','brutal-legend-nx-runtime-ii'}:raise Refused('unknown application destination')
+    if application not in {APP,'brutal-legend-nx-ppc','brutal-legend-nx-runtime','brutal-legend-nx-runtime-ii','brutal-legend-nx-acceptance'}:raise Refused('unknown application destination')
     return application,application+'.nro'
 def deploy_fd(root,payload,revalidate,*,application=APP,allow_replace=True):
     app_name,nro_name=deployment_names(application)

@@ -91,6 +91,8 @@ class NativeThread {
     s32 index=-1;auto rc=svcWaitSynchronization(&index,&thread_.handle,1,milliseconds*1000000);
     if(R_FAILED(rc))return false;
     if(R_FAILED(threadWaitForExit(&thread_)))return false;
+    // Pair with entry's exited release before publishing callback-owned data.
+    if(state_.load(std::memory_order_acquire)!=State::exited)return false;
     if(R_FAILED(threadClose(&thread_)))std::terminate();
 #else
     if(!done_.wait(milliseconds))return false;

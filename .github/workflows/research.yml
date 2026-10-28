@@ -70,6 +70,11 @@ jobs:
         run: python3 tests/horizon-acceptance/test_fixture.py
       - name: Check acceptance lifecycle and controller contracts
         run: python3 tests/horizon-acceptance/lifecycle_core.py --workdir "${{ runner.temp }}/acceptance-lifecycle"
+      - name: Check acceptance UI supervision and separate deployment
+        run: |
+          python3 tests/horizon-acceptance/supervisor_core.py --workdir "${{ runner.temp }}/acceptance-ui"
+          python3 tests/horizon-acceptance/test_package.py
+          python3 tests/horizon-acceptance/test_deploy.py
       - name: Check bounded diagnostic path sanitization on synthetic ELF fixtures
         run: python3 tests/switch-horizon/test_sanitize.py
 

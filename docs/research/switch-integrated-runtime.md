@@ -1,3 +1,7 @@
+> Current candidate (2026-10-28): [Stages12–15 hardware acceptance](switch-hardware-acceptance.md).
+> The following RuntimeII/Stage8 records and artifacts are preserved. Their
+> hardware execution remains UNKNOWN; no Stage16 follows before final acceptance.
+
 # Integrated Horizon synthetic runtime — current Runtime II and preserved Stage 8
 
 2026-10-28: Stages 9–11 are HOST/BUILD VERIFIED in their declared subset;

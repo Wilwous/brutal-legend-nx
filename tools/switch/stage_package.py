@@ -9,7 +9,7 @@ import argparse,hashlib,json,shutil,subprocess,sys,zipfile
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
-def package(build,work,app,title,expected):
+def package(build,work,app,title,expected,platform_expected=1):
  work.mkdir(parents=True,exist_ok=False);r=json.loads((build/'results.json').read_text())
  for n,digest in r['sources_sha256'].items():
   if sha(ROOT/n)!=digest:raise ValueError('build source changed: '+n)
@@ -24,11 +24,11 @@ def package(build,work,app,title,expected):
  revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True,timeout=10).strip()
  manifest={'application':title,'nro_path':'switch/'+app+'/'+nro,'nro_sha256':sha(appdir/nro),'source_commit':revision,
            'source_worktree_dirty':bool(subprocess.check_output(['git','status','--porcelain=v1'],cwd=ROOT,timeout=10)),
-           'sources_sha256':r['sources_sha256'],'host_passed':expected*3,'host_failed':0,'expected_console_passed':expected+1,
+           'sources_sha256':r['sources_sha256'],'host_passed':expected*3,'host_failed':0,'expected_console_passed':expected+platform_expected,'expected_platform_passed':platform_expected,
            'hardware_execution':'UNKNOWN','game_code_included':False,'build':r['switch']}
  (appdir/'build-info.json').write_text(json.dumps(manifest,indent=2,sort_keys=True)+'\n');(appdir/'SHA256SUMS').write_text(sha(appdir/nro)+'  '+nro+'\n')
- shutil.copyfile(ROOT/'LICENSE',appdir/'LICENSE.txt');shutil.copyfile(ROOT/('tests/horizon-runtime-ii/NOTICE.txt' if app=='brutal-legend-nx-runtime-ii' else 'tests/horizon-expansion/NOTICE.txt' if app=='brutal-legend-nx-runtime' else 'tests/horizon-runtime/NOTICE.txt'),appdir/'THIRD_PARTY.txt')
- (appdir/'README.txt').write_text(title+'\nOriginal synthetic fixture. NOT the game.\nCopy switch/ to SD root. Keep all earlier probes.\nBUILD VERIFIED; HARDWARE EXECUTION UNKNOWN.\nExpected successful console summary: PASS='+str(expected+1)+' FAIL=0. This has not yet been observed.\nLaunch using the existing homebrew setup; prefer Title Override. Photograph the complete screen, launch mode and platform versions. Press PLUS to exit.\nSafely eject SD storage before leaving Hekate USB Mass Storage.\nSource: https://github.com/Wilwous/brutal-legend-nx/tree/research/switch-horizon-feasibility\n')
+ shutil.copyfile(ROOT/'LICENSE',appdir/'LICENSE.txt');shutil.copyfile(ROOT/('tests/horizon-acceptance/NOTICE.txt' if app=='brutal-legend-nx-acceptance' else 'tests/horizon-runtime-ii/NOTICE.txt' if app=='brutal-legend-nx-runtime-ii' else 'tests/horizon-expansion/NOTICE.txt' if app=='brutal-legend-nx-runtime' else 'tests/horizon-runtime/NOTICE.txt'),appdir/'THIRD_PARTY.txt')
+ (appdir/'README.txt').write_text(title+'\nOriginal synthetic fixture. NOT the game.\nCopy switch/ to SD root. Keep all earlier probes.\nBUILD VERIFIED; HARDWARE EXECUTION UNKNOWN.\nExpected successful console summary: PASS='+str(expected+platform_expected)+' FAIL=0. This has not yet been observed.\nLaunch using the existing homebrew setup; prefer Title Override. Photograph the complete screen, launch mode and platform versions. Press PLUS to exit.\nSafely eject SD storage before leaving Hekate USB Mass Storage.\nSource: https://github.com/Wilwous/brutal-legend-nx/tree/research/switch-horizon-feasibility\n')
  names=sorted(str(p.relative_to(work/'package')) for p in appdir.iterdir())
  def archive(target):
   with zipfile.ZipFile(target,'x',zipfile.ZIP_DEFLATED,compresslevel=9) as z:

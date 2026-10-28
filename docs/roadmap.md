@@ -1,29 +1,39 @@
-# Research roadmap — independent Switch/Horizon feasibility
+# Research roadmap — mandatory Switch hardware acceptance next
 
-**Current independent Switch track (2026-10-28): Stages 9–11 HOST/BUILD VERIFIED
-within the declared original-synthetic subset; Runtime II HARDWARE UNKNOWN.**
-Stage 9 adds selected carry/sign/finite-FP/stack/pointer ABI checks; Stage 10 admits
-real NtQueryVirtualMemory selector 0 over checked uniform owned metadata; Stage 11
-adds bounded diagnostics, controlled refusal and lifetime/partial-startup stress.
-Final smoke 268/0, stress 387/0 in Debug/Release/ASan+UBSan; two clean AArch64 builds
-match. Expected new console PASS269/FAIL0, result24, SDK entered38/completed37,
-allocations0/leases0. This is unobserved. Old Stage 8 hardware stays UNKNOWN; only
-the earlier PASS38/r3=42/PLUS exit is externally verified. hbmenu launch is known,
-Applet/Title Override mode remains UNKNOWN.
-[Runtime II evidence and exact reproduction](research/switch-runtime-diagnostics.md).
+**2026-10-28: final host-only batch Stages12–15 HOST VERIFIED / BUILD VERIFIED
+in the declared original-synthetic scope; HARDWARE UNKNOWN. STOP runtime feature
+expansion until actual Nintendo Switch acceptance.** No Stage16 or game integration
+is authorized by synthetic results. [Consolidated candidate/report](research/switch-hardware-acceptance.md).
 
-| Independent track | Current status | Next dependency |
+Stage12 adds selected cntlzw/rotate/full-block VMX; reservation atomics, partial
+vectors and typed-vector ABI remain BLOCKED. Stage13 admits real bounded fill as
+the fourth SDK contract. Stage14 verifies lifecycle/ownership/contextual traces.
+Stage15 supplies a responsive native-controller UI and a separate acceptance app.
+The final fixture is21 functions/203 instructions/49 memory sites/97 hooks/four
+backedges. Debug/Release/ASan+UBSan each pass423/0 smoke and759/0 stress; native
+controller/trace-off smoke agree. Two clean AArch64 builds match. Expected new
+console total427/0, result197650, SDK entered64/completed61 and allocations0/leases0
+is an expectation only; it has not been observed on Switch.
+
+| Independent track | Current status | Required next evidence |
 | --- | --- | --- |
-| A — Xbox XEX residency | **BLOCKED**, preserved on `research/phase-22-blocked`; Phase 22 incomplete. G4/G8 BLOCKED, G5 UNKNOWN. | Independent original residency/ownership evidence. No debug hardware access; synthetic results cannot close this gate. |
-| B — Switch/Horizon runtime | Older PASS38 scope HARDWARE VERIFIED; Stages 4–11 HOST/BUILD VERIFIED, new hardware UNKNOWN; general Xbox runtime PARTIAL. | One final Integrated Runtime II observation with full build/result screen and normal PLUS exit. Resolve any platform failure before further ABI/services. |
+| A — Xbox XEX residency | Phase22/G4/G8 **BLOCKED**, G5 **UNKNOWN**, preserved on research/phase-22-blocked. | Independent original residency/ownership evidence; no debug hardware available. Synthetic results cannot close this gate. |
+| B — Horizon runtime | Selected Stages2–15 HOST/BUILD VERIFIED; general Xbox runtime PARTIAL; new hardware UNKNOWN. | Connect real Switch, deploy the final acceptance app safely, photograph the complete result/build/applet-type screen and confirm normal PLUS return to hbmenu. |
 
-The final package uses `switch/brutal-legend-nx-runtime-ii/`, preserving every
-previous app/package. No intermediate hardware tests are required. Unverified
-signatures/imports, typed vectors, reservation atomics, partial vectors, arbitrary
-callbacks and guest unwind/dispatch remain denied. There is no proprietary code
-execution, Phase 23, merge to main or Phase 22 completion tag. Original game
-execution remains **NO-GO**. The last completed core milestone remains
-`v0.0.21-entry-runtime-contracts`.
+Only the old PASS38/r3=42/PLUS probe has external PPC hardware evidence; Stage8,
+RuntimeII and the new candidate remain HARDWARE UNKNOWN. The new destination is
+`switch/brutal-legend-nx-acceptance/`; every older NRO/package is preserved.
+No intermediate hardware tests are required, but this final test is mandatory
+before further expansion. Native scheduling, actual stack/TLS/joins/SVC permissions
+and teardown remain hardware gates. The logical checked arena is not complete
+physical Horizon VM isolation. Full Xbox ABI/scheduler and guest unwind remain
+unsupported. Direct production re-entry to named xstart has an observed symbol
+blocker. Original game execution remains **NO-GO**.
+
+The core milestone remains v0.0.21-entry-runtime-contracts; this track neither
+completes Phase22 nor starts Phase23. No main merge, completion tag or GitHub
+Release. After candidate delivery: hardware acceptance only, then a scoped
+response to actual results rather than another host-only feature batch.
 
 ## Historical core baseline
 
