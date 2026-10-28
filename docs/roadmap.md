@@ -36,6 +36,24 @@ The next deliverable is a qualified original-fixture-only post-mapping/pre-entry
 evidence plan with ownership/commit/content/permission/lifetime and exceptional
 transition observations. No Phase23 or new development stage is started here.
 
+## Switch roadmap Stages20–22 — source and observation evidence
+
+These identifiers are independent of preserved Xbox Phase22. [Source audit](research/xex-loader-reference-audit.md)
+covers pinned Xenia loader/memory/exception paths and RXDK producer. The
+[original14-case differential](research/xex-synthetic-loader-differential.md)
+passes199 contracts in Debug/Release and the explicit offset-only Sanitized
+reference observation variant. The unmodified reference has13 recorded UBSan
+failures from one null-member macro; it is not sanitizer-clean. Strict SDK
+regressions pass337 residency and504 ownership/lifetime checks per profile.
+
+Full independent loader/heap lifecycle comparison remains PARTIAL; source
+slices plus an observation adapter are not Xbox allocation evidence. [Gate review](research/xex-gate-evidence-review.md)
+keeps G4/G8 BLOCKED, G5 UNKNOWN, original execution NO-GO. [Optional Xbox protocol](research/xbox-hardware-observation-protocol.md)
+is design-only; supported pre-entry owner/commit/lifetime observation is
+unavailable. Next action: qualify that channel or obtain an equivalently
+authoritative loader contract. No additional Switch build or test is justified,
+no game code is executed, no Phase23 is started, no historical branch is changed.
+
 ## Historical core baseline
 
 **Current Phase 21 gate (2026-10-24): VERIFIED original-synthetic runtime contracts.** All eight store classes pass positive and individual refusal tests through actual production codegen, the SDK loader and XThread. Loaded image ownership stays bounded despite a larger PE extent; malformed code/sections/context refuse. All 24 stop sites and 21 edges are observed. Final Debug/Release/ASan+UBSan regressions pass 752 core checks. Private stores/hooks remain uninstrumented, actual title startup values UNKNOWN and exception integration PARTIAL. Phase 22 instrumentation/audit is CONDITIONAL GO; game execution remains NO-GO. [Evidence, measurements and separate readiness layers](research/bounded-entry-runtime-contracts.md).

@@ -117,3 +117,13 @@ restoration instructions are kept privately. A local same-disk preservation copy
 is not an off-device backup. Only the Switch research branch may be pushed;
 main/Xbox branch, tags and Releases remain unchanged. CI verifies public original
 fixtures; its runner has no private SDK or title inputs.
+
+## Subsequent Switch roadmap Stages20–22 review
+
+[New source/differential/property assessment](xex-gate-evidence-review.md) retains
+decision C and original NO-GO. The original-fixture protocol is now documented;
+its required supported pre-entry owner/commit/lifetime interface remains
+unavailable. Next action is channel/contract qualification, not an unqualified
+hardware run. Full Xenia native ownership/lifecycle and unchanged-reference
+sanitizer compatibility remain unobserved/blocked respectively. This is not
+completion or resumption of the preserved Xbox Phase22 branch.

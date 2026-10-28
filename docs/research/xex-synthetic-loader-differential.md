@@ -95,7 +95,8 @@ and teardown regressions are additionally reported in the final gate review.
 Independent SDK-free corpus layout/identity tests:13 PASS. No unrelated large
 Switch workload is rerun. All potentially faulting children have a30s external
 monotonic whole-process-group watchdog; native unexpected signals/timeouts are
-reported separately from UBSan's observed exit1.
+reported separately: all13 original-reference UBSan terminations were
+SIGABRT (watchdog exit_code=-6), not ordinary exit1.
 
 ## Unsupported combinations and interpretation limits
 

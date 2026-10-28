@@ -34,7 +34,8 @@ python3 tests/loader-observation/run.py --reference "$XENIA_REFERENCE" --sdk "$S
 Output paths must be new and private, outside the repository. Each compile,
 emission and probe child has an external30-second process-group watchdog. The
 SDK binary/receipt hashes are checked against the existing22-patch SDK lock.
-Results include exact commands, source/extraction/fixture hashes, observations,
+The driver specifies the compile/invocation commands; results retain process
+labels, source/extraction/fixture hashes, observations,
 checks, errors, CPU time and peak RSS. No large Switch workload or NRO is built.
 
 ## Unsuppressed original-reference UBSan limitation

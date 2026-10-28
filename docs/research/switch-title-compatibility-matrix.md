@@ -88,3 +88,20 @@ flowchart TD
 Highest-priority proof path: R01 and R05. More synthetic opcodes or SDK stubs
 cannot resolve either. Stage17 tests the current ownership rule independently;
 Stage18 may strengthen diagnostic evidence without claiming Xbox continuation.
+
+## Switch roadmap Stages20–22 evidence update
+
+[Independent source audit](xex-loader-reference-audit.md) and
+[14-case source-slice differential](xex-synthetic-loader-differential.md) reinforce
+R01: raw/virtual declarations, security size and image allocations are distinct;
+NONE/BASIC/NORMAL allocation paths must be treated separately. A larger section
+still supplies no owner. Reference B is not full Xenia Memory/LoadContinue.
+Its unmodified PE path has a confirmed UBSan null-member offset defect; an
+explicit one-line observation variant is separate and does not change policy.
+R05 remains blocked: the reviewed reference RtlRaiseException is a stub/debugger
+path with incomplete unwind, not an independent Xbox exception oracle.
+[Gate/property review](xex-gate-evidence-review.md) retains G4/G8 BLOCKED and
+G5 UNKNOWN. [Optional observation protocol](xbox-hardware-observation-protocol.md)
+requires a qualified pre-entry image-owner channel; ordinary self-reporting
+cannot observe before its own entry. No title contract/gate is promoted and no
+new Horizon-specific behavior or NRO is introduced.
