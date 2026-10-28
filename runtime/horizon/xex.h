@@ -7,14 +7,14 @@ namespace brutal::horizon {
 REX_EXTERN(__imp__RtlCompareMemoryUlong);
 REX_EXTERN(__imp__RtlInitializeCriticalSection);
 REX_EXTERN(__imp__NtQueryVirtualMemory);
-struct GeneratedXex {uint32_t image_base,image_size,code_base,code_size;std::span<const Function> functions;PPCFunc* initializer{};PPCFunc* query{};};
+struct GeneratedXex {uint32_t image_base,image_size,code_base,code_size;std::span<const Function> functions;PPCFunc* initializer{};PPCFunc* query{};PPCFunc* fill{};};
 // Intentionally exact unencrypted/uncompressed original-fixture family.
 // No decryption, arbitrary PE virtual-size adoption, relocation or title loader.
 class XexImage {
  public:
-  struct Layout {uint32_t base{},entry{},tls{},slots{},static_size{},raw_size{},thunk{};bool initialize{},query{};std::vector<uint32_t> functions;};
+  struct Layout {uint32_t base{},entry{},tls{},slots{},static_size{},raw_size{},thunk{};bool initialize{},query{},fill{};std::vector<uint32_t> functions;};
   struct Policy {std::span<const uint8_t> image;const GeneratedXex& generated;uint32_t entry;};
-  enum class Signature { compare_u32_read_words,initialize_cs_inout,query_basic28,typed_vector,unverified };
+  enum class Signature { compare_u32_read_words,initialize_cs_inout,query_basic28,fill_u32_out,typed_vector,unverified };
  private:
   std::mutex unload_mutex_;
   Space& space_;ModuleLife life_{0x58455833};Layout layout_{};
@@ -55,27 +55,30 @@ class XexImage {
     require(std::find(l.functions.begin(),l.functions.end(),l.entry)!=l.functions.end());
     l.slots=be(0x380);l.tls=be(0x384);l.static_size=be(0x388);l.raw_size=be(0x38c);
     require(l.slots==64&&l.tls==l.base+0x20000&&l.static_size==32&&l.raw_size==16);
-    l.query=be(0x400)==0x5c;l.initialize=be(0x400)==0x54||l.query;require((be(0x400)==0x4c||l.initialize)&&be(0x404)==16&&be(0x408)==1);
+    l.fill=be(0x400)==0x64;l.query=be(0x400)==0x5c||l.fill;l.initialize=be(0x400)==0x54||l.query;require((be(0x400)==0x4c||l.initialize)&&be(0x404)==16&&be(0x408)==1);
     constexpr std::string_view library="xboxkrnl.exe";require(std::equal(library.begin(),library.end(),data.begin()+0x40c)&&data[0x418]==0);
-    require(be(0x41c)==(l.query?64:l.initialize?56:48)&&number(data,0x41c+38,false,2)==(l.query?6:l.initialize?4:2)&&be(0x444)==l.base+0x30000&&be(0x448)==l.base+0x30004);
+    require(be(0x41c)==(l.fill?72:l.query?64:l.initialize?56:48)&&number(data,0x41c+38,false,2)==(l.fill?8:l.query?6:l.initialize?4:2)&&be(0x444)==l.base+0x30000&&be(0x448)==l.base+0x30004);
     if(be(0x31000)!=0x11b||be(0x31004)!=0x100011b)throw Error(Fault::unsupported,"unadmitted XEX import ordinal/type");
     if(l.initialize){require(be(0x44c)==l.base+0x30008&&be(0x450)==l.base+0x3000c);
       if(be(0x31008)!=0x12e||be(0x3100c)!=0x100012e)throw Error(Fault::unsupported,"unadmitted initializer ordinal/type");}
     if(l.query){require(be(0x454)==l.base+0x30010&&be(0x458)==l.base+0x30014);
       if(be(0x31010)!=0xee||be(0x31014)!=0x10000ee)throw Error(Fault::unsupported,"unadmitted query ordinal/type");}
+    if(l.fill){require(be(0x45c)==l.base+0x30018&&be(0x460)==l.base+0x3001c);
+      if(be(0x31018)!=0x126||be(0x3101c)!=0x1000126)throw Error(Fault::unsupported,"unadmitted fill ordinal/type");}
     l.thunk=l.base+0x30004;return l;
   }
   XexImage(Space& space,std::span<const uint8_t> input,Policy policy,int fail_after=-1):space_(space){
     layout_=parse(input);
     if(policy.generated.image_base!=layout_.base||policy.generated.image_size!=0x40000||policy.generated.code_base!=layout_.base+0x10000||policy.generated.code_size!=65536)throw Error(Fault::argument,"generated image metadata mismatch");
-    if(policy.image.size()!=input.size()||!std::equal(input.begin(),input.end(),policy.image.begin())||policy.entry!=layout_.entry||policy.generated.functions.size()!=layout_.functions.size()+(layout_.query?3:layout_.initialize?2:1))
+    if(policy.image.size()!=input.size()||!std::equal(input.begin(),input.end(),policy.image.begin())||policy.entry!=layout_.entry||policy.generated.functions.size()!=layout_.functions.size()+(layout_.fill?4:layout_.query?3:layout_.initialize?2:1))
       throw Error(Fault::argument,"image/generated-code identity mismatch");
     for(size_t i=0;i<policy.generated.functions.size();++i){auto f=policy.generated.functions[i];
       if(!f.implementation||f.address!=(i<layout_.functions.size()?layout_.functions[i]:layout_.thunk+8*(i-layout_.functions.size())))throw Error(Fault::argument,"generated mapping mismatch");
       if(i==layout_.functions.size()&&(f.implementation!=__imp__RtlCompareMemoryUlong||f.name!="__imp__RtlCompareMemoryUlong"))throw Error(Fault::unsupported,"import symbol/signature admission");
     }
     if(layout_.initialize){auto f=policy.generated.functions[layout_.functions.size()+1];if(!policy.generated.initializer||f.implementation!=policy.generated.initializer||f.name!="__imp__RtlInitializeCriticalSection")throw Error(Fault::unsupported,"initializer symbol binding");}
-    if(layout_.query){auto f=policy.generated.functions.back();if(!policy.generated.query||f.implementation!=policy.generated.query||f.name!="__imp__NtQueryVirtualMemory")throw Error(Fault::unsupported,"query symbol binding");}
+    if(layout_.query){auto f=policy.generated.functions[layout_.functions.size()+2];if(!policy.generated.query||f.implementation!=policy.generated.query||f.name!="__imp__NtQueryVirtualMemory")throw Error(Fault::unsupported,"query symbol binding");}
+    if(layout_.fill){auto f=policy.generated.functions[layout_.functions.size()+3];if(!policy.generated.fill||f.implementation!=policy.generated.fill||f.name!="__imp__RtlFillMemoryUlong")throw Error(Fault::unsupported,"fill symbol binding");}
     functions_=policy.generated.functions;sections_.reserve(4);
     try{
       for(unsigned i=0;i<4;++i){if(int(i)==fail_after)throw Error(Fault::exhausted,"injected image initialization failure");
@@ -93,7 +96,7 @@ class XexImage {
   std::vector<std::byte> tls_template(){ModuleLife::Lease admission(life_);if(!loaded_)throw Error(Fault::stale,"image unloaded");return space_.read(layout_.tls,layout_.raw_size);}
   void lend(Scope& scope){ModuleLife::Lease admission(life_);if(!scope.belongs_to(life_,space_))throw Error(Fault::argument,"foreign module/space call scope");if(!loaded_)throw Error(Fault::stale,"image unloaded");for(auto h:sections_)scope.lend(h);}
   void invoke(Scope& scope,uint32_t entry){ModuleLife::Lease admission(life_);if(!scope.belongs_to(life_,space_))throw Error(Fault::argument,"foreign module/space entry scope");if(!loaded_||entry!=layout_.entry)throw Error(Fault::argument,"XEX entry admission");scope.invoke(entry);}
-  void admit_import(uint32_t ordinal,Signature signature){try{ModuleLife::Lease admission(life_);if(!((ordinal==0x11b&&signature==Signature::compare_u32_read_words)||(layout_.initialize&&ordinal==0x12e&&signature==Signature::initialize_cs_inout)||(layout_.query&&ordinal==0xee&&signature==Signature::query_basic28)))throw Error(Fault::unsupported,"unverified import or ABI signature");}catch(const Error&){diagnostic::emit(diagnostic::Kind::import_rejected,ordinal);throw;}}
+  void admit_import(uint32_t ordinal,Signature signature){try{ModuleLife::Lease admission(life_);if(!((ordinal==0x11b&&signature==Signature::compare_u32_read_words)||(layout_.initialize&&ordinal==0x12e&&signature==Signature::initialize_cs_inout)||(layout_.query&&ordinal==0xee&&signature==Signature::query_basic28)||(layout_.fill&&ordinal==0x126&&signature==Signature::fill_u32_out)))throw Error(Fault::unsupported,"unverified import or ABI signature");}catch(const Error&){diagnostic::emit(diagnostic::Kind::import_rejected,ordinal);throw;}}
   // A specific retained read-only image capability, not a generic raw pointer.
  private:
   friend class ImportFrame;

@@ -1,0 +1,9 @@
+{
+  "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+  "file": "src/kernel/xboxkrnl/xboxkrnl_rtl.cpp",
+  "source_sha256": "344c48eba0f1439bf002e7e80d6e9d6e92fa2434737e14f308efc33f96d1f392",
+  "function_sha256": "5700cfb87e932773f84721228528e8fbcb4c8ec4788f3483193ea879fcf2d5c7",
+  "ordinal": 294,
+  "signature": "void(mapped_void,u32,u32)",
+  "scope": "OUT-only aligned 4..64 byte multiple-of-four retained region; bounded scratch and checked atomic publication; no guest status fabricated"
+}

@@ -17,6 +17,11 @@ OFILES += query.o
 endif
 query.o: $(REPO)/tests/horizon-runtime-ii/query.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+ifeq ($(shell test $(STAGE_MAX) -ge 13 && echo yes),yes)
+OFILES += fill.o
+endif
+fill.o: $(REPO)/tests/horizon-acceptance/fill.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 all: probe.nro
 main.o: $(REPO)/tests/horizon-acceptance/main.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@

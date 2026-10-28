@@ -10,6 +10,10 @@ class Acceptance(unittest.TestCase):
  def setUp(self):
   t=tempfile.TemporaryDirectory();self.addCleanup(t.cleanup);self.root=Path(t.name);self.m=create(self.root/'one',Path(__file__).parent/'templates')
  def test_shape(self):self.assertEqual((len(self.m['functions']),self.m['instructions'],len(self.m['memory_sites']),len(self.m['hooks'])),(20,195,46,92))
+ def test_four_import_shape(self):
+  m=create(self.root/'four',Path(__file__).parent/'templates',fill=True);self.assertEqual((len(m['functions']),m['instructions'],len(m['memory_sites']),len(m['hooks'])),(21,203,49,97))
+ def test_fourth_import_exact(self):
+  create(self.root/'four',Path(__file__).parent/'templates',fill=True);b=(self.root/'four/fixture.xex').read_bytes();self.assertEqual(struct.unpack_from('>II',b,0x31018),(0x126,0x1000126));self.assertEqual(struct.unpack_from('>I',b,0x400)[0],0x64)
  def test_prefix(self):
   old=prior.create(self.root/'old',Path(__file__).parent/'templates',query=True);self.assertEqual(self.m['words'][:158],old['words'])
  def test_scalar_words(self):

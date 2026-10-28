@@ -42,7 +42,7 @@ def decode(word,pc):
   if xo==467 and spr in [8,9]:return ('mtlr' if spr==8 else 'mtctr')+f' r{rt}'
  raise ValueError('unreviewed original PPC word '+hex(word))
 def sources():
- names=['tools/switch/stage_package.py','tools/switch/deploy.py','tools/switch/common.py','runtime/diagnostics.h','runtime/horizon/query.h','tests/horizon-expansion/import.cpp','tests/horizon-expansion/sdk-lock.json','tests/horizon-expansion/fixture.py','tests/horizon-expansion/audit.py','runtime/checked_memory.h','runtime/cooperative_stop.h','tests/switch-horizon/result_ui.h','tests/switch-horizon/toolchain.json','tools/switch/sanitize_elf.py','tests/horizon-foundation/fixture.py','tests/xex-binding/fixture.py','tests/generated-dispatch/fixture.py']
+ names=['runtime/horizon/fill.h','tools/switch/stage_package.py','tools/switch/deploy.py','tools/switch/common.py','runtime/diagnostics.h','runtime/horizon/query.h','tests/horizon-expansion/import.cpp','tests/horizon-expansion/sdk-lock.json','tests/horizon-expansion/fixture.py','tests/horizon-expansion/audit.py','runtime/checked_memory.h','runtime/cooperative_stop.h','tests/switch-horizon/result_ui.h','tests/switch-horizon/toolchain.json','tools/switch/sanitize_elf.py','tests/horizon-foundation/fixture.py','tests/xex-binding/fixture.py','tests/generated-dispatch/fixture.py']
  names+=['runtime/horizon/'+n for n in ['native.h','space.h','guest.h','generated.h','xex.h']]
  names+=['tests/horizon-xex/'+n for n in ['fixture.py','sdk-lock.json','probe.h','probe.cpp','host.cpp','import.cpp','main.cpp','Makefile','inspect_nro.py','run.py','templates/codegen/pch_h.inja','templates/codegen/init_cpp.inja']]
  return {**{n:sha(ROOT/n) for n in names},**{p.relative_to(ROOT).as_posix():sha(p) for p in (ROOT/'tests/horizon-runtime-ii').rglob('*') if p.is_file() and '__pycache__' not in str(p)}}
@@ -84,7 +84,8 @@ def main():
   if 'XE_EXPORT(xboxkrnl, 0x0000012E, RtlInitializeCriticalSection,' not in (a.sdk_source/'src/kernel/xboxkrnl/export_table.inc').read_text():raise ValueError('ordinal evidence changed')
   (w/'sdk-initialize.inc').write_text(header+body)
  if a.stage>=10:load('sdk_query',ROOT/'tests/horizon-runtime-ii/sdk_query.py').extract(a.sdk_source,w)
- meta=expanded.create(w/'input',ROOT/'tests/horizon-acceptance/templates',query=a.stage>=10);cli=[tc/'rexglue','codegen',w/'input/fixture_manifest.toml'];execute(cli,'generation')
+ if a.stage>=13:load('sdk_fill',ROOT/'tests/horizon-acceptance/sdk_fill.py').extract(a.sdk_source,w)
+ meta=expanded.create(w/'input',ROOT/'tests/horizon-acceptance/templates',query=a.stage>=10,fill=a.stage>=13);cli=[tc/'rexglue','codegen',w/'input/fixture_manifest.toml'];execute(cli,'generation')
  generated=w/'input/generated';emitted=sorted([*generated.glob('*.cpp'),*generated.glob('*.h')]);fingerprints={p.name:sha(p) for p in emitted}
  execute([*cli,'--ignore-stamp'],'regeneration')
  if fingerprints!={p.name:sha(p) for p in emitted}:raise ValueError('non-deterministic production codegen')
@@ -102,6 +103,7 @@ def main():
   if denied in cpp:raise ValueError('unmediated generated operation '+denied)
  (w/'xex-data.h').write_text(data_header(meta,(w/'input/fixture.xex').read_bytes())+'\n#include "expansion-plan.h"\n')
  plan='#pragma once\n#include "runtime/horizon/generated.h"\n'
+ plan+='REX_EXTERN(__imp__RtlFillMemoryUlong);\ninline constexpr PPCFunc* acceptance_fill='+('__imp__RtlFillMemoryUlong' if a.stage>=13 else 'nullptr')+';\n'
  if a.stage>=6:
   plan+='REX_EXTERN(__imp__NtQueryVirtualMemory);\ninline constexpr PPCFunc* ii_query='+('__imp__NtQueryVirtualMemory' if a.stage>=10 else 'nullptr')+';\n'
   plan+='REX_EXTERN(__imp__RtlInitializeCriticalSection);\ninline constexpr PPCFunc* expansion_initializer='+('__imp__RtlInitializeCriticalSection' if a.stage>=7 else 'nullptr')+';\n'
@@ -121,7 +123,7 @@ def main():
  hosts=[];stress=[]
  for name,flags in [('Debug',['-O0']),('Release',['-O2']),('Sanitized',['-O1','-g','-fsanitize=address,undefined','-fno-sanitize-recover=all','-fno-omit-frame-pointer'])]:
   binary=w/('host-'+name)
-  execute(['clang++','-std=c++23','-pthread','-Wall','-Wextra','-Werror',*flags,'-DSTAGE_MAX='+str(a.stage),'-isystem',tc/'include','-iquote',ROOT,'-I',w,'-I',generated,ROOT/'tests/horizon-acceptance/host.cpp',ROOT/'tests/horizon-acceptance/probe.cpp',ROOT/'tests/horizon-runtime-ii/probe.cpp',ROOT/'tests/horizon-xex/import.cpp',*([ROOT/'tests/horizon-expansion/import.cpp'] if a.stage>=7 else []),*([ROOT/'tests/horizon-runtime-ii/query.cpp'] if a.stage>=10 else []),generated/'fixture_recomp.0.cpp',generated/'fixture_init.cpp',w/'hooks.cpp','-o',binary],'compile-'+name)
+  execute(['clang++','-std=c++23','-pthread','-Wall','-Wextra','-Werror',*flags,'-DSTAGE_MAX='+str(a.stage),'-isystem',tc/'include','-iquote',ROOT,'-I',w,'-I',generated,ROOT/'tests/horizon-acceptance/host.cpp',ROOT/'tests/horizon-acceptance/probe.cpp',ROOT/'tests/horizon-runtime-ii/probe.cpp',ROOT/'tests/horizon-xex/import.cpp',*([ROOT/'tests/horizon-expansion/import.cpp'] if a.stage>=7 else []),*([ROOT/'tests/horizon-runtime-ii/query.cpp'] if a.stage>=10 else []),*([ROOT/'tests/horizon-acceptance/fill.cpp'] if a.stage>=13 else []),generated/'fixture_recomp.0.cpp',generated/'fixture_init.cpp',w/'hooks.cpp','-o',binary],'compile-'+name)
   row=json.loads(execute([binary],'run-'+name))
   if row['failed'] or not row['passed'] or row['remaining'] or row['leases']:raise ValueError('expansion runtime failed')
   if hosts and row!={k:v for k,v in hosts[0].items() if k!='profile'}:raise ValueError('profile result drift')
@@ -134,7 +136,7 @@ def main():
    off=json.loads(execute([binary,'--no-trace'],'no-trace-'+name))
    if {k:v for k,v in off.items() if k not in ('diagnostics','dropped')}!={k:v for k,v in row.items() if k not in ('diagnostics','dropped')}:raise ValueError('tracing changed runtime outcomes')
  census=load('independent_census',ROOT/'tests/horizon-acceptance/audit.py').audit(meta,cpp) if a.stage>=6 else None
- result={'build_fingerprint':build_id,'codegen_fingerprint':codegen_id,'sdk_fingerprint':sdk_id,'stress':stress,'census':census,'stage':a.stage,'host':hosts,'static':{'functions':len(meta['functions']),'instructions':meta['instructions'],'hooks':len(meta['hooks']),'counts':counts,'admitted_imports':3 if a.stage>=10 else 2},'sources_sha256':{**sources(),**{p.relative_to(ROOT).as_posix():sha(p) for p in (ROOT/'tests/horizon-acceptance').rglob('*') if p.is_file() and '__pycache__' not in str(p)}},'generation_sha256':fingerprints,'xex_sha256':sha(w/'input/fixture.xex'),'sdk_function_sha256':lock['function_sha256'],'hardware_execution':'UNKNOWN','game_executed':False}
+ result={'build_fingerprint':build_id,'codegen_fingerprint':codegen_id,'sdk_fingerprint':sdk_id,'stress':stress,'census':census,'stage':a.stage,'host':hosts,'static':{'functions':len(meta['functions']),'instructions':meta['instructions'],'hooks':len(meta['hooks']),'counts':counts,'admitted_imports':4 if a.stage>=13 else 3},'sources_sha256':{**sources(),**{p.relative_to(ROOT).as_posix():sha(p) for p in (ROOT/'tests/horizon-acceptance').rglob('*') if p.is_file() and '__pycache__' not in str(p)}},'generation_sha256':fingerprints,'xex_sha256':sha(w/'input/fixture.xex'),'sdk_function_sha256':lock['function_sha256'],'hardware_execution':'UNKNOWN','game_executed':False}
  negatives=['REX_RAW_ADDR(0)','REX_PARTIAL_VECTOR_GUARD()','ppc_longjmp(0,0)','REX_UNIMPLEMENTED(0,"trap")','xstart(ctx.v0,base)']
  for i,expression in enumerate(negatives):
   f=w/f'negative-{i}.cpp';f.write_text('#include "fixture_pch.h"\nvoid deny(PPCContext& ctx,uint8_t* base){(void)ctx;(void)base;'+expression+';}\n')
@@ -158,7 +160,8 @@ def main():
     finally:
      clean=subprocess.run(['docker','rm','-f',name],capture_output=True,text=True,timeout=10)
      if clean.returncode and 'No such container' not in clean.stderr:raise RuntimeError('container cleanup failed')
-   container(['make','-f','/src/tests/horizon-acceptance/Makefile','REPO=/src','STAGE_MAX='+str(a.stage),*(['ICON=/icon.jpg'] if a.icon else [])],'link')
+   targets=['main.o','probe.o','baseline.o','leaf.o','mapping.o','hooks.o','import.o','initialize.o','query.o']+(['fill.o'] if a.stage>=13 else [])+['probe.nro']
+   for target in targets:container(['make','-f','/src/tests/horizon-acceptance/Makefile','REPO=/src','STAGE_MAX='+str(a.stage),*(['ICON=/icon.jpg'] if a.icon else []),target],'build-'+target)
    container(['python3','/src/tests/horizon-acceptance/inspect_nro.py'],'inspect')
    outputs.append({n:sha(out/n) for n in ['probe.nro','probe.elf','leaf.o','mapping.o','import.o']})
   if outputs[0]!=outputs[1]:raise ValueError('non-deterministic clean build')

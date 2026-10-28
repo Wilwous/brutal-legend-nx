@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 s=importlib.util.spec_from_file_location('runtime_ii_original',ROOT/'tests/horizon-runtime-ii/fixture.py');prior=importlib.util.module_from_spec(s);s.loader.exec_module(prior)
 x=prior.x;d=prior.d;spr=prior.spr
-def create(path,templates,query=True):
+def create(path,templates,query=True,fill=False):
  m=prior.create(path,templates,query=True);words=m['words'];functions=m['functions'];sizes=m['sizes'];code=m['code_base']
  def function(name,body):functions[name]=code+4*len(words);sizes[name]=len(body);words.extend(body)
  # cntlzw r6,r3; rlwinm r3,r4,8,8,23; blr (non-record forms).
@@ -18,11 +18,15 @@ def create(path,templates,query=True):
  for reg,offset in [(3,0xc00),(4,0xc10),(5,0xc20)]:body+=[d(15,reg,0,0x8203),d(24,reg,reg,offset)]
  body+=[bl(functions['vector_blocks']),x(14,3,14,444),d(58,14,1,16),d(32,0,1,68),spr(0,8,True),d(14,1,1,64),0x4e800020]
  function('acceptance_multicall',body)
+ if fill:
+  pc=code+4*len(words);function('fill_only',[d(37,1,1,-32),spr(0,8),d(36,0,1,36),0x48000001|((0x8203001c-(pc+12))&0x3fffffc),d(32,0,1,36),spr(0,8,True),d(14,1,1,32),0x4e800020])
  image=bytearray((path/'fixture.xex').read_bytes());be=lambda at,value:struct.pack_into('>I',image,at,value)
  codebytes=b''.join(struct.pack('>I',v) for v in words);image[0x11000:0x11000+len(codebytes)]=codebytes
  struct.pack_into('<I',image,0x1000+0x98+100+24,len(functions)*8)
  for i,(name,addr) in enumerate(functions.items()):be(0x21100+i*8,addr);be(0x21104+i*8,(sizes[name]<<8)|0x40000000)
  for i,value in enumerate([0xffffffff,0x10203040,0x80000000,0x01020304,1,0x11223344,0x80000000,0x04030201]):be(0x31c00+i*4,value)
+ if fill:
+  be(0x400,0x64);be(0x41c,72);struct.pack_into('>H',image,0x442,8);be(0x45c,0x82030018);be(0x460,0x8203001c);be(0x31018,0x126);be(0x3101c,0x1000126)
  (path/'fixture.xex').write_bytes(image)
  sites=[];memory=[];back=[];returns=[]
  for i,w in enumerate(words):
@@ -37,7 +41,7 @@ def create(path,templates,query=True):
    target=pc+delta;kind='direct' if op==18 and w&1 else 'branch'
    if kind=='branch' and target<=pc:back.append(pc)
   if kind:sites.append(dict(pc=pc,owner=owner,kind=kind,width=width,target=target))
- m.update(words=words,code=list(codebytes),instructions=len(words),sites=sites,hooks=[s['pc'] for s in sites],memory_sites=memory,backedges=back,return_sites=returns)
+ m.update(fill=fill,words=words,code=list(codebytes),instructions=len(words),sites=sites,hooks=[s['pc'] for s in sites],memory_sites=memory,backedges=back,return_sites=returns)
  manifest=(path/'fixture_manifest.toml').read_text().split('\n[[entrypoint.midasm_hook]]')[0]
  for pc in m['hooks']:manifest+=f'\n[[entrypoint.midasm_hook]]\naddress={pc}\nname="horizon_point_{pc:X}"\n'
  (path/'fixture_manifest.toml').write_text(manifest);(path/'xex-layout.json').write_text(json.dumps(m,indent=2)+'\n');return m
