@@ -23,6 +23,19 @@ unverified. Existing software guest checks and strict loader/binder remain intac
 The core baseline stays Phase21; Phase22 remains BLOCKED, no Phase23 starts.
 No main merge, completion tag or Release.
 
+## Stages16–19 result and next gate
+
+- [Compatibility matrix](research/switch-title-compatibility-matrix.md):15 traced requirements; owner/residency and exception evidence are P0.
+- [XEX evidence](research/xex-residency-evidence.md): offline refusal reproduced,23 actual SDK cases/337 checks per Debug/Release/Sanitized; no loader weakening.
+- [Compatibility services](research/switch-compatibility-services.md):30 new host refusal/cleanup checks per profile; existing generated423/0 smoke and759/0 stress retained; no unproven import/ISA expansion.
+- [Stage19 decision C](research/switch-next-readiness-gate.md): acquire independently qualified Xbox loader/exception evidence before reconsidering title entry. No new NRO is justified by host-only work; no routine Switch test or deployment is required.
+
+G4/G8 remain BLOCKED, G5 UNKNOWN. Recovery III's other offline PARTIAL gates
+remain partial; none grants live admission. Original game execution **NO-GO**.
+The next deliverable is a qualified original-fixture-only post-mapping/pre-entry
+evidence plan with ownership/commit/content/permission/lifetime and exceptional
+transition observations. No Phase23 or new development stage is started here.
+
 ## Historical core baseline
 
 **Current Phase 21 gate (2026-10-24): VERIFIED original-synthetic runtime contracts.** All eight store classes pass positive and individual refusal tests through actual production codegen, the SDK loader and XThread. Loaded image ownership stays bounded despite a larger PE extent; malformed code/sections/context refuse. All 24 stop sites and 21 edges are observed. Final Debug/Release/ASan+UBSan regressions pass 752 core checks. Private stores/hooks remain uninstrumented, actual title startup values UNKNOWN and exception integration PARTIAL. Phase 22 instrumentation/audit is CONDITIONAL GO; game execution remains NO-GO. [Evidence, measurements and separate readiness layers](research/bounded-entry-runtime-contracts.md).

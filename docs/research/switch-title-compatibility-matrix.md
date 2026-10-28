@@ -36,12 +36,12 @@ normal imports. H evidence is never automatically transferred to D.
 | --- | --- | --- | --- | --- |
 | R01 P0 image allocation/owner | H/S: original flat synthetic XEX only; `runtime/horizon/xex.h`, `space.h` own and lease ranges | X: original SDK loader refuses; one PE virtual tail lacks owner evidence | Required; G4 BLOCKED. Descriptor bytes cannot authorize extra extent | High risk; external Xbox allocation/commit/content/permission/owner/lifetime evidence before any correction |
 | R02 P0 initial memory/values | H/S: authored constants, explicit zero-fill within committed allocations | X: static decoded bytes available; live initial title values UNKNOWN | Required; R01 then G5 UNKNOWN | High risk; prove consumed startup bytes/registers and provenance; no synthetic substitute |
-| R03 P0 generated memory mediation | H/S:49 instrumented sites (45 scalar,4 full vector) in203 authored words; checked capability/permissions/endian | X: preserved compile-only8 stores/20 hook references; no invoked private hook bodies | Required; G2/G3 BLOCKED, R01/R02; no new game compilation | High risk; separately reviewed offline generation/binding provenance and runtime contracts, not larger synthetic denominator |
+| R03 P0 generated memory mediation | H/S:49 instrumented sites (45 scalar,4 full vector) in203 authored words; checked capability/permissions/endian | X: preserved compile-only8 stores/20 hook references; no invoked private hook bodies | Required; G2/G3 PARTIAL offline, live admission blocked; R01/R02; no new game compilation | High risk; separately reviewed offline generation/binding provenance and runtime contracts, not larger synthetic denominator |
 | R04 P0 CFG/stop boundaries | H/S:97 hooks,4 backedges,17 call sites,20 returns,11 branch edges; `generated.h`, strict ControlPlan | X: frozen19 instructions plus one unexecuted pre-call boundary;4 blocks,2 ranges,19 normal edges,0 loops | Required; frozen audit is not execution admission; R03/R05 | Bounded stop cannot interrupt arbitrary native syscall; prove proposed boundaries and exact binding |
 | R05 P0 fault/refusal/unwind | H/S: typed Error, structured trace, host RAII; `generated.h`, `diagnostics.h`; no Xbox CONTEXT dispatcher | X: required guest exceptional transfer semantics missing | G8 BLOCKED; observed host refusal alone insufficient | High risk; fault-time context and required Xbox exception transitions must be established; no guest continuation |
-| R06 P0 stack/PCR/TLS and ABI | H/S: real PPCContext, own16KiB guest stack, native TLS, selected r1/r2/r13 and scalar/FPR tests; `guest.h` | X: Phase21 synthetic XThread only; title PCR/stack provenance not admitted | R02/R05, G6 PARTIAL/G7 BLOCKED; full Xbox ABI UNKNOWN | Prove exact consumed fields and signature, not every possible ABI; typed-vector marshalling refused |
+| R06 P0 stack/PCR/TLS and ABI | H/S: real PPCContext, own16KiB guest stack, native TLS, selected r1/r2/r13 and scalar/FPR tests; `guest.h` | X: Phase21 synthetic XThread only; title PCR/stack provenance not admitted | R02/R05, G6 PARTIAL; full Xbox ABI UNKNOWN | Prove exact consumed fields and signature, not every possible ABI; typed-vector marshalling refused |
 | R07 P0 module lifetime | H/S: active execution/import leases block unload; transactional rollback, handle ownership | X: preserved SDK synthetic leases/rollback; title-wide allocation fails | R01/R06, G9 PARTIAL; no live original module | General rule host-testable; original owner and neighbor/lifetime rule still external |
-| R08 P0 identity/publication/budget | H/S: production generator, pinned hashes, deterministic NRO, watchdog and cancellation | X: source hash and private compile receipts; no guest invocation | G1/G10/G12 PASS within original gate definitions; G11 BLOCKED | Preserve source, privacy, watchdog, no original execution; these gates alone cannot admit entry |
+| R08 P0 identity/publication/budget | H/S: production generator, pinned hashes, deterministic NRO, watchdog and cancellation | X: source hash and private compile receipts; no guest invocation | G1/G10/G12 PASS within original gate definitions; G11 PARTIAL offline | Preserve source, privacy, watchdog, no original execution; these gates alone cannot admit entry |
 | R09 P1 ordinary imports | H/S: exactly4 Horizon exports, narrow signatures; `xex.h`, `query.h`, `fill.h` | X:274 recognized import records /261 function shims is identity inventory, not implementation coverage | Frozen region needs0 normal imports; save-helper call is not an SDK export | Actual subsequent startup dependency UNKNOWN; admit only proven required call/signature/error/ownership |
 | R10 P1 integer/control semantics | H/S: authored subset including cntlzw/selected rlwinm; production codegen audited | X: frozen instruction classification exists privately | Required only for actual frozen slice, not a whole ISA | No new opcode justified by this audit; independent oracle first |
 | R11 P1 FPR/vector ABI | H/S: selected finite scalar FPR; full-block lvx/stvx/vadduwm/vxor; typed-vector signatures denied | X: no new required vector/FPR ABI established for frozen slice | Not newly established as a D dependency | Later requirements UNKNOWN; preserve partial-vector/typed-vector refusal |
@@ -61,8 +61,12 @@ RSA authenticity or extra allocation. Frozen title region:19 admitted offline
 instructions,0 proprietary instructions executed in this work;0/0 required normal
 SDK imports in that frozen region, which says nothing about later startup.
 
-Original mandatory G1–G12 status (not redefined):3 PASS (G1/G10/G12),2 PARTIAL
-(G6/G9),1 UNKNOWN (G5),6 BLOCKED (G2/G3/G4/G7/G8/G11). No completion percentage.
+Original mandatory G1–G12 evidence status (not redefined):3 PASS (G1/G10/G12),
+6 PARTIAL (G2/G3/G6/G7/G9/G11),1 UNKNOWN (G5),2 BLOCKED (G4/G8). The later
+Recovery III table supersedes the earlier pre-offline table retained in the
+protected report; PARTIAL offline artifacts still do not satisfy live admission.
+This carries forward preserved evidence and is not an upgrade from this work.
+No completion percentage.
 
 ```mermaid
 flowchart TD
