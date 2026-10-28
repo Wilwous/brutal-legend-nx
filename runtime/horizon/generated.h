@@ -103,6 +103,16 @@ class Scope {
   }
   template<class T>static T load(PPCContext& context,uint32_t address){auto&s=current(context);s.memory_site(Access::read,sizeof(T));s.permitted(address,sizeof(T));auto v=s.guest_.space().load<T>(address);++s.reads;return v;}
   template<class T>static void store(PPCContext& context,uint32_t address,T value){auto&s=current(context);s.memory_site(Access::write,sizeof(T));s.permitted(address,sizeof(T));s.guest_.space().store<T>(address,value);++s.writes;}
+  static void load_vector(PPCContext& context,PPCVRegister& value,uint32_t address){
+    auto&s=current(context);s.memory_site(Access::read,16);s.permitted(address,16);
+    if(address&15)throw Error(Fault::argument,"vector adapter requires rounded block address");
+    auto bytes=s.guest_.space().read(address,16);for(unsigned i=0;i<16;++i)value.u8[15-i]=std::to_integer<uint8_t>(bytes[i]);++s.reads;
+  }
+  static void store_vector(PPCContext& context,uint32_t address,const PPCVRegister& value){
+    auto&s=current(context);s.memory_site(Access::write,16);s.permitted(address,16);
+    if(address&15)throw Error(Fault::argument,"vector adapter requires rounded block address");
+    std::array<std::byte,16> bytes;for(unsigned i=0;i<16;++i)bytes[i]=std::byte(value.u8[15-i]);s.guest_.space().write(address,bytes);++s.writes;
+  }
   void invoke(uint32_t address){for(auto f:functions_)if(f.address==address){dispatch(f);return;}diagnostic::emit(diagnostic::Kind::branch_rejected,2);throw Error(Fault::unsupported,"unknown generated target");}
   template<class F>requires std::same_as<F,PPCFunc*>
   static void direct(F function,PPCContext& context,uint8_t* base){
