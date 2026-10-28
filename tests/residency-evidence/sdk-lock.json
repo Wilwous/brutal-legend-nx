@@ -1,0 +1,27 @@
+{
+  "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+  "patch_source_commit": "f3c6affb913fa4fb4da1031fdbf6a9b4fca73416",
+  "patch_lock_path": "tools/sdk/residency-lock.json",
+  "patch_lock_sha256": "edd55c8d89851303d779e27f785dd1bcc6141c6d06cba913fb470e11d5ae7bb2",
+  "patch_count": 22,
+  "profiles": {
+    "Debug": {
+      "config": "Debug",
+      "runtime_filename": "librexruntimed.dylib",
+      "runtime_sha256": "65294e7b733d485bde7e7a3a3f01fe2d245fa36296018fe66ec06466c594a64c",
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2"
+    },
+    "Release": {
+      "config": "Release",
+      "runtime_filename": "librexruntime.dylib",
+      "runtime_sha256": "747a56de0aabe3befb943a5ea67f05a4141ba138780a2d38b6d5dd6f11a70cab",
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2"
+    },
+    "Sanitized": {
+      "config": "Sanitized",
+      "runtime_filename": "librexruntime.dylib",
+      "runtime_sha256": "be4392c3dfb2c33241de80ff64189aac7b8ef2ad6a3222cbfdb71a4acc2c949d",
+      "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2"
+    }
+  }
+}
