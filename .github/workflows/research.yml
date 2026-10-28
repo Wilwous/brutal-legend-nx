@@ -18,6 +18,8 @@ jobs:
           persist-credentials: false
       - name: Check public research contents and local links
         run: python3 tools/check_public_tree.py
+      - name: Check independent original XEX observation corpus and pinned fixture identities
+        run: python3 tests/loader-observation/test_corpus.py
       - name: Check host-only compatibility refusal and cleanup contracts in three profiles
         run: python3 tests/compatibility-services/run.py --workdir "${{ runner.temp }}/compatibility-services"
       - name: Check original static residency evidence fixtures (no SDK or title input)

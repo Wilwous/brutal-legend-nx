@@ -1,0 +1,7 @@
+--- a/reference-methods.inc
++++ b/reference-methods.inc
+@@ -189,3 +189,3 @@
+ // offsetof seems to be unable to find OptionalHeader.
+-#define offsetof1(type, member) ((std::size_t) & (((type*)0)->member))
++#define offsetof1(type, member) offsetof(type, member)
+ #define IMAGE_FIRST_SECTION1(ntheader)                                   \

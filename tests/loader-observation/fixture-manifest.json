@@ -1,0 +1,20 @@
+{
+  "original_corpus": true,
+  "guest_entry": "marker write then trap; never invoked",
+  "images": {
+    "plain": "f866d24fe8ff78f128abbae6ff36926fc94813f3bc2c37c58cce7cbe8930cd70",
+    "raw-zero": "7da05bf060376d01422a846c2db66bb303f683cd879fd9c07d891b0ba05a2362",
+    "raw-short": "e3f575c5dd8d50454ab749db38479a7095da023bf868c194ff17002ba2455835",
+    "pe-overhang": "97bf12e7e03c7eeb4ef23f47256cdd0978b9a90baa6db189e5e89dcdbd463aa8",
+    "owned-tail": "086cb87be23f330c02935c7ec9d091e787144efe3521848ab54bf2ea84ec1cef",
+    "basic-zero": "eeac64c679280aee262a19f32f4203d8b755a74727fd57abe707d05bf2ee1050",
+    "basic-gap": "5fa0c4149bd6b07869a94a3de3e6b9adcfbd585c14fd9ecd6f60aebf2b8caca0",
+    "none-short": "60f45c40b35d1537598d7bd60347278837e9dc7df2e647ff977e357f23b4a5db",
+    "security-larger": "e506b08ba426efeb86cf4d6e3fc0c8c1acb69d15e3d0d7e09829c2129f86f23f",
+    "no-read": "e30d56781d3f9549a91c161367ca58e0173ac09c4e7776ea61c609a750c63adc",
+    "overlap": "be34531e5e9f4a4e52af780e2155da2fbc0a7ce66f38a0341fdfb836ee004b4e",
+    "invalid-entry": "124d6830ba6035711b95370bb484bdf60354987cbd8f1583070cc2e0db2f85f5",
+    "bad-pe": "f0d1aa123fdb0722954bfc41b58b4ff216e7834f15107dd030398e67cffeaf12",
+    "rounded-owned": "a6d5b7de8df2fd8609a362817b76dff43dee521fc341a17849f81b7427a30a71"
+  }
+}

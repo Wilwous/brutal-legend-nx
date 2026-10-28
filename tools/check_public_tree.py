@@ -18,6 +18,19 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    'tests/loader-observation/README.md',
+    'tests/loader-observation/NOTICE.txt',
+    'tests/loader-observation/corpus.cpp',
+    'tests/loader-observation/project.cpp',
+    'tests/loader-observation/reference.cpp',
+    'tests/loader-observation/extract.py',
+    'tests/loader-observation/run.py',
+    'tests/loader-observation/verify.py',
+    'tests/loader-observation/test_corpus.py',
+    'tests/loader-observation/defined-offset.patch',
+    'tests/loader-observation/fixture-manifest.json',
+    'tests/loader-observation/expected-observations.json',
+
     'tests/loader-observation/reference-lock.json',
     'tests/compatibility-services/contracts.cpp',
     'tests/compatibility-services/run.py',
