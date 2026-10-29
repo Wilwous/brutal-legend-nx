@@ -1,5 +1,18 @@
 # Research roadmap — title readiness evidence
 
+## Current decision — Switch Stage23 (2026-10-29)
+
+[Evidence-acquisition feasibility](research/xbox-evidence-acquisition-feasibility.md):
+**BLOCKED PENDING EXTERNAL EVIDENCE.** Newly inspected public360 debugger clients
+provide transport/UI source, not a qualified pre-TLS allocation-owner/commitment
+or guest exception contract. Public modern GDK access policy does not establish
+availability of legacy360 documentation. No qualified accessible path was found
+in the bounded review; stop rule applied. No further speculative stage, repeated
+loader experiment or Switch NRO is proposed. G4/G8 BLOCKED, G5 UNKNOWN, original
+execution NO-GO. Only genuinely new qualified external evidence can reopen review.
+This Switch documentation stage does not start core Xbox Phase23 or resume the
+preserved blocked Xbox Phase22 branch.
+
 ## Stages16–19 scope (2026-10-28)
 
 Stage15 Candidate0.15.0 build80407778989c is **HARDWARE VERIFIED** by the user's

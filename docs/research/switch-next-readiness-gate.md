@@ -127,3 +127,11 @@ unavailable. Next action is channel/contract qualification, not an unqualified
 hardware run. Full Xenia native ownership/lifecycle and unchanged-reference
 sanitizer compatibility remain unobserved/blocked respectively. This is not
 completion or resumption of the preserved Xbox Phase22 branch.
+
+## Switch Stage23 terminal feasibility decision
+
+The [bounded acquisition review](xbox-evidence-acquisition-feasibility.md) found
+accessible new debugger-client source but no qualified accessible Xbox360
+pre-TLS owner/commit/lifetime or exception-contract source. Decision remains
+**BLOCKED PENDING EXTERNAL EVIDENCE**; stop rule applied. No new experiment,
+follow-up stage or runtime expansion is proposed. G4/G8 BLOCKED, G5 UNKNOWN.
