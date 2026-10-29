@@ -1,5 +1,14 @@
 # Research roadmap — title readiness evidence
 
+## Final research freeze (2026-10-29)
+
+[Recovery checkpoint and verified scope](research/RESEARCH-FREEZE.md) preserve
+Stage23, the unchanged hardware-observed Candidate0.15.0 package, toolchain pins,
+selected host regression evidence and exact restoration instructions. This is
+documentation/preservation, not a new engineering stage. G4/G8 remain BLOCKED,
+G5 UNKNOWN and original game execution NO-GO. Stop pending qualified external
+evidence; no Stage24, new NRO or resumed Xbox Phase22 work.
+
 ## Current decision — Switch Stage23 (2026-10-29)
 
 [Evidence-acquisition feasibility](research/xbox-evidence-acquisition-feasibility.md):
