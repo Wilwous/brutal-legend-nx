@@ -1,5 +1,13 @@
 # Research roadmap — title readiness evidence
 
+## Targeted post-freeze investigation (2026-10-30)
+
+[Native image contract comparison](research/native-image-contract-investigation.md)
+finds source-backed independent native layouts and validates an original
+host-only owned-tail model. This separates native ownership from Xbox historical
+residency; title initialization/startup correctness remains unproven. G4/G8
+BLOCKED, G5 UNKNOWN, game NO-GO. No Stage24 or original execution is started.
+
 ## Final research freeze (2026-10-29)
 
 [Recovery checkpoint and verified scope](research/RESEARCH-FREEZE.md) preserve
