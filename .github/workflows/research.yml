@@ -20,6 +20,8 @@ jobs:
         run: python3 tests/native-image-binding/test_fixture.py
       - name: Check non-admitting interval provenance on original fixtures
         run: python3 tests/native-provenance/test_intervals.py
+      - name: Check resource coordinates, PNG CRC, initialization and binding identities
+        run: python3 tests/native-provenance/test_initialization.py
       - name: Check DATA-only validator refusals in three profiles
         run: python3 tests/native-provenance/run_reader.py --workdir "${{ runner.temp }}/native-provenance-reader"
       - name: Check original overhanging-section ownership and rollback

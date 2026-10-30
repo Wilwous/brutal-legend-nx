@@ -17,9 +17,9 @@ int main(int argc,char**argv){try{
  auto count=n();if(count>4096)return 2;
  for(size_t i=0;i<count;++i){Region r;r.owner=n();r.address=u();r.size=u();r.source_offset=u();r.file_size=u();r.zero_size=u();r.alignment=u();r.rights=Rights(u());r.init=Init(u());r.reserve=bit();r.commit=bit();p.regions.push_back(r);}
  if(at!=data.size())return 2;unsigned refusals=0;
- try{validate(p,source,identity(p));return 3;}catch(const brutal::horizon::Error&){++refusals;}
+ try{validate(p,source,identity(p));return 3;}catch(const brutal::horizon::Error&e){std::cerr<<e.what()<<'\n';++refusals;}
  // Diagnostic isolation of origin gate, not a truncated/admitted title plan.
  auto origin_control=p;origin_control.regions.clear();
- try{validate(origin_control,source,identity(origin_control));return 3;}catch(const brutal::horizon::Error&){++refusals;}
+ try{validate(origin_control,source,identity(origin_control));return 3;}catch(const brutal::horizon::Error&e){std::cerr<<e.what()<<'\n';++refusals;}
  std::cout<<"{\"expected_refusals\":"<<refusals<<",\"source_identity_match\":"<<(digest(source)==p.source?"true":"false")<<",\"guest_images_constructed\":0,\"guest_instructions\":0}\n";return 0;
  }catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
