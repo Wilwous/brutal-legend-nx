@@ -1,5 +1,16 @@
 # Research roadmap — title readiness evidence
 
+## Separate native recompilation route — N1–N3 (2026-10-30)
+
+[Plan validation](research/native-image-plan.md), [production binding](research/native-image-code-binding.md),
+[Horizon integration](research/native-image-horizon-integration.md) and
+[title readiness](research/native-image-title-readiness.md) define a separate
+original-synthetic route. N1 and N2 have independent host checkpoints; N3 reuses
+checked memory, thread/TLS/CFI and UI components. Console execution of the new
+probe remains UNKNOWN until externally observed. Historical G4/G8 BLOCKED,
+G5 UNKNOWN; original-title native gates are not closed by synthetic evidence.
+The strict loader, Stage15 hardware package and blocked Xbox branch are preserved.
+
 ## Targeted post-freeze investigation (2026-10-30)
 
 [Native image contract comparison](research/native-image-contract-investigation.md)

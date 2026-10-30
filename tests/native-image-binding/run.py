@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (c) 2026 Wilwous
 """Production generator -> immutable native plan -> real SDK leaf -> checked PPC."""
-import argparse,hashlib,json,re,sys,struct
+import argparse,hashlib,json,re,sys,struct,subprocess
 from pathlib import Path
 from fixture import create,load,ROOT
 sys.path.insert(0,str(ROOT/'tests/ppc'));from watchdog import run
@@ -35,9 +35,16 @@ for s in meta['sites']:contract_numbers += [s['pc'],s['owner'],kind_ids[s['kind'
 contract_numbers += [len(meta['functions']),*meta['functions'].values(),0x8201feed]
 contracts_id=hashlib.sha256(b''.join(struct.pack('>Q',n) for n in contract_numbers)).hexdigest()
 def dig(s):return '{'+','.join(map(str,bytes.fromhex(s)))+'}'
-image=(w/'input/fixture.xex').read_bytes();data='#pragma once\n#include "runtime/horizon/native_image_binding.h"\nusing namespace brutal::horizon;using namespace brutal::horizon::native_image;\nextern const Function native_functions[];extern const size_t native_function_count;\n'
+native_regions=[]
+for i in range(4):
+ size=65536 if i<3 else 131072;length=65536 if i<3 else 1024
+ native_regions.append([i+1,0x82000000+i*65536,size,4096+i*65536,length,size-length,4096,[1,5,1,3][i],1,1,1])
+plan_numbers=[1,1,0x4e324e33,1,0x82000000,0x82060000,0x82010000,0x82020000,16,32,64,0]
+canonical=b''.join(struct.pack('>Q',n) for n in plan_numbers)+b''.join(bytes.fromhex(v) for v in [source_id,code_id,sdk_id,runtime_id])+struct.pack('>Q',4)+b''.join(struct.pack('>Q',n) for row in native_regions for n in row)+b''.join(struct.pack('>Q',n) for n in [1,0x11b,1])
+plan_id=hashlib.sha256(canonical).hexdigest()
+image=(w/'input/fixture.xex').read_bytes();assert not any(image[4096+0x30400:4096+0x50000]);data='#pragma once\n#include "runtime/horizon/native_image_binding.h"\nusing namespace brutal::horizon;using namespace brutal::horizon::native_image;\nextern const Function native_functions[];extern const size_t native_function_count;\n'
 data+='inline constexpr uint8_t native_bytes[]{'+','.join(map(str,image))+'};\n'
-data+='inline constexpr CodeIdentity native_identity{'+','.join(dig(v) for v in [source_id,ppc_id,code_id,sdk_id,runtime_id,contracts_id])+',0x82010000,0x82020000};\n'
+data+='inline constexpr CodeIdentity native_identity{'+','.join(dig(v) for v in [source_id,ppc_id,code_id,sdk_id,runtime_id,contracts_id,plan_id])+',0x82010000,0x82020000};\n'
 data+='inline Plan native_plan(){Plan p;p.provenance=Provenance::original_synthetic;p.module=0x4e324e33;p.lifetime=1;p.base=0x82000000;p.limit=0x82060000;p.entry=0x82010000;p.tls_address=0x82020000;p.tls_file_size=16;p.tls_total_size=32;p.tls_slots=64;p.source=native_identity.source;p.code=native_identity.generated;p.sdk=native_identity.sdk;p.runtime=native_identity.runtime;p.imports={{0x11b,1}};\n'
 for i in range(4):
  address=0x82000000+i*65536;size=65536 if i<3 else 131072;length=65536 if i<3 else 1024;rights=['read','read_execute','read','read_write'][i];data+=f'p.regions.push_back(Region{{{i+1},{address},{size},{4096+i*65536},{length},{size-length},4096,Rights::{rights},Init::file_then_authored_zero,true,true}});\n'
@@ -46,8 +53,11 @@ data+='inline constexpr uint32_t native_roots[]{'+','.join(map(str,meta['functio
 rows=[(pc,meta['sizes'][name]*4) for name,pc in meta['functions'].items()]+[(0x82030004,4)];data+='inline constexpr Boundary native_bounds[]{'+','.join('{'+str(pc)+','+str(size)+'}' for pc,size in rows)+'};\ninline constexpr uint32_t native_forever='+str(meta['functions']['forever'])+';\ninline constexpr uint32_t native_helper='+str(meta['functions']['helper'])+';\n'
 actual_map=[int(x,16) for x in re.findall(r'\{ (0x[0-9A-Fa-f]+),', (g/'fixture_init.cpp').read_text())];assert actual_map==[pc for pc,size in rows]
 (w/'native-data.h').write_text(data);(w/'hooks.cpp').write_text('#include <cstdint>\nvoid native_poll(uint32_t);\n'+''.join(f'void native_point_{pc:X}(){{native_poll({pc});}}\n' for pc in meta['hooks']))
-tests=[]
+tests=[];builds={}
+compiler=subprocess.check_output(['clang++','--version'],text=True,timeout=10).splitlines()[0]
 for name,flags in [('Debug',['-O0']),('Release',['-O2']),('Sanitized',['-O1','-g','-fsanitize=address,undefined','-fno-sanitize-recover=all','-fno-omit-frame-pointer'])]:
- binary=w/name;execute(['clang++','-std=c++23','-pthread','-Wall','-Wextra','-Werror',*flags,'-isystem',tc/'include','-iquote',ROOT,'-I',w,'-I',g,ROOT/'tests/native-image-binding/host.cpp',ROOT/'tests/native-image-binding/probe.cpp',g/'fixture_recomp.0.cpp',g/'fixture_init.cpp',w/'hooks.cpp','-o',binary],'compile-'+name);row=json.loads(execute([binary],'run-'+name));assert not row['failed'] and row['result']==32 and not row['remaining'] and not row['leases'];tests.append({'profile':name,**row})
+ binary=w/name;execute(['clang++','-std=c++23','-pthread','-Wall','-Wextra','-Werror',*flags,'-isystem',tc/'include','-iquote',ROOT,'-I',w,'-I',g,ROOT/'tests/native-image-binding/host.cpp',ROOT/'tests/native-image-binding/probe.cpp',g/'fixture_recomp.0.cpp',g/'fixture_init.cpp',w/'hooks.cpp','-o',binary],'compile-'+name);row=json.loads(execute([binary],'run-'+name));assert not row['failed'] and row['result']==32 and not row['remaining'] and not row['leases'];tests.append({'profile':name,'mode':'smoke',**row});builds[name]={'compiler':compiler,'flags':flags,'runtime_source_contract':runtime_id,'binary_sha256':sha(binary)}
+ for option in ['--repeat','--concurrent']:
+  row=json.loads(execute([binary,option],option[2:]+'-'+name));assert not row['failed'] and row['result']==32 and not row['remaining'] and not row['leases'];tests.append({'profile':name,'mode':option[2:],**row})
 assert fingerprints=={p.name:sha(p) for p in files}
-result={'tests':tests,'records':records,'source':source_id,'ppc':ppc_id,'generated':code_id,'sdk':sdk_id,'runtime':runtime_id,'contracts':contracts_id,'functions':3,'import_functions':1,'instructions':len(meta['words']),'memory_sites':memory_sites,'hooks':len(meta['hooks']),'game_executed':False};(w/'results.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps({k:v for k,v in result.items() if k!='records'}))
+result={'runtime_builds':builds,'tests':tests,'records':records,'source':source_id,'ppc':ppc_id,'generated':code_id,'sdk':sdk_id,'runtime':runtime_id,'contracts':contracts_id,'plan':plan_id,'functions':3,'import_functions':1,'instructions':len(meta['words']),'memory_sites':memory_sites,'hooks':len(meta['hooks']),'game_executed':False};(w/'results.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps({k:v for k,v in result.items() if k!='records'}))

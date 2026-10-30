@@ -16,6 +16,8 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, pinned for this research snapshot
         with:
           persist-credentials: false
+      - name: Check original native PPC fixture and codegen input identity
+        run: python3 tests/native-image-binding/test_fixture.py
       - name: Check native image plan canonical identity and owned transactions
         run: python3 tests/native-image-plan/run.py --workdir "${{ runner.temp }}/native-image-plan"
       - name: Check public research contents and local links

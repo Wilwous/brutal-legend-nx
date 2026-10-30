@@ -32,8 +32,9 @@ unmapped holes; partial-page layouts remain unsupported. Limits are representabl
 Materialization registers exclusive Space/module ownership; reserves each region,
 commits trusted construction backing, writes exact file bytes plus explicit zeros,
 then applies guest permissions. Distinct state fields record declared/reserved/
-backed/initialized/explicit-zero/committed/accessible/executable/released. Existing
-Space commits backing and guest commitment together, but neither is substituted
+backed/initialized/explicit-zero/committed/accessible/executable/released. The private
+arena already has host storage; reserve assigns a logical backing loan while
+guest commitment remains separate. Neither backing nor commitment substitutes
 for initialized/admitted. No public admission until all regions complete. RX is
 software code admission with readable data backing, never native host execution
 permission. This is not Horizon VM page isolation.

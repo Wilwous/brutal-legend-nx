@@ -3,6 +3,7 @@
 #pragma once
 #include "space.h"
 #include <bit>
+#include <cstring>
 #include <set>
 namespace brutal::horizon::native_image {
 using Digest=std::array<uint8_t,32>;
@@ -28,6 +29,7 @@ struct Plan {
 inline Digest identity(const Plan&p){std::vector<uint8_t>b;auto n=[&](uint64_t v){for(int i=7;i>=0;--i)b.push_back(uint8_t(v>>(8*i)));};n(p.schema);n(uint32_t(p.provenance));n(p.module);n(p.lifetime);for(auto v:{p.base,p.limit,p.entry,p.tls_address,p.tls_file_size,p.tls_total_size,p.tls_slots,p.relocations})n(v);for(auto d:{p.source,p.code,p.sdk,p.runtime})b.insert(b.end(),d.begin(),d.end());n(p.regions.size());for(auto&r:p.regions){n(r.owner);for(auto v:{r.address,r.size,r.source_offset,r.file_size,r.zero_size,r.alignment,uint32_t(r.rights),uint32_t(r.init),uint32_t(r.reserve),uint32_t(r.commit)})n(v);}n(p.imports.size());for(auto i:p.imports){n(i.ordinal);n(i.signature);}return digest(b);}
 inline void require(bool v,const char* why){if(!v)throw Error(Fault::argument,why);}
 inline void validate(const Plan&p,std::span<const uint8_t>source,const Digest&expected){
+ require(source.size()<=64*1024*1024&&p.regions.size()<=64&&p.imports.size()<=4,"identity input budget");
  require(p.schema==1&&p.provenance==Provenance::original_synthetic&&p.module&&p.lifetime,"schema/origin/module/lifetime");
  require(identity(p)==expected&&digest(source)==p.source,"plan/source identity");
  for(auto d:{p.code,p.sdk,p.runtime})require(d!=Digest{},"missing contract identity");
@@ -57,7 +59,7 @@ class Image {
   validate(plan_,bytes,expected);handles_.reserve(plan_.regions.size());states_.resize(plan_.regions.size());
   {std::lock_guard lock(registry_mutex_);require(registry_.insert({&space_,plan_.module}).second,"conflicting module owner");registered_=true;}
   try{int step=0;auto point=[&]{if(step++==fail)throw Error(Fault::exhausted,"injected materialization failure");};
-   for(size_t i=0;i<plan_.regions.size();++i){auto&r=plan_.regions[i];auto&st=states_[i];st.declared=true;point();auto h=space_.reserve(r.size,r.address);handles_.push_back(h);st.reserved=true;point();space_.commit(h);st.backed=true;st.committed=true;
+   for(size_t i=0;i<plan_.regions.size();++i){auto&r=plan_.regions[i];auto&st=states_[i];st.declared=true;point();auto h=space_.reserve(r.size,r.address);handles_.push_back(h);st.reserved=true;st.backed=true;point();space_.commit(h);st.committed=true;
     std::vector<std::byte> initialized(r.size);if(r.file_size)std::memcpy(initialized.data(),bytes.data()+r.source_offset,r.file_size);space_.write(h.address,initialized);st.initialized=true;st.explicit_zero=r.zero_size!=0;point();
     space_.protect(h,r.rights==Rights::read_write?Permission::read_write:Permission::read);st.executable=r.rights==Rights::read_execute;st.accessible=true;
    }admitted_=true;

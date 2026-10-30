@@ -89,3 +89,19 @@ Every child has a30-second external group watchdog. Raw paths, tool output,
 source copies and generated artifacts stay outside Git. No claim is made for
 unbounded/arbitrary guest programs, physical Horizon isolation, all exception
 contexts, complete rollback under arbitrary native crashes or title correctness.
+
+## Pin and later integration hardening
+
+Production SDK revision is `f5337cdc947ff6d4c4196737e2c807a48f2a1fc2`
+(v0.10.0, unchanged nineteen-patch lock plus existing Horizon leaf overlay).
+Prepared CLI SHA256 is
+`6f40ec768bba9ea985719f6df543c5e0bd099b19ceaec88aee9f9c7f7e6cc15c`.
+Original new-fixture XEX SHA256 is
+`ebc7240a2ae4a2c826c8cd513f26b815f38fb0baba5a46907e5daf9604fb54c0`;
+PPC-word SHA256 is
+`429913c07f25e91f54736f81cfe4ad01f354cee1cea8b496653ad52da898925c`.
+N3 additionally binds the independent semantic plan hash and trusted function
+pointers/names, adds generated fault injection and structured diagnostics, and
+records per-profile runtime build hashes. See the final
+[N3 matrix](native-image-horizon-integration.md); its strengthened checks supersede
+the initial N2 checkpoint counts without rewriting that checkpoint.
