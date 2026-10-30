@@ -18,6 +18,12 @@ jobs:
           persist-credentials: false
       - name: Check original native PPC fixture and codegen input identity
         run: python3 tests/native-image-binding/test_fixture.py
+      - name: Check non-admitting interval provenance on original fixtures
+        run: python3 tests/native-provenance/test_intervals.py
+      - name: Check DATA-only validator refusals in three profiles
+        run: python3 tests/native-provenance/run_reader.py --workdir "${{ runner.temp }}/native-provenance-reader"
+      - name: Check original overhanging-section ownership and rollback
+        run: python3 tests/native-image-contract/run.py --workdir "${{ runner.temp }}/native-image-tail"
       - name: Check native image plan canonical identity and owned transactions
         run: python3 tests/native-image-plan/run.py --workdir "${{ runner.temp }}/native-image-plan"
       - name: Check public research contents and local links

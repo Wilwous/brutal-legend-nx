@@ -18,6 +18,10 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    'tools/native_provenance.py',
+    'tests/native-provenance/test_intervals.py',
+    'tests/native-provenance/native_refusal.cpp',
+    'tests/native-provenance/run_reader.py',
     'tests/native-image-binding/test_fixture.py',
     'tests/native-image-horizon/main.cpp',
     'tests/native-image-horizon/Makefile',

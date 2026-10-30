@@ -5,9 +5,9 @@
 #include <fstream>
 #include <iostream>
 using namespace brutal::horizon;
-unsigned passed=0;
+unsigned passed=0,byte_comparisons=0,negative_refusals=0;
 void check(bool v){if(!v)throw std::runtime_error("assertion failed");++passed;}
-template<class F> void refused(F f){bool caught=false;try{f();}catch(const Error&){caught=true;}check(caught);}
+template<class F> void refused(F f){bool caught=false;try{f();}catch(const Error&){caught=true;}check(caught);++negative_refusals;}
 constexpr uint32_t base=0x82000000, page=65536;
 struct Image {
  Space& s;std::vector<Space::Handle> handles;
@@ -45,7 +45,7 @@ int main(int argc,char**argv){try{
  refused([&]{Image collision(s,bytes,true);});check(s.live()==1);check(s.load<uint32_t>(neighbor.address)==0xabcdef01);s.release(neighbor);
  Image image(s,bytes,true);check(s.live()==5);
  // Exhaustive expected bytes for the entire accepted logical image; no raw host pointers.
- for(unsigned i=0;i<5;++i){auto q=s.query(base+i*page);check(q.committed&&q.allocation_base==base+i*page&&q.allocation_size==page);auto b=s.read(base+i*page,page);for(unsigned j=0;j<page;++j)check(b[j]==(i<4?bytes[4096+i*page+j]:std::byte{0}));}
+ for(unsigned i=0;i<5;++i){auto q=s.query(base+i*page);check(q.committed&&q.allocation_base==base+i*page&&q.allocation_size==page);auto b=s.read(base+i*page,page);for(unsigned j=0;j<page;++j){if(b[j]!=(i<4?bytes[4096+i*page+j]:std::byte{0}))throw std::runtime_error("byte oracle failed");++byte_comparisons;}}
  refused([&]{s.store<uint32_t>(base+page,1);});
  s.store<uint32_t>(base+4*page+page-4,0x12345678);check(s.load<uint32_t>(base+5*page-4)==0x12345678);
  refused([&]{s.read(base+5*page-1,2);});refused([&]{s.read(base+5*page,1);});refused([&]{s.read(0,1);});
@@ -54,6 +54,6 @@ int main(int argc,char**argv){try{
  {auto lease=s.pin(base+4*page,1);refused([&]{image.unload();});check(s.live()==5);check(s.leases()==1);}
  image.unload();check(s.live()==0);refused([&]{s.read(stale);});
  {Image again(s,bytes,true);refused([&]{s.read(stale);});}check(s.live()==0);check(s.leases()==0);
- std::cout<<"{\"passed\":"<<passed<<",\"failed\":0,\"accepted_image_bytes\":327680,\"proprietary_execution\":false}"<<std::endl;
+ std::cout<<"{\"passed\":"<<passed<<",\"negative_refusals\":"<<negative_refusals<<",\"byte_comparisons\":"<<byte_comparisons<<",\"failed\":0,\"accepted_image_bytes\":327680,\"proprietary_execution\":false}"<<std::endl;
  return 0;
  }catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
