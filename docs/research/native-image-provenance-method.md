@@ -87,3 +87,19 @@ the historical327725 combined count without removing a single comparison.
 Detailed title ledgers, source paths, disassembly, coordinates, native draft
 projections and private source hashes remain outside Git. Public output contains
 aggregate coverage, methodology, generic code/tests and explicit gate limits.
+
+## Subsequent initialization and coordinate checks
+
+The [T4–T6 audit](title-image-forensics.md) adds original fixtures:
+
+```sh
+python3 tests/native-provenance/test_initialization.py
+```
+
+Keep original-container offsets, PE raw-file pointers, decoded offsets, resource
+relative offsets and guest VAs distinct. An observed source page can cross a
+logical section boundary: source identity is not permission authority. Report
+logical gaps explicitly and deny access instead of promoting a whole page.
+PNG structure/CRC and conventional relocation shape checks establish only their
+stated grammar; neither supplies an Xbox conversion/initialization contract.
+The generic reader now retains the actual validator refusal messages on stderr.

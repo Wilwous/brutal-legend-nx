@@ -1,5 +1,14 @@
 # Research roadmap — title readiness evidence
 
+## Title image forensics — T4–T6 (completed 2026-10-31)
+
+[Resource/relocation, variable providers and scoped readiness](research/title-image-forensics.md)
+confirms a same-image PNG/relocation-declaration overlap, preserves unknown
+initialization, and distinguishes a sourced finite subset from logical permission
+authority. Both private drafts remain refused. Historical G4/G8 BLOCKED, G5 UNKNOWN;
+native N-G4/N-G8 BLOCKED, N-G5 PARTIAL; title execution NO-GO. Next work is one
+nonexecutable byte-bounds/context contract review, with no new stage or deployment.
+
 ## Title offline route — T0/T1–T3 (2026-10-30)
 
 [Representation reconciliation and title readiness](research/title-native-image-readiness.md)

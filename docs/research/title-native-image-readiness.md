@@ -180,3 +180,7 @@ relocation declarations apply to a fixed-address native image. Do not substitute
 PE raw-pointer remapping, observed old resolver pointers or failed-decode padding.
 This is a native functional-content obligation; an exact historical Xbox allocator
 trace is a separate proof goal, not silently reinstated as the only solution.
+
+The subsequent [T4–T6 resource and initialization audit](title-image-forensics.md)
+refines the relocation/resource interpretation, records a bounded source subset
+and logical page gap, and preserves every provenance count and gate above.
