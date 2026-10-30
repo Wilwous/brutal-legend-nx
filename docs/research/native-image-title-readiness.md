@@ -11,7 +11,7 @@ Xbox mapping. Synthetic success changes no historical gate and admits no title.
 | Synthetic N-G4 initialization/backing | **HOST VERIFIED**, exact original fixture and checked whole-region policy only |
 | Synthetic N-G5 startup | **HOST VERIFIED**, selected GuestThread/r1/r2/r13/PCR/static TLS/slot subset only |
 | Synthetic N-G8 supported refusals | **HOST VERIFIED** for listed checked/CFI/cooperative-stop cases and bounded host containment; native fault-time capture, guest dispatch/unwind and continuation **UNKNOWN/unsupported** |
-| New native path on Switch | Host and AArch64 build evidence do not imply console execution; **HARDWARE UNKNOWN** |
+| New native path on Switch | Subsequent explicit user T1–T3 attestation:42/0, result32, SDK2/2, cleanup and PLUS return; **HARDWARE VERIFIED for that finite synthetic scope only**, photograph not independently inspected here |
 | Original-title native N-G4/N-G5/N-G8 | **BLOCKED / UNKNOWN / BLOCKED**, not inherited from the synthetic route |
 | Proprietary Brütal Legend execution | **NO-GO**; no title-specific admitted plan was constructed or executed |
 
@@ -59,3 +59,6 @@ screen counters and PLUS return. No intermediate N1/N2 hardware tests are needed
 That validates the new Horizon path only. Original-title plan construction and
 execution remain NO-GO pending the evidence above and a new explicit admission
 review. No main merge, Release, Xbox branch change or resumed Phase22 is implied.
+
+The subsequent [T0/T1–T3 offline audit](title-native-image-readiness.md) records
+representation differences, exact coverage and remaining title obligations.

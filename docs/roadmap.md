@@ -1,13 +1,24 @@
 # Research roadmap — title readiness evidence
 
+## Title offline route — T0/T1–T3 (2026-10-30)
+
+[Representation reconciliation and title readiness](research/title-native-image-readiness.md)
+classifies pre-binding decode versus post-binding snapshot, exact source intervals,
+unknown tail/extent claims, a rejected private draft and bounded static startup.
+[Non-admitting methodology](research/native-image-provenance-method.md) provides
+original generic accounting/reader tests. User attestation now confirms Native
+Image Probe42/0 and PLUS return for synthetic hardware scope only. Full title
+admission and execution remain NO-GO: historical G4/G8 BLOCKED, G5 UNKNOWN;
+title-native initialization/startup/exception obligations are not closed.
+
 ## Separate native recompilation route — N1–N3 (2026-10-30)
 
 [Plan validation](research/native-image-plan.md), [production binding](research/native-image-code-binding.md),
 [Horizon integration](research/native-image-horizon-integration.md) and
 [title readiness](research/native-image-title-readiness.md) define a separate
 original-synthetic route. N1 and N2 have independent host checkpoints; N3 reuses
-checked memory, thread/TLS/CFI and UI components. Console execution of the new
-probe remains UNKNOWN until externally observed. Historical G4/G8 BLOCKED,
+checked memory, thread/TLS/CFI and UI components. The user has now confirmed console
+execution and normal PLUS return for the new probe; only that finite synthetic scope is HARDWARE VERIFIED. Historical G4/G8 BLOCKED,
 G5 UNKNOWN; original-title native gates are not closed by synthetic evidence.
 The strict loader, Stage15 hardware package and blocked Xbox branch are preserved.
 
