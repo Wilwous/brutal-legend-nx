@@ -18,6 +18,9 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    "runtime/horizon/native_image_plan.h",
+    "tests/native-image-plan/run.py",
+    "tests/native-image-plan/contract.cpp",
     "tests/native-image-contract/contract.cpp",
     "tests/native-image-contract/fixture.py",
     "tests/native-image-contract/run.py",
