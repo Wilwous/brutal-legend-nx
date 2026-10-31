@@ -1,5 +1,15 @@
 # Research roadmap — title readiness evidence
 
+## Bounded nonexecuting data contract — T7 (2026-10-31)
+
+[T7 report](research/bounded-nonexecuting-data.md) verifies an inert copy of all
+12,288 known bytes in four intervals, with the 392-byte fragment separately denied
+guest access. Existing executable admission stays unchanged/BLOCKED. Independent
+synthetic stack/PCR/TLS tests verify selected preparation/lifetime mechanics and
+expose a stack-write permission check missing from metadata-only entry admission.
+Next action is that synthetic pre-entry contract, not title execution or T8.
+Historical G4/G8 BLOCKED, G5 UNKNOWN; native N-G4/N-G8 BLOCKED, N-G5 PARTIAL.
+
 ## Title image forensics — T4–T6 (completed 2026-10-31)
 
 [Resource/relocation, variable providers and scoped readiness](research/title-image-forensics.md)

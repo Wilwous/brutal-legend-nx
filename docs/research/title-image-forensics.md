@@ -221,3 +221,8 @@ at that boundary rather than repeating exhausted loader experiments.
 for the frozen normal slice, especially the source-backed page's undeclared gap,
 owned stack/context, exact PC/stop binding and denied transitions. This is one
 contract review, not authorization to execute the title or start another stage.
+
+The subsequent [T7 data-only audit](bounded-nonexecuting-data.md) separates a
+successful inert four-interval copy from refused guest admission and records
+the remaining synthetic entry-permission limitation. Provenance counts above
+and all historical/title-native gates remain unchanged.
