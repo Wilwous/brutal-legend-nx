@@ -1,5 +1,15 @@
 # Research roadmap — title readiness evidence
 
+## Bounded startup dependencies — T9 (2026-10-31)
+
+[T9 static proof](research/title-startup-footprint.md) accounts for the frozen
+19 normal sites, eight stores and excluded boundary. Exact symbolic stack and
+context dependencies stay private; no historical variable provider is needed in
+this scope. Live stack/data ownership, native context, PC/stop and exceptional
+transitions still prevent admission. All historical/native gates are unchanged.
+Next useful proof is independently owned startup-stack containment, without title
+execution. No later stage is started by this result.
+
 ## Generic pre-entry stack admission — T8 (2026-10-31)
 
 [T8 guard and integration evidence](research/pre-entry-stack-admission.md) closes

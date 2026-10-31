@@ -1,5 +1,9 @@
 # Title native image — T0 reconciliation and T1–T3 readiness
 
+Subsequent [T9 bounded startup analysis](title-startup-footprint.md) refines the
+private footprint/context/PC obligations. The historical findings below and all
+title gates remain unchanged; static correspondence is not execution admission.
+
 2026-10-30 · baseline `d8f37d4ac24edd99d8f20f936d7aa546fafc0f8a`.
 **Historical G4 BLOCKED / G5 UNKNOWN / G8 BLOCKED; game execution NO-GO.**
 No original instruction was executed; no game-derived C++ was compiled/linked;
