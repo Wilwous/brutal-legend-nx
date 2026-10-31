@@ -1,5 +1,14 @@
 # Research roadmap — title readiness evidence
 
+## Generic pre-entry stack admission — T8 (2026-10-31)
+
+[T8 guard and integration evidence](research/pre-entry-stack-admission.md) closes
+the T7 metadata-only stack permission gap using authoritative checked-memory span
+validation, exact allocation identity, lifetime pins and per-entry rechecks.
+Production-generated original fixtures pass; title gates remain unchanged/NO-GO.
+Next title obligation is a reviewed nonexecuting entry/context/PC-stop contract,
+with no assumption that a generic stack fix admits original game code.
+
 ## Bounded nonexecuting data contract — T7 (2026-10-31)
 
 [T7 report](research/bounded-nonexecuting-data.md) verifies an inert copy of all

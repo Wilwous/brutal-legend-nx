@@ -194,3 +194,8 @@ pre-entry stack permission/ownership contract on synthetic fixtures, starting
 with the observed write-permission admission gap. This does not authorize title
 execution; source authority, scoped guest admission, startup and PC/fault binding
 still require their own complete proofs.
+
+The subsequent [T8 targeted fix](pre-entry-stack-admission.md) closes that generic
+pre-entry stack gap and updates the live synthetic context fixture to require
+early refusal. The historical T7 observations/counts above and all title gates
+remain evidence of their original checkpoint; no title admission is implied.

@@ -24,6 +24,8 @@ jobs:
         run: python3 tests/native-provenance/test_initialization.py
       - name: Check inert bounded data contracts without guest admission
         run: python3 tests/native-provenance/run_data.py --workdir "${{ runner.temp }}/offline-image-data"
+      - name: Check exact owned stack windows and current checked-memory permissions
+        run: python3 tests/pre-entry-stack/run.py --workdir "${{ runner.temp }}/stack-window"
       - name: Check DATA-only validator refusals in three profiles
         run: python3 tests/native-provenance/run_reader.py --workdir "${{ runner.temp }}/native-provenance-reader"
       - name: Check original overhanging-section ownership and rollback

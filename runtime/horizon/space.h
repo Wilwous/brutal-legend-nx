@@ -57,6 +57,19 @@ class Space {
     }
     for(auto h:handles){memory_.release(owned(h).backing);regions_.erase(h.id);--live_total_;}
   }
+  // Context teardown only: original private registrations may already have
+  // been retired by a trusted host caller. Never accept them for entry again.
+  // Check every surviving token/lease before releasing any surviving region.
+  void release_survivors(std::span<const Handle> handles){
+    std::lock_guard lock(mutex_);
+    for(size_t i=0;i<handles.size();++i){auto h=handles[i];
+      if(h.owner!=owner_)throw Error(Fault::ownership,"foreign context registration");
+      if(!h.id||h.id>=next_)throw Error(Fault::stale,"unissued context registration");
+      for(size_t j=0;j<i;++j)if(handles[j].id==h.id)throw Error(Fault::argument,"duplicate context registration");
+      if(regions_.contains(h.id)&&owned(h).leases)throw Error(Fault::ownership,"context registration is leased");
+    }
+    for(auto h:handles)if(regions_.contains(h.id)){memory_.release(owned(h).backing);regions_.erase(h.id);--live_total_;}
+  }
   class Lease {
     Space* space_{};Handle handle_{};
    public:
@@ -84,6 +97,18 @@ class Space {
   View view(uint32_t address,uint32_t size,Access access){
     std::lock_guard lock(mutex_);auto&r=range(address,size);diagnostic::AllocationBinding allocation(owner_,r.h.id);
     return {r.h,memory_.translate(r.backing.guest+(address-r.h.address),size,access)};
+  }
+  // Full logical span, exact allocation token, current commitment/permissions.
+  // Leases prevent release/decommit; protection can still change and is rechecked
+  // at each admission and actual access. No page or permission model is duplicated.
+  void validate_owned_window(Handle h,uint32_t address,uint32_t size,Access access,bool also_read=false){
+    std::lock_guard lock(mutex_);auto&r=owned(h);
+    if(access!=Access::read&&access!=Access::write)throw Error(Fault::argument,"unknown owned-window access");
+    if(!size||address<r.h.address||uint64_t(address)+size>uint64_t(r.h.address)+r.h.size||uint64_t(address)+size>0x100000000ull)
+      throw Error(Fault::bounds,"owned window exceeds one allocation");
+    diagnostic::AllocationBinding allocation(owner_,r.h.id);
+    if(also_read)memory_.validate(memory_.translate(r.backing.guest+(address-r.h.address),size,Access::read),Access::read);
+    memory_.validate(memory_.translate(r.backing.guest+(address-r.h.address),size,access),access);
   }
   std::vector<std::byte> read(const View& v){
     std::lock_guard lock(mutex_);auto&r=owned(v.handle);diagnostic::AllocationBinding allocation(owner_,r.h.id);

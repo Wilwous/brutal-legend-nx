@@ -33,13 +33,13 @@ int main(){try{
  memory.store<uint32_t>(a.pcr.address,b.tls.address);refused([&]{GuestThread::Execution guard(a);});memory.store<uint32_t>(a.pcr.address,a.tls.address);
  memory.store<uint64_t>(a.pcr.address+0x30,b.pcr.address);refused([&]{GuestThread::Execution guard(a);});memory.store<uint64_t>(a.pcr.address+0x30,a.pcr.address);
  memory.protect(a.stack,Permission::read);refused([&]{memory.view(a.stack.address,4,Access::write);});
- // Existing Execution validates metadata/pins, not stack write permission.
- {GuestThread::Execution metadata_only(a);check(memory.leases()==3);}memory.protect(a.stack,Permission::read_write);
+ // T8 requires write permission before metadata can admit execution.
+ refused([&]{GuestThread::Execution denied(a);});check(memory.leases()==0);memory.protect(a.stack,Permission::read_write);
  Function function{0x1010,never_called,"independent_never_called"};
  refused([&]{Scope scope(a,std::span(&function,1),wrong.identity);});
  {Scope scope(a,std::span(&function,1),module.identity);refused([&]{a.cleanup();});check(memory.leases()==6);}
  {auto lease=memory.pin(a.stack.address,1);refused([&]{a.cleanup();});check(memory.live()==6);}
  auto stale=memory.view(a.tls.address,4,Access::read);check(!module.close());a.cleanup();a.cleanup();check(memory.live()==3);refused([&]{GuestThread::Execution guard(a);});refused([&]{memory.read(stale);});b.cleanup();check(memory.live()==0&&memory.leases()==0);
  slots.release(token);refused([&]{slots.validate(token);});check(module.close());check(callbacks==0&&Scope::guest_entries==0);check(Space::totals()==std::pair<size_t,size_t>{0,0});
- std::cout<<"{\"positive\":"<<positive<<",\"refusals\":"<<negative<<",\"byte_comparisons\":"<<bulk<<",\"live_allocations\":0,\"leases\":0,\"guest_entries\":0,\"stack_write_guard\":\"checked-memory only; metadata guard insufficient\"}\n";
+ std::cout<<"{\"positive\":"<<positive<<",\"refusals\":"<<negative<<",\"byte_comparisons\":"<<bulk<<",\"live_allocations\":0,\"leases\":0,\"guest_entries\":0,\"stack_write_guard\":\"pre-entry and checked-memory\"}\n";
  }catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}

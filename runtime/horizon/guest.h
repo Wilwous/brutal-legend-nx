@@ -71,18 +71,51 @@ class GuestThread {
   friend class GuestTask;
   void native_pending(bool pending){std::lock_guard lock(mutex_);if(closed_||active_||native_pending_==pending)throw Error(Fault::ownership,"native lifecycle transition during call");native_pending_=pending;}
  public:
+  struct StackContract {
+    uint64_t thread{},module_instance{};
+    bool relative{};int64_t begin{},end{}; // read/write [current r1+begin,current r1+end)
+  };
+  StackContract whole_stack_contract()const{return {identity,module_.instance,false,0,0};}
+  StackContract relative_stack_contract(int64_t begin,int64_t end)const{return {identity,module_.instance,true,begin,end};}
   class Execution {
     GuestThread& thread_;ModuleLife::Lease module_;
     std::vector<Space::Lease> pins_;
+    const StackContract contract_;
+    std::pair<uint32_t,uint32_t> window_{};
+    static bool same(Space::Handle a,Space::Handle b){return a.owner==b.owner&&a.id==b.id&&a.address==b.address&&a.size==b.size;}
+    static uint64_t offset(uint64_t base,int64_t delta){
+      if(delta>=0){auto n=uint64_t(delta);if(n>0x100000000ull-base)throw Error(Fault::bounds,"stack positive offset overflow");return base+n;}
+      auto n=uint64_t(-(delta+1))+1;if(n>base)throw Error(Fault::bounds,"stack negative offset overflow");return base-n;
+    }
+    void validate_locked(){
+      auto&t=thread_;t.slots_.validate(t.slot_);
+      if(t.closed_||contract_.thread!=t.identity||contract_.module_instance!=t.module_.instance||t.allocations_.size()!=3)
+        throw Error(Fault::ownership,"stack thread/module/lifetime identity");
+      if(!same(t.stack,t.allocations_[0])||!same(t.pcr,t.allocations_[1])||!same(t.tls,t.allocations_[2]))
+        throw Error(Fault::ownership,"altered context allocation token");
+      const auto h=t.allocations_[0];const uint64_t high=uint64_t(h.address)+h.size,sp=t.context.r1.u64;
+      if(!h.owner||!h.id||h.size<192||high>0x100000000ull||sp>UINT32_MAX||sp<uint64_t(h.address)+64||sp>high-128||(sp&15)||
+         t.context.r13.u64!=t.pcr.address||t.context.r2.u64!=0x82020000||t.context.msr!=PPCContext{}.msr||
+         t.space_.load<uint64_t>(t.pcr.address+0x30)!=t.pcr.address||t.space_.load<uint32_t>(t.pcr.address)!=t.tls.address)
+        throw Error(Fault::argument,"guest startup/context admission");
+      uint64_t lo=h.address,hi=high;
+      if(contract_.relative){if(contract_.begin>=contract_.end)throw Error(Fault::argument,"empty/reversed stack contract");lo=offset(sp,contract_.begin);hi=offset(sp,contract_.end);}
+      else if(contract_.begin||contract_.end)throw Error(Fault::argument,"inconsistent whole-stack contract");
+      if(lo<h.address||hi>high||hi<=lo||hi-lo>UINT32_MAX)throw Error(Fault::bounds,"required stack window is not owned");
+      t.space_.validate_owned_window(h,uint32_t(lo),uint32_t(hi-lo),Access::write,true);
+      window_={uint32_t(lo),uint32_t(hi-lo)};
+    }
    public:
-    explicit Execution(GuestThread& t):thread_(t),module_(t.module_){
+    explicit Execution(GuestThread& t,const StackContract* contract=nullptr):thread_(t),module_(t.module_),contract_(contract?*contract:t.whole_stack_contract()){
       std::lock_guard lock(t.mutex_);t.slots_.validate(t.slot_);
-      if(t.closed_||t.active_||t.context.r13.u64!=t.pcr.address||t.context.r2.u64!=0x82020000||t.context.msr!=PPCContext{}.msr||
-         t.space_.load<uint64_t>(t.pcr.address+0x30)!=t.pcr.address||t.space_.load<uint32_t>(t.pcr.address)!=t.tls.address||t.context.r1.u64<t.stack.address+64||
-         t.context.r1.u64>uint64_t(t.stack.address)+t.stack.size-128||(t.context.r1.u64&15)){diagnostic::emit(diagnostic::Kind::abi_rejected);throw Error(Fault::argument,"guest startup/context admission");}
+      if(t.active_)throw Error(Fault::argument,"guest startup/context already active");
+      if(t.closed_||t.allocations_.size()!=3)throw Error(Fault::ownership,"closed/incomplete context allocations");
       for(auto h:t.allocations_){pins_.emplace_back(t.space_,h);}
+      validate_locked();
       t.active_=true;
     }
+    void validate_entry(){ModuleLife::Lease entry(thread_.module_);std::lock_guard lock(thread_.mutex_);validate_locked();}
+    std::pair<uint32_t,uint32_t> required_window()const{return window_;}
     Execution(const Execution&)=delete;
     ~Execution(){std::lock_guard lock(thread_.mutex_);pins_.clear();thread_.active_=false;}
   };
@@ -91,7 +124,7 @@ class GuestThread {
     diagnostic::Binding binding(trace_,module_.instance,identity);
     std::lock_guard lock(mutex_);if(closed_)return;
     if(active_||native_pending_)throw Error(Fault::ownership,"guest cleanup before native join or active call return");
-    space_.release_all(allocations_);
+    space_.release_survivors(allocations_);
     allocations_.clear();slot_lease_.reset();module_lease_.reset();closed_=true;auto counts=Space::totals();diagnostic::emit(diagnostic::Kind::cleanup,uint32_t(counts.first),uint32_t(counts.second));
   }
 };

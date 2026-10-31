@@ -30,6 +30,7 @@ class Scope {
       throw Error(Fault::unsupported,"unadmitted generated memory site");
   }
   void dispatch(Function f,bool indirect=false){
+    execution_.validate_entry();
     diagnostic::PhaseBinding execution_phase{5};
     if(f.finite_fpr&&(!std::isfinite(guest_.context.f1.f64)||!std::isfinite(guest_.context.f2.f64)))throw Error(Fault::unsupported,"unadmitted nonfinite FPR arguments");
     if(!plan_){++calls;diagnostic::emit(diagnostic::Kind::function_enter,f.address);f.implementation(guest_.context,nullptr);return;}
@@ -57,8 +58,8 @@ class Scope {
   uint64_t reads{},writes{},calls{},polls{};
   bool belongs_to(const ModuleLife& module,const Space& space)const{return guest_.belongs_to(module)&&&guest_.space()==&space;}
   Scope(GuestThread& guest,std::span<const Function> functions,uint64_t module_identity,
-        synthetic::CooperativeStop* stop=nullptr,std::function<void(uint32_t)> observer={},const ControlPlan* plan=nullptr)
-    :guest_(guest),trace_binding_(guest.trace(),guest.module_instance(),guest.identity),execution_(guest),functions_(functions),stop_(stop),observer_(std::move(observer)),plan_(plan){
+        synthetic::CooperativeStop* stop=nullptr,std::function<void(uint32_t)> observer={},const ControlPlan* plan=nullptr,const GuestThread::StackContract* stack=nullptr)
+    :guest_(guest),trace_binding_(guest.trace(),guest.module_instance(),guest.identity),execution_(guest,stack),functions_(functions),stop_(stop),observer_(std::move(observer)),plan_(plan){
     if(plan_){if(plan_->sites.empty()||plan_->roots.empty()||!plan_->exit)throw Error(Fault::argument,"empty control plan");returns_.reserve(32);active_.reserve(32);}
     if(current_||guest.module_identity()!=module_identity||functions.empty()||functions.size()>32)throw Error(Fault::argument,"scope/module admission");
     for(size_t i=0;i<functions.size();++i){auto f=functions[i];if(f.strict&&!plan_)throw Error(Fault::unsupported,"strict generated function requires control plan");if(!f.address||(f.address&3)||!f.implementation||f.name.empty())throw Error(Fault::argument,"function identity");
@@ -96,11 +97,9 @@ class Scope {
     throw Error(Fault::unsupported,"unknown instruction site");
   }
   static void prologue(PPCContext& context,uint8_t* base,std::string_view name){
-    auto&s=current(context);if(base||context.r13.u64!=s.guest_.pcr.address||context.r2.u64!=0x82020000||context.msr!=PPCContext{}.msr)throw Error(Fault::argument,"raw base/PCR context admission");
-    if(context.r1.u64<s.guest_.stack.address+64||context.r1.u64>uint64_t(s.guest_.stack.address)+s.guest_.stack.size-128||(context.r1.u64&15))
-      throw Error(Fault::argument,"generated call stack window admission");
+    auto&s=current(context);if(base)throw Error(Fault::argument,"raw base context admission");
     if(name.starts_with("__imp__"))name.remove_prefix(7);
-    for(auto f:s.functions_)if(f.name==name){if(s.plan_&&(s.active_.empty()||s.active_.back()!=f.address))throw Error(Fault::unsupported,"prologue without admitted dispatch");++guest_entries;diagnostic::site(f.address);s.poll(f.address);return;}
+    for(auto f:s.functions_)if(f.name==name){if(s.plan_&&(s.active_.empty()||s.active_.back()!=f.address))throw Error(Fault::unsupported,"prologue without admitted dispatch");diagnostic::site(f.address);s.poll(f.address);s.execution_.validate_entry();++guest_entries;return;}
     throw Error(Fault::unsupported,"unadmitted generated function prologue");
   }
   template<class T>static T load(PPCContext& context,uint32_t address){auto&s=current(context);s.memory_site(Access::read,sizeof(T));s.permitted(address,sizeof(T));auto v=s.guest_.space().load<T>(address);++s.reads;return v;}
