@@ -158,3 +158,7 @@ stack capability bound to the intended thread/entry and initial pointer, contain
 all six spans. Validate it without executing title instructions. Data ownership,
 code/stop and exception obligations still prohibit execution afterwards.
 T9 stops here; no subsequent stage starts.
+
+The later [T10 synthetic stack exercise](title-stack-context.md) verifies owned
+allocation, explicit footprint containment and mandatory fixture-entry binding.
+It does not establish original title r1/context provenance or change these gates.

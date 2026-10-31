@@ -1,5 +1,16 @@
 # Research roadmap — title readiness evidence
 
+## Owned synthetic entry stack — T10 (2026-10-31)
+
+[T10 stack and context proof](research/title-stack-context.md) verifies a separate
+original PPC fixture through production generation and host execution in three
+profiles. A mandatory fixture prologue binds declared footprint/thread/module/
+entry identity while retaining strict full-stack RW checks. It supplies no
+original title r1, stack owner or historical register values. Title image/entry
+admission and every historical/native gate remain unchanged/BLOCKED.
+Next missing title proof is an independently applicable incoming-context provenance
+or equivalence contract, bound to a live owned stack/thread. No next stage starts.
+
 ## Bounded startup dependencies — T9 (2026-10-31)
 
 [T9 static proof](research/title-startup-footprint.md) accounts for the frozen
