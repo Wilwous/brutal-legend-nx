@@ -1,5 +1,20 @@
 # Research roadmap — title readiness evidence
 
+## First unproved callee and provider observations — T13 (2026-11-02)
+
+[T13 finite callee analysis](research/first-callee-observations.md) binds an exact
+direct-call target to Exception-directory metadata and checks its entire declared
+53-instruction extent. Thirty-five sites occur in conditional call-free prefixes;
+18 are discovered-only beyond unknown calls. An independent structural cut proves
+every local entry-to-return route crosses an unproved call. A local stack-buffer
+pointer crosses one such boundary, so retention/numeric observation stays UNKNOWN.
+A mandatory module-handle variable provider is now a concrete dependency, without
+an admitted native replacement. Local frame/restore relations remain conditional;
+normal return and title entry remain BLOCKED/NO-GO. Gates and runtime are unchanged.
+The smallest next proof is an owned native module-handle provider/object contract,
+qualified to the intended module and consumed header relationship. A historical
+snapshot pointer or convenient null cannot establish that contract. T14 is not started.
+
 ## Stack pointer consumers and escape contracts — T12 (2026-11-02)
 
 [T12 bounded consumer investigation](research/stack-pointer-provenance.md) completes

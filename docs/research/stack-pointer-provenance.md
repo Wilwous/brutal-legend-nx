@@ -192,3 +192,8 @@ Smallest next obligation: a finite summary of the first still-unproved direct
 callee's incoming frame-pointer/backchain observations and normal return. Stop at
 the first unsupported observer rather than assuming it preserves renaming. No
 return, provider or exception behavior is invented. T13 is not started.
+
+The subsequent [T13 callee investigation](first-callee-observations.md) examines
+that exact metadata-bound function without recursion. It establishes a concrete
+module-provider dependency and an outgoing stack-pointer argument; normal-return
+and external-observer contracts remain unproved.
