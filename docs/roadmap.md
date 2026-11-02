@@ -1,5 +1,20 @@
 # Research roadmap — title readiness evidence
 
+## Stack pointer consumers and escape contracts — T12 (2026-11-02)
+
+[T12 bounded consumer investigation](research/stack-pointer-provenance.md) completes
+the independent static and original synthetic checks. The first directly justified
+callee prefix creates another backchain edge but does not read a backchain. Its
+next callee and the return-conditional continuation lack proved summaries; actual
+title stack-renaming equivalence remains PARTIAL/BLOCKED and entry NO-GO.
+Production-generated nested-frame fixtures verify declared typed graph/alias
+relations and expose raw scalar, persistent escape, returned dead-frame pointer
+and absolute-predicate counterexamples. Allocation lifetime is explicitly distinct
+from logical frame lifetime. No production runtime/loader or historical/native gate
+is changed. The smallest next proof is a finite summary of the first still-unproved
+direct callee's incoming frame-pointer/backchain observations and normal return,
+stopping at its first unsupported observer. T13 is not started.
+
 ## Conditional native context equivalence — T11 (2026-11-02)
 
 [T11 relation and counterexamples](research/native-startup-equivalence.md) proves

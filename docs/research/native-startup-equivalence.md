@@ -189,3 +189,7 @@ SP-derived frame pointers at the excluded continuation, establishing whether it
 respects typed stack renaming rather than raw historical addresses. Other opaque
 input, image and exception obligations remain. No such continuation was executed
 or expanded here; no further stage is started.
+
+The subsequent [T12 consumer/escape investigation](stack-pointer-provenance.md)
+records a finite static extension and new original nested-frame tests. Its local
+typed graph evidence leaves the original title continuation contract BLOCKED.
