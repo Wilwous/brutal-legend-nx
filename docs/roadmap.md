@@ -1,5 +1,16 @@
 # Research roadmap — title readiness evidence
 
+## Conditional native context equivalence — T11 (2026-11-02)
+
+[T11 relation and counterexamples](research/native-startup-equivalence.md) proves
+conditional stack-address algebra and verifies an explicit original native ABI
+with production-generated differential fixtures. Literal guest-byte equality is
+false; typed-observer equivalence needs matching opaque inputs, no absolute-address
+observer/escape and a closed normal boundary. Actual title applicability remains
+PARTIAL and entry BLOCKED/NO-GO. No historical/native gate is promoted.
+The next missing proof is the bounded consumer/observer contract for saved stack
+pointers at the excluded continuation. No additional stage is started.
+
 ## Owned synthetic entry stack — T10 (2026-10-31)
 
 [T10 stack and context proof](research/title-stack-context.md) verifies a separate

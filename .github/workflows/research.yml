@@ -22,6 +22,8 @@ jobs:
         run: python3 tests/startup-dependencies/test_static.py
       - name: Check original stack geometry, context dependencies and closed-call inputs
         run: python3 tests/stack-geometry/test_fixture.py
+      - name: Check conditional stack-renaming model and original counterexample inputs
+        run: python3 tests/context-equivalence/test_model.py
       - name: Check non-admitting interval provenance on original fixtures
         run: python3 tests/native-provenance/test_intervals.py
       - name: Check resource coordinates, PNG CRC, initialization and binding identities

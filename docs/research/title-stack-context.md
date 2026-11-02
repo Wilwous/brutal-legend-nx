@@ -193,3 +193,7 @@ context provenance/equivalence contract: concrete initial r1 bound to the actual
 intended live owned stack/thread, with justified saved register/LR inputs. Safe
 synthetic allocation mechanics alone do not supply that title binding. Image/page,
 PC/stop and exception blockers remain afterwards. T10 stops without starting a new stage.
+
+The subsequent [T11 conditional-equivalence investigation](native-startup-equivalence.md)
+distinguishes historical numeric values from typed native observation invariants.
+It does not establish actual title context equivalence or promote these gates.

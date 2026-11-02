@@ -18,6 +18,15 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    'tests/context-equivalence/model.py',
+    'tests/context-equivalence/fixture.py',
+    'tests/context-equivalence/test_model.py',
+    'tests/context-equivalence/contract.h',
+    'tests/context-equivalence/probe.cpp',
+    'tests/context-equivalence/run.py',
+    'tests/context-equivalence/verify.py',
+    'tests/context-equivalence/templates/test/ppc_config_h.inja',
+    'tests/context-equivalence/templates/test/ppc_test_functions_cpp.inja',
     'tests/stack-geometry/fixture.py',
     'tests/stack-geometry/test_fixture.py',
     'tests/stack-geometry/admission.h',
