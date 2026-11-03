@@ -1,5 +1,17 @@
 # Research roadmap — title readiness evidence
 
+## Executable-module provider — T14 (2026-11-03)
+
+[T14 source and consumer investigation](research/executable-module-provider.md)
+confirms the finite BE32 pointer chain and distinguishes a header-word address
+from its scalar payload. Independent original-header checks establish the selected
+field's absence; missing-field zero is pinned SDK behavior, not a proved Xbox
+contract. A strict original parser and immutable snapshot prototype remain
+nonexecuting DRAFT. No owned runtime provider is admitted. Gates stay unchanged;
+title execution remains NO-GO. The next smallest proof is independent qualification
+of that selected absent-field native query contract. T15 is not started.
+
+
 ## First unproved callee and provider observations — T13 (2026-11-02)
 
 [T13 finite callee analysis](research/first-callee-observations.md) binds an exact
@@ -13,7 +25,7 @@ an admitted native replacement. Local frame/restore relations remain conditional
 normal return and title entry remain BLOCKED/NO-GO. Gates and runtime are unchanged.
 The smallest next proof is an owned native module-handle provider/object contract,
 qualified to the intended module and consumed header relationship. A historical
-snapshot pointer or convenient null cannot establish that contract. T14 is not started.
+snapshot pointer or convenient null cannot establish that contract. T14 findings are above.
 
 ## Stack pointer consumers and escape contracts — T12 (2026-11-02)
 

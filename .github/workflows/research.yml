@@ -26,6 +26,8 @@ jobs:
         run: python3 tests/context-equivalence/test_model.py
       - name: Check typed pointer graphs, lifetime refusals and original nested-frame inputs
         run: python3 tests/stack-provenance/test_model.py
+      - name: Check nonexecuting module-provider snapshots and strict selected-header parser
+        run: python3 tests/module-provider/test_contract.py
       - name: Check metadata-bound static callee observations and unknown-call barriers
         run: python3 tests/callee-observations/test_static.py
       - name: Check non-admitting interval provenance on original fixtures

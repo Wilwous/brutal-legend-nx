@@ -1,5 +1,14 @@
 # Feasibility — Phase 21
 
+**T14 current update, 2026-11-03:** the finite executable-module pointer chain and
+selected XEX header representation are source-verified. A new strict parser and
+immutable synthetic snapshot audit are nonexecuting DRAFT; there is no production
+provider, live title binding or runtime ownership claim. Missing-field handling is
+qualified to the pinned SDK, with original Xbox conformance UNKNOWN. Historical
+G4/G8 BLOCKED, G5 UNKNOWN; native N-G4/N-G8 BLOCKED, N-G5 PARTIAL. Game execution
+remains NO-GO. [Contract, refusals and remaining proof](research/executable-module-provider.md).
+
+
 **Independent Switch update, 2026-10-27:** Stages 4–8 are HOST/BUILD VERIFIED
 for the original synthetic runtime; hardware execution is UNKNOWN. The probe
 uses checked logical memory, four guest workers/PCR/TLS, production-generated
