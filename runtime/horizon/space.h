@@ -47,6 +47,8 @@ class Space {
   Handle allocate(uint32_t size,uint32_t guest=0){auto h=reserve(size,guest);try{commit(h);return h;}catch(...){release(h);throw;}}
   void commit(Handle h,Permission p=Permission::read_write){std::lock_guard lock(mutex_);auto&r=owned(h);memory_.commit(r.backing,p);if(!r.initialized){r.initial=p;r.initialized=true;}}
   void protect(Handle h,Permission p){std::lock_guard lock(mutex_);memory_.protect(owned(h).backing,p);}
+  void seal_read_only(Handle h){std::lock_guard lock(mutex_);memory_.seal_read_only(owned(h).backing);}
+  foundation::Memory::Info info(Handle h){std::lock_guard lock(mutex_);return memory_.info(owned(h).backing);}
   void decommit(Handle h){std::lock_guard lock(mutex_);auto&r=owned(h);if(r.leases)throw Error(Fault::ownership,"active memory lease");memory_.decommit(r.backing);}
   void release(Handle h){std::lock_guard lock(mutex_);auto&r=owned(h);if(r.leases)throw Error(Fault::ownership,"active memory lease");memory_.release(r.backing);regions_.erase(h.id);--live_total_;}
   void release_all(std::span<const Handle> handles){
@@ -71,6 +73,7 @@ class Space {
     for(auto h:handles)if(regions_.contains(h.id)){memory_.release(owned(h).backing);regions_.erase(h.id);--live_total_;}
   }
   class Lease {
+    friend class Space;
     Space* space_{};Handle handle_{};
    public:
     Lease(Space& space,Handle h):space_(&space),handle_(h){std::lock_guard lock(space.mutex_);++space.owned(h).leases;++lease_total_;}
@@ -78,6 +81,16 @@ class Space {
     Lease(Lease&& other)noexcept:space_(std::exchange(other.space_,nullptr)),handle_(other.handle_){}
     ~Lease(){if(space_)space_->unlease(handle_);}
   };
+  // Consume this allocation's final pin and release atomically. A competing
+  // pin refuses without changing either token; lookup/pin races cannot bind ABA.
+  bool release_exclusive(Lease& pin){
+    std::lock_guard lock(mutex_);
+    if(pin.space_!=this)throw Error(Fault::ownership,"foreign or consumed release lease");
+    auto&r=owned(pin.handle_);
+    if(r.leases>1)return false;
+    if(r.leases!=1)throw Error(Fault::ownership,"missing release lease");
+    memory_.release(r.backing);regions_.erase(pin.handle_.id);--live_total_;--lease_total_;pin.space_=nullptr;return true;
+  }
   Lease pin(uint32_t address,uint32_t size){
     Handle h;{std::lock_guard lock(mutex_);h=range(address,size).h;}
     // A release between lookup and acquisition makes this exact token stale;

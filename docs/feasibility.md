@@ -1,5 +1,15 @@
 # Feasibility — Phase 21
 
+**T16 current update, 2026-11-03:** a standalone source-bound header buffer now
+has checked logical guest reservation/commitment, an irreversible read-only seal,
+module/allocation leases and last-reader cleanup. Private original-header data-only
+admission passes in Debug/Release/ASan+UBSan on the host backend. Unsupported memory
+access modes now refuse centrally. This is no full module provider or executable
+image; original Xbox semantics, full image rights/lifetime and exceptions remain
+unproved. Historical/native gates and game NO-GO are unchanged.
+[Scope, tests and remaining obligations](research/read-only-header-buffer.md).
+
+
 **T15 current update, 2026-11-03:** actual pinned SDK export/helper tests verify
 zero for an absent selected header key and a borrowed inline-word address when
 present. A separate host parser agrees within that scope; historical Xbox

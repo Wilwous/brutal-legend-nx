@@ -1,5 +1,17 @@
 # Research roadmap — title readiness evidence
 
+## Standalone read-only guest header — T16 (2026-11-03)
+
+[T16 ownership and lifecycle evidence](research/read-only-header-buffer.md)
+verifies an opt-in irreversible RO seal in the existing memory authority, a
+module-instance-bound header object and deferred last-reader cleanup. The original
+header passes private data-only checked guest admission in three host profiles;
+no executable image, provider or import binding is created. Historical/native
+gates and game NO-GO remain unchanged. The smallest next proof is a nonexecuting
+owned metadata prefix retaining this header with coupled module/source lifetime,
+without publishing the exported cell or imports. No next stage is started.
+
+
 ## Missing header-field semantics — T15 (2026-11-03)
 
 [T15 finite investigation](research/missing-xex-header-field.md) verifies actual
@@ -9,7 +21,7 @@ conformance remains UNKNOWN; no module provider or title gate is admitted.
 The parser now distinguishes ABSENT from malformed input while retaining T14's
 strict provider refusal. The smallest independent N-G4 task is owned, leased,
 read-only guest backing for the source-bound header alone, without import binding
-or entry. T16 is not started.
+or entry. T16 findings are above.
 
 
 ## Executable-module provider — T14 (2026-11-03)

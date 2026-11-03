@@ -27,7 +27,7 @@ struct View { Allocation allocation; uint32_t offset{}, length{}; uint64_t epoch
 // Bounded checked memory for component execution, not a 4-GiB PPC address space.
 // No raw host pointer escapes. Permissions apply to checked accesses, not mprotect.
 class Memory {
-  struct Region { Allocation a; bool committed{}; Permission permission{}; uint64_t epoch{1}; };
+  struct Region { Allocation a; bool committed{}; Permission permission{}; uint64_t epoch{1}; bool read_only_sealed{}; };
   inline static std::atomic<uint64_t> next_owner_{1};
   const uint64_t owner_{next_owner_.fetch_add(1)};
   std::vector<std::byte> bytes_;
@@ -48,6 +48,8 @@ class Memory {
     return r;
   }
   Region& check(const View& v, Access operation) {
+    if (operation!=Access::read && operation!=Access::write)
+      throw Error(Fault::unsupported,"unsupported memory access");
     auto& r = region(v.allocation);
     if (r.epoch != v.epoch) throw Error(Fault::stale, "mapping epoch changed");
     if (!r.committed) throw Error(Fault::uncommitted, "memory is reserved but not committed");
@@ -81,6 +83,8 @@ class Memory {
   }
   void commit(const Allocation& a, Permission p=Permission::read_write) {
     std::lock_guard lock(mutex_);valid_permission(p);auto& r=region(a);
+    if(r.read_only_sealed && p!=Permission::read && p!=Permission::none)
+      throw Error(Fault::protection,"sealed allocation cannot become writable");
     if (!r.committed) std::fill_n(bytes_.begin()+index(a),a.size,std::byte{});
     r.committed=true;r.permission=p;
   }
@@ -90,7 +94,17 @@ class Memory {
   void protect(const Allocation& a, Permission p) {
     std::lock_guard lock(mutex_);valid_permission(p);auto& r=region(a);
     if (!r.committed) throw Error(Fault::uncommitted,"protect requires committed memory");
+    if(r.read_only_sealed && p!=Permission::read && p!=Permission::none)
+      throw Error(Fault::protection,"sealed allocation cannot become writable");
     r.permission=p;
+  }
+  // Opt-in, irreversible for this allocation, including decommit/recommit.
+  // Revocation to none and restoration to read remain available to its owner.
+  void seal_read_only(const Allocation& a) {
+    std::lock_guard lock(mutex_);auto& r=region(a);
+    if(!r.committed)throw Error(Fault::uncommitted,"seal requires commitment");
+    if(r.read_only_sealed)throw Error(Fault::stale,"allocation already sealed");
+    r.permission=Permission::read;r.read_only_sealed=true;
   }
   void decommit(const Allocation& a) {
     std::lock_guard lock(mutex_);auto& r=region(a);
@@ -113,8 +127,8 @@ class Memory {
     }
     throw Error(Fault::bounds,"guest address is not owned by a live allocation");
   }
-  struct Info {bool committed;Permission permission;};
-  Info info(const Allocation& a){std::lock_guard lock(mutex_);auto&r=region(a);return {r.committed,r.permission};}
+  struct Info {bool committed;Permission permission;bool read_only_sealed;};
+  Info info(const Allocation& a){std::lock_guard lock(mutex_);auto&r=region(a);return {r.committed,r.permission,r.read_only_sealed};}
   void validate(const View& v,Access access){std::lock_guard lock(mutex_);check(v,access);}
   std::vector<std::byte> read(const View& v) {
     std::lock_guard lock(mutex_);check(v,Access::read);
