@@ -1,5 +1,14 @@
 # Feasibility — Phase 21
 
+**T15 current update, 2026-11-03:** actual pinned SDK export/helper tests verify
+zero for an absent selected header key and a borrowed inline-word address when
+present. A separate host parser agrees within that scope; historical Xbox
+semantics remain UNKNOWN. Offline parsing distinguishes absence from malformed
+input without admitting a provider. Ownership, rights, lifetime and publication
+remain BLOCKED for title use; historical/native gates and game NO-GO are unchanged.
+[Evidence, case distinctions and N-G4 next proof](research/missing-xex-header-field.md).
+
+
 **T14 current update, 2026-11-03:** the finite executable-module pointer chain and
 selected XEX header representation are source-verified. A new strict parser and
 immutable synthetic snapshot audit are nonexecuting DRAFT; there is no production

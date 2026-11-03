@@ -1,5 +1,17 @@
 # Research roadmap — title readiness evidence
 
+## Missing header-field semantics — T15 (2026-11-03)
+
+[T15 finite investigation](research/missing-xex-header-field.md) verifies actual
+SDK missing-field zero and present inline-word pointer behavior on original
+metadata, with a separately compiled host-parser comparison. Historical Xbox
+conformance remains UNKNOWN; no module provider or title gate is admitted.
+The parser now distinguishes ABSENT from malformed input while retaining T14's
+strict provider refusal. The smallest independent N-G4 task is owned, leased,
+read-only guest backing for the source-bound header alone, without import binding
+or entry. T16 is not started.
+
+
 ## Executable-module provider — T14 (2026-11-03)
 
 [T14 source and consumer investigation](research/executable-module-provider.md)
@@ -9,7 +21,7 @@ field's absence; missing-field zero is pinned SDK behavior, not a proved Xbox
 contract. A strict original parser and immutable snapshot prototype remain
 nonexecuting DRAFT. No owned runtime provider is admitted. Gates stay unchanged;
 title execution remains NO-GO. The next smallest proof is independent qualification
-of that selected absent-field native query contract. T15 is not started.
+of that selected absent-field native query contract. T15 findings are above.
 
 
 ## First unproved callee and provider observations — T13 (2026-11-02)

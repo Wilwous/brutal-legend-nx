@@ -18,11 +18,11 @@ def require(ok, reason):
         raise ValueError(reason)
 
 
-def selected_field(blob, selector=DEFAULT_HEAP_SIZE):
-    """Return a source offset, never a guest pointer or the inline scalar value.
+def lookup_selected(blob, selector=DEFAULT_HEAP_SIZE):
+    """Classify PRESENT/ABSENT separately from invalid input; never admit a provider.
 
     Only the single demonstrated inline-word selector is supported. Strict
-    malformed/missing/duplicate refusal is native policy, not an Xbox status.
+    malformed/duplicate refusal is native policy, not an Xbox status.
     """
     require(selector == DEFAULT_HEAP_SIZE, 'unsupported selector')
     require(isinstance(blob, bytes) and len(blob) >= 24, 'truncated header')
@@ -32,11 +32,20 @@ def selected_field(blob, selector=DEFAULT_HEAP_SIZE):
     require(24 <= size <= len(blob) and size % 4 == 0, 'header extent')
     require(count <= (size-24)//8, 'directory extent')
     matches = [24+8*i+4 for i in range(count) if u32(24+8*i) == selector]
-    require(len(matches) == 1, 'missing or duplicate selector')
-    offset = matches[0]
-    return {'offset': offset, 'width': 4, 'value': u32(offset),
+    require(len(matches) <= 1, 'missing or duplicate selector')
+    offset = matches[0] if matches else None
+    return {'state': 'PRESENT' if matches else 'ABSENT',
+            'offset': offset, 'width': 4 if matches else 0,
+            'value': u32(offset) if matches else None,
             'header_size': size, 'source_sha256': hashlib.sha256(blob[:size]).hexdigest(),
-            'kind': 'inline-word-address', 'execution_admitted': False}
+            'kind': 'inline-word-address' if matches else 'absent', 'execution_admitted': False}
+
+
+def selected_field(blob, selector=DEFAULT_HEAP_SIZE):
+    """Retain T14's strict policy: an absent field cannot install a provider."""
+    field = lookup_selected(blob, selector)
+    require(field['state'] == 'PRESENT', 'missing or duplicate selector')
+    return {k: v for k, v in field.items() if k != 'state'}
 
 
 @dataclass(frozen=True)

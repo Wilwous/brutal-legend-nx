@@ -1,0 +1,48 @@
+{
+  "scope": "selected inline-word XEX field and valid-header absence; no historical hardware proof",
+  "references": [
+    {
+      "repository": "rexglue/rexglue-sdk",
+      "revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+      "locations": ["src/kernel/xboxkrnl/xboxkrnl_rtl.cpp:RtlImageXexHeaderField_entry", "src/system/user_module.cpp:UserModule::GetOptHeader"],
+      "evidence": "actual isolated existing SDK binary tests plus source; wrapper zero on absent key; present kind1 gives guest inline-word address",
+      "independence": "baseline implementation; Xenia-derived",
+      "limits": "raw pointer helper lacks bounded-input/lifetime contract; not Xbox hardware"
+    },
+    {
+      "repository": "xenia-project/xenia",
+      "revision": "95a5c3ee250f80c3b9d139658649d9ffb6db3eec",
+      "locations": ["src/xenia/kernel/user_module.cc:UserModule::GetOptHeader"],
+      "evidence": "same-family missing-field zero and kind1 pointer source, preserved T14 reference",
+      "independence": "common lineage; not an independent confirmation",
+      "limits": "not reexecuted or counted as new evidence"
+    },
+    {
+      "repository": "hedge-dev/XenonRecomp",
+      "revision": "ddd128bcca99fe8bfbb99bea583c972351fa6ace",
+      "locations": ["XenonUtils/xex.h:getOptHeaderPtr"],
+      "evidence": "separate host parser returns nullptr when absent and host inline-word pointer for kind1; compared on original bounded fixtures",
+      "independence": "separate API/implementation; independent historical derivation not established",
+      "limits": "not a guest runtime export; kind0 returns a host pointer whereas SDK guest helper returns immediate; no hardware proof or malformed-input guarantee"
+    },
+    {
+      "repository": "hedge-dev/UnleashedRecomp",
+      "revision": "cf829a9eca8fb680fba4b0409ddeb6ca92f22e3c",
+      "locations": ["UnleashedRecomp/kernel/imports.cpp:RtlImageXexHeaderField"],
+      "evidence": "logging stub; no usable lookup contract",
+      "independence": "does not supply a semantic oracle",
+      "limits": "void stub is not evidence of null return"
+    },
+    {
+      "repository": "ClementDreptin/XexUtils",
+      "revision": "01fecb17e4edc8b9b8774c3ae6aaa0fc21c2622f",
+      "locations": ["src/Kernel.h:RtlImageXexHeaderField"],
+      "evidence": "export299 pointer-return prototype with header and selector arguments",
+      "independence": "separate community declaration; origin/authority insufficient for historical proof",
+      "limits": "no implementation or documented missing-selector result"
+    }
+  ],
+  "qualified_Microsoft_missing_field_contract": false,
+  "qualified_Xbox_hardware_observation": false,
+  "historical_status": "UNKNOWN"
+}
