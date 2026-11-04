@@ -1,5 +1,14 @@
 # Proposed architecture — Phase 21
 
+**T41–T52 current update, 2026-11-04:** original data-descriptor coverage and
+535 direct import-slot spans corroborate the finite eight-byte evidence. Live
+entry values, provider/startup side effects, owner/observer lifetime and applicable
+RW authority remain unproved. Post-store initial-value independence is conditional
+on a restricted observation boundary. No production C++ change or local full
+rebuild was justified; targeted static checks pass. All gates and game NO-GO remain.
+[Evidence, conditional result and smallest missing proof](research/native-write-authority-evidence.md).
+
+
 **T29–T40 current update, 2026-11-04:** source-bound RW regions and original
 production-generated module/image writes pass three host profiles. Exact logical
 bounds, current permission checks, module identity and retained lifetime remain
