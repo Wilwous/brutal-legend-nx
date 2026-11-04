@@ -18,6 +18,8 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    'tools/observation_order.py',
+    'tests/observation-order/test_order.py',
     'tests/image-write-authority/test_contract.py',
     'runtime/horizon/writable_image.h',
     'tests/writable-image/contract.cpp',

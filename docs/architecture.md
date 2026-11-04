@@ -1,5 +1,15 @@
 # Proposed architecture — Phase 21
 
+**T53–T64 current update, 2026-11-04:** scoped provider/TLS/PCR/launch review
+identifies pre-entry APC dispatch as an unresolved observer path. Explicit SDK
+writes are bounded to their own objects only under allocation/lifetime premises;
+original closure and earliest target reader remain UNKNOWN. A new analysis-only
+partial-order checker preserves scope and conditional evidence. No production
+C++ change or new title mapping; all gates and game NO-GO remain. The next useful
+step is a qualified independent observation channel, not another repeated source cycle.
+[Writer/observer findings and acquisition requirements](research/title-writer-observer-contract.md).
+
+
 **T41–T52 current update, 2026-11-04:** original data-descriptor coverage and
 535 direct import-slot spans corroborate the finite eight-byte evidence. Live
 entry values, provider/startup side effects, owner/observer lifetime and applicable
