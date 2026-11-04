@@ -174,8 +174,9 @@ are kept outside the checkout.
 
 Each row passes in **Debug / Release / combined ASan+UBSan**, with `-O0`, `-O2`
 and `-O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all` respectively.
-The table reports per-profile counters; “passed” is the suite's reported semantic
-assertion count, not a count of byte comparisons or unique compatibility facts.
+The table reports the suites' raw per-profile counters. Some raw positive
+counters also increment for byte equality checks; those are separated below and
+must not be counted as independent semantic tests or compatibility facts.
 
 | Suite | Per-profile outcome |
 |---|---|
@@ -194,8 +195,11 @@ assertion count, not a count of byte comparisons or unique compatibility facts.
 | Horizon core / checked foundation | 20 core passes / 6 foundation cases |
 | Private original header / RO projection | Three-profile data-only byte and refusal checks; zero PPC entries |
 
-New four-suite totals per profile are **257 positive assertions and 130 expected
-refusals**, with no failed final assertion. The selected final corpus has 159
+New four-suite totals per profile are **237 non-byte positive assertions,
+20 byte-equality assertions and 130 expected refusals**, with no failed final
+assertion. The raw positive counters sum to 257 because the metadata suite includes
+four byte checks and the variable suite includes sixteen. The projection's 7,800
+bulk byte comparisons are separate and do not increment its positive counter. The selected final corpus has 159
 bounded child processes: 150 exit zero; nine offline-reader invalid-input cases
 intentionally exit one. There are zero unexpected faults, timeouts or sanitizer
 findings. Expected native errors are exceptions/refusals, not host fault tests.
