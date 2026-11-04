@@ -1,5 +1,14 @@
 # Proposed architecture — Phase 21
 
+**T65 update, 2026-11-04:** current external-tracing feasibility audit found no
+locally operational qualified Xbox observation channel. Xenia has selected disabled
+CPU trace hooks; a separate early Xenon LLE has point watchpoints, not a verified
+complete startup recorder. A small original trace-envelope validator and loss/
+causality refusal fixtures pass; no framework or original-title execution occurred.
+EXTERNAL EVIDENCE REQUIRED. All historical/native gates and game NO-GO remain.
+[Candidate revisions, capture requirements and stop decision](research/xbox-startup-tracing-feasibility.md).
+
+
 **T53–T64 current update, 2026-11-04:** scoped provider/TLS/PCR/launch review
 identifies pre-entry APC dispatch as an unresolved observer path. Explicit SDK
 writes are bounded to their own objects only under allocation/lifetime premises;
