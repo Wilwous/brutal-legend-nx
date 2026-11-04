@@ -1,5 +1,22 @@
 # Research roadmap — title readiness evidence
 
+## T17–T28 cycle decision (2026-11-04)
+
+[The consolidated native-module cycle](research/native-module-integration.md)
+completes the bounded independent engineering and finite evidence audits. T17–T21
+mechanisms and T24–T27 original synthetic integration pass in their declared host
+scope; title acceptance in T19/T21–T25 remains PARTIAL/BLOCKED. T28 records the
+unchanged gates. No stage beyond T28 is started.
+
+Next single obligation: a source-bound independently justified native RW
+owner/commitment/lifetime contract for the required in-section image-backed stores,
+with the 392-byte gap, virtual tail and SizeOfImage remainder still excluded.
+The new RO forensic owner cannot fulfill these writes. Do not promote title gates
+or execute proprietary PPC on the strength of synthetic tests. The separate Xbox
+residency/exception evidence track stays BLOCKED; prior hardware-verified NROs are
+preserved without rebuilding or deploying a new candidate.
+
+
 ## Minimal native module ownership and selected binding — T17–T21 (2026-11-04)
 
 [The generic module contract](research/native-module-runtime.md) now verifies the

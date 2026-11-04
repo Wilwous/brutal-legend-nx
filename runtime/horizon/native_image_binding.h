@@ -6,6 +6,7 @@
 namespace brutal::horizon::native_image {
 struct CodeIdentity {Digest source,ppc,generated,sdk,runtime,contracts,plan;uint32_t entry,tls;bool operator==(const CodeIdentity&)const=default;};
 struct Boundary {uint32_t pc,size;};
+enum class ImportPolicy {compare_leaf,no_function_imports};
 inline Digest contract_identity(std::span<const Boundary>bounds,const ControlPlan&control){
  std::vector<uint8_t>bytes;auto n=[&](uint64_t v){for(int i=7;i>=0;--i)bytes.push_back(uint8_t(v>>(8*i)));};
  n(bounds.size());for(auto b:bounds){n(b.pc);n(b.size);}n(control.sites.size());for(auto s:control.sites){n(s.pc);n(s.owner);n(uint32_t(s.kind));n(s.width);n(s.target);}n(control.roots.size());for(auto root:control.roots)n(root);n(control.exit);return digest(bytes);
@@ -13,7 +14,7 @@ inline Digest contract_identity(std::span<const Boundary>bounds,const ControlPla
 class Binding {
  Image& image_;Space& space_;ModuleLife& module_;std::span<const Function> functions_;const ControlPlan&control_;
  public:
- Binding(Image&i,Space&s,ModuleLife&m,CodeIdentity actual,const CodeIdentity&trusted,std::span<const Function>functions,std::span<const Boundary>bounds,const ControlPlan&control,std::span<const Function>trusted_functions):image_(i),space_(s),module_(m),functions_(functions),control_(control){
+ Binding(Image&i,Space&s,ModuleLife&m,CodeIdentity actual,const CodeIdentity&trusted,std::span<const Function>functions,std::span<const Boundary>bounds,const ControlPlan&control,std::span<const Function>trusted_functions,ImportPolicy imports=ImportPolicy::compare_leaf):image_(i),space_(s),module_(m),functions_(functions),control_(control){
   auto&p=i.plan();require(i.admitted()&&m.identity==p.module&&actual==trusted,"native binding identity");
   require(actual.plan==i.fingerprint(),"exact admitted plan identity");
   require(actual.source==p.source&&actual.generated==p.code&&actual.sdk==p.sdk&&actual.runtime==p.runtime&&actual.entry==p.entry&&actual.tls==p.tls_address,"plan/code/startup mismatch");
@@ -21,12 +22,13 @@ class Binding {
   require(actual.ppc!=Digest{}&&actual.contracts!=Digest{}&&functions.size()==bounds.size()&&functions.size()<=32,"function/contract extent");
   require(functions.size()==trusted_functions.size(),"trusted map extent");
   bool entry=false;for(size_t n=0;n<functions.size();++n){auto f=functions[n];auto b=bounds[n];auto trusted_function=trusted_functions[n];require(f.address==trusted_function.address&&f.implementation==trusted_function.implementation&&f.name==trusted_function.name&&f.strict==trusted_function.strict&&f.finite_fpr==trusted_function.finite_fpr,"trusted generated function map");require(f.address==b.pc&&b.size&&f.implementation&&f.strict,"function identity/boundary");
-   bool owned=false;for(auto&r:p.regions)if(b.pc>=r.address&&uint64_t(b.pc)+b.size<=uint64_t(r.address)+r.file_size&&(r.rights==Rights::read_execute||b.pc==0x82030004))owned=true;require(owned,"unbacked function");
+   bool owned=false;for(auto&r:p.regions)if(b.pc>=r.address&&uint64_t(b.pc)+b.size<=uint64_t(r.address)+r.file_size&&(r.rights==Rights::read_execute||(imports==ImportPolicy::compare_leaf&&b.pc==0x82030004)))owned=true;require(owned,"unbacked function");
    if(f.address==p.entry)entry=true;
    for(size_t j=0;j<n;++j)require(f.address!=functions[j].address&&f.name!=functions[j].name&&f.implementation!=functions[j].implementation,"duplicate binding");
   }require(entry,"missing bound entry");
   for(auto site:control.sites){bool owned=false;for(auto b:bounds)if(site.owner==b.pc&&site.pc>=b.pc&&uint64_t(site.pc)+4<=uint64_t(b.pc)+b.size)owned=true;require(owned,"site/function mismatch");}
-  require(p.imports==std::vector<Import>{{0x11b,1}},"selected native import manifest");
+  require(imports==ImportPolicy::compare_leaf||imports==ImportPolicy::no_function_imports,"unknown native import policy");
+  require(p.imports==(imports==ImportPolicy::compare_leaf?std::vector<Import>{{0x11b,1}}:std::vector<Import>{}),"selected native import manifest");
  }
  void lend(Scope&scope){require(image_.admitted()&&scope.belongs_to(module_,space_),"closed/foreign native scope");for(auto h:image_.handles())scope.lend(h);}
  void startup(GuestThread&guest){

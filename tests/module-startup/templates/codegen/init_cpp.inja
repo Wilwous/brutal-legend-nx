@@ -1,0 +1,6 @@
+// Production-generated original synthetic function map.
+#include "{{ project }}_pch.h"
+extern const brutal::horizon::Function module_functions[]{
+{% for fn in functions %} { {{ fn.address }}, {{ fn.name }}, "{{ fn.name }}", true, false },
+{% endfor %}};
+extern const size_t module_function_count=sizeof(module_functions)/sizeof(module_functions[0]);

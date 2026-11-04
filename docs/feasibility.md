@@ -1,5 +1,14 @@
 # Feasibility — Phase 21
 
+**T17–T28 current update, 2026-11-04:** independent generic engineering is verified
+in three host profiles: metadata/lifetime, selected self-module variable, lookup,
+exact RO subranges and production-generated synthetic integration. The private
+RO projection reads 11,896 proven bytes and excludes 392; it does not admit required
+original image writes. **Original title entry NO-GO.** G4/G8 and N-G4/N-G8 stay
+BLOCKED, G5 UNKNOWN and N-G5 PARTIAL. No new NRO/hardware claim.
+[Stage decisions, final regressions and next proof](research/native-module-integration.md).
+
+
 **T17–T21 current update, 2026-11-04:** the minimal metadata/header ownership graph
 and selected synthetic variable binding are **VERIFIED in the bounded host scope**.
 Selected field lookup distinguishes absence, inline-word address and invalid

@@ -1,5 +1,14 @@
 # Proposed architecture — Phase 21
 
+**T17–T28 current update, 2026-11-04:** the native module graph now integrates
+with an original production-generated synthetic startup, strict no-function-import
+binding and exact RO forensic subranges. The host workload returns 31 and reclaims
+all resources; every one of its 12 scalar access sites is checked. It uses an
+explicit original query hook, not an Xbox SDK export. Title RW image admission,
+providers, startup and exceptions remain blocked/unproved; all gates are unchanged.
+[Complete scope and test evidence](research/native-module-integration.md).
+
+
 **T17–T21 current update, 2026-11-04:** exact logical slices, sealed minimal
 module metadata and retained header/provider/import-slot ownership now pass
 original three-profile host tests. The selected BE32 chain and inline-word lookup

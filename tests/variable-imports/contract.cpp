@@ -24,6 +24,11 @@ int main(){try{nm::VariableKey key{"xboxkrnl.exe",0x193,nm::ImportKind::variable
   }
   check(binding.closed());check(s.live()==2);check(meta.close());check(h.close());check(s.live()==0&&s.leases()==0);check(m.close()&&other.close());
  }
+ // Malformed backing is a refusal, never the missing-selector zero result.
+ for(unsigned variant=0;variant<3;++variant){Space s(65536);ModuleLife m(17+variant);auto b=data();if(variant==0)b[0]=0;else if(variant==1)b[11]=31;else b[23]=2;auto p=plan(m,b);
+  no([&]{hb::Buffer h(s,m,p,b,hb::identity(p));nm::Metadata meta(s,m,h,h.reference(),0x41000000);auto r=std::make_shared<nm::Metadata::Reader>(meta.acquire(m,meta.reference()));nm::lookup(r,0x40000000,0x20401);});
+  check(s.live()==0&&s.leases()==0&&m.close());
+ }
  // Registry replacement requires a fresh provider/capability. Old Ref cannot unbind it.
  {Space s(65536);ModuleLife m(8);auto b=data();auto p=plan(m,b);hb::Buffer h(s,m,p,b,hb::identity(p));nm::Metadata meta(s,m,h,h.reference(),0x41000000);nm::Registry registry;nm::Provider a(s,m,meta,meta.reference(),key,0x42000000);auto old=a.reference();registry.publish(a);nm::Binding binding(registry,s,m,key,old,0x43000000);auto oldbinding=binding.reference();registry.withdraw(key,old);check(binding.close());nm::Provider fresh(s,m,meta,meta.reference(),key,0x42000000);auto now=fresh.reference();registry.publish(fresh);no([&]{registry.withdraw(key,old);});no([&]{binding.acquire(m,oldbinding);});nm::Binding newer(registry,s,m,key,now,0x43000000);no([&]{newer.acquire(m,oldbinding);});check(newer.close());registry.withdraw(key,now);check(meta.close());check(h.close());check(s.live()==0);check(m.close());}
  check(Space::totals()==std::pair<size_t,size_t>{0,0});check(hb::Buffer::registrations()==0&&nm::Object::registrations()==0);

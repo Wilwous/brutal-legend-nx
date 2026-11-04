@@ -85,14 +85,16 @@ compiler/runtime diagnostics, time and peak RSS stay outside Git.
 | Suite, per profile | Positive assertions | Expected refusals | Bulk byte comparisons |
 |---|---:|---:|---:|
 | Minimal metadata/lifecycle | 97 | 21 | 4 |
-| Selected provider/import binding | 117 | 81 | 16 |
+| Selected provider/import binding | 120 | 84 | 16 |
 
 All six runs pass with zero outstanding allocations/leases and zero sanitizer
 findings, unexpected faults or timeouts. Bulk comparisons are not independent
 semantic tests. Four metadata, four provider and four binding failure points
 exercise rollback; the latter two run for each of four header variants. Reuse,
 stale withdrawal, selected field absence/zero/duplication, permission revocation,
-foreign identity and repeated/concurrent teardown contracts are covered.
+foreign identity and repeated/concurrent teardown contracts are covered. Three
+additional malformed headers are refused by the existing source-bound header
+admission before lookup or guest publication.
 
 A private nonexecuting replay also copies the verified original 12,288-byte header,
 constructs only the supported metadata word, reads it through the checked guest
