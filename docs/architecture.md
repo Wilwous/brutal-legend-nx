@@ -1,5 +1,13 @@
 # Proposed architecture — Phase 21
 
+**T17–T21 current update, 2026-11-04:** exact logical slices, sealed minimal
+module metadata and retained header/provider/import-slot ownership now pass
+original three-profile host tests. The selected BE32 chain and inline-word lookup
+are supported within a self-module native contract. Unknown adjacent module
+fields stay inaccessible; full Xbox layout, general imports and all original
+providers remain unadmitted. [Contracts and lifetime limits](research/native-module-runtime.md).
+
+
 **T16 current update, 2026-11-03:** a standalone source-bound header buffer now
 has checked logical guest reservation/commitment, an irreversible read-only seal,
 module/allocation leases and last-reader cleanup. Private original-header data-only

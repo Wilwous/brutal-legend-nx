@@ -1,5 +1,15 @@
 # Research roadmap — title readiness evidence
 
+## Minimal native module ownership and selected binding — T17–T21 (2026-11-04)
+
+[The generic module contract](research/native-module-runtime.md) now verifies the
+sealed metadata word, complete retained object graph and selected self-module
+variable publication/withdrawal with failure rollback. All 13 original providers
+remain unadmitted. Continue the independent bounded data projection and original
+synthetic startup integration within T22–T28; image/title execution gates remain
+unchanged. Xbox residency research stays BLOCKED independently of this native route.
+
+
 ## Standalone read-only guest header — T16 (2026-11-03)
 
 [T16 ownership and lifecycle evidence](research/read-only-header-buffer.md)

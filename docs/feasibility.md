@@ -1,5 +1,12 @@
 # Feasibility — Phase 21
 
+**T17–T21 current update, 2026-11-04:** the minimal metadata/header ownership graph
+and selected synthetic variable binding are **VERIFIED in the bounded host scope**.
+Selected field lookup distinguishes absence, inline-word address and invalid
+context. Original title-provider readiness remains **BLOCKED**; all historical
+and native gates are unchanged. [Evidence and exclusions](research/native-module-runtime.md).
+
+
 **T16 current update, 2026-11-03:** a standalone source-bound header buffer now
 has checked logical guest reservation/commitment, an irreversible read-only seal,
 module/allocation leases and last-reader cleanup. Private original-header data-only

@@ -34,9 +34,11 @@ class Space {
   explicit Space(uint32_t capacity=4*1024*1024):memory_(capacity){}
   Space(const Space&)=delete;
   ~Space(){for(auto&[id,r]:regions_){(void)id;if(r.leases)std::terminate();}live_total_-=regions_.size();}
-  Handle reserve(uint32_t size,uint32_t guest=0){
+ private:
+  Handle reserve_impl(uint32_t size,uint32_t guest,bool exact){
     std::lock_guard lock(mutex_);
-    if(guest&&(guest&4095))throw Error(Fault::argument,"guest mapping alignment");
+    if(!exact&&guest&&(guest&4095))throw Error(Fault::argument,"guest mapping alignment");
+    if(exact&&!guest)throw Error(Fault::argument,"exact logical slice needs an explicit address");
     if(guest&&uint64_t(guest)+size>0x100000000ull)throw Error(Fault::bounds,"guest mapping overflow");
     auto a=memory_.reserve(size);uint32_t address=guest?guest:a.guest;
     try{
@@ -44,6 +46,11 @@ class Space {
       Handle h{owner_,next_,address,size};regions_.emplace(next_,Region{h,a});++next_;++live_total_;return h;
     }catch(...){memory_.release(a);throw;}
   }
+ public:
+  Handle reserve(uint32_t size,uint32_t guest=0){return reserve_impl(size,guest,false);}
+  // Opt-in exact logical bytes; backing still uses the one checked arena.
+  // No enclosing guest page is granted access or returned by page query.
+  Handle reserve_slice(uint32_t size,uint32_t guest){return reserve_impl(size,guest,true);}
   Handle allocate(uint32_t size,uint32_t guest=0){auto h=reserve(size,guest);try{commit(h);return h;}catch(...){release(h);throw;}}
   void commit(Handle h,Permission p=Permission::read_write){std::lock_guard lock(mutex_);auto&r=owned(h);memory_.commit(r.backing,p);if(!r.initialized){r.initial=p;r.initialized=true;}}
   void protect(Handle h,Permission p){std::lock_guard lock(mutex_);memory_.protect(owned(h).backing,p);}
@@ -90,6 +97,18 @@ class Space {
     if(r.leases>1)return false;
     if(r.leases!=1)throw Error(Fault::ownership,"missing release lease");
     memory_.release(r.backing);regions_.erase(pin.handle_.id);--live_total_;--lease_total_;pin.space_=nullptr;return true;
+  }
+  bool release_exclusive_all(std::span<Lease*> pins){
+    std::lock_guard lock(mutex_);bool busy=false;
+    for(size_t i=0;i<pins.size();++i){auto*p=pins[i];
+      if(!p||p->space_!=this)throw Error(Fault::ownership,"foreign group release lease");
+      auto&r=owned(p->handle_);if(!r.leases)throw Error(Fault::ownership,"missing group lease");
+      for(size_t j=0;j<i;++j)if(pins[j]->handle_.id==p->handle_.id)throw Error(Fault::argument,"duplicate group release lease");
+      busy|=r.leases!=1;
+    }
+    if(busy)return false;
+    for(auto*p:pins){memory_.release(owned(p->handle_).backing);regions_.erase(p->handle_.id);--live_total_;--lease_total_;p->space_=nullptr;}
+    return true;
   }
   Lease pin(uint32_t address,uint32_t size){
     Handle h;{std::lock_guard lock(mutex_);h=range(address,size).h;}

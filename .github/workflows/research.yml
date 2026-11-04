@@ -26,6 +26,10 @@ jobs:
         run: python3 tests/context-equivalence/test_model.py
       - name: Check typed pointer graphs, lifetime refusals and original nested-frame inputs
         run: python3 tests/stack-provenance/test_model.py
+      - name: Check minimal module metadata, coupled lifetime and transactional cleanup
+        run: python3 tests/native-module/run.py --workdir "${{ runner.temp }}/native-module"
+      - name: Check selected variable cell binding, generation and withdrawal
+        run: python3 tests/variable-imports/run.py --workdir "${{ runner.temp }}/variable-imports"
       - name: Check owned sealed guest metadata and last-reader cleanup in three profiles
         run: python3 tests/header-buffer/run.py --workdir "${{ runner.temp }}/header-buffer"
       - name: Check absent versus malformed XEX field contracts on original metadata
