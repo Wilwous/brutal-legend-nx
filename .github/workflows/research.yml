@@ -26,6 +26,10 @@ jobs:
         run: python3 tests/context-equivalence/test_model.py
       - name: Check typed pointer graphs, lifetime refusals and original nested-frame inputs
         run: python3 tests/stack-provenance/test_model.py
+      - name: Check independently authored fixed-write instruction and effect oracle
+        run: python3 tests/writable-startup/test_fixture.py
+      - name: Check source-bound writable region, subrange refusal and lifecycle
+        run: python3 tests/writable-image/run.py --workdir "${{ runner.temp }}/writable-image"
       - name: Check original integrated module encoding and independent arithmetic
         run: python3 tests/module-startup/test_fixture.py
       - name: Check exact RO forensic subranges and excluded-gap refusals

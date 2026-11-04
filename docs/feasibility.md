@@ -1,5 +1,14 @@
 # Feasibility — Phase 21
 
+**T29–T40 current update, 2026-11-04:** source-bound RW regions and original
+production-generated module/image writes pass three host profiles. Exact logical
+bounds, current permission checks, module identity and retained lifetime remain
+authoritative. The private two-store/eight-byte title draft refuses RW admission
+because applicable authority/owner/lifetime evidence is absent. All historical and
+native gates are unchanged; original execution NO-GO. No NRO/deployment or SDK change.
+[Contracts, tests and readiness decision](research/source-bound-writable-image.md).
+
+
 **T17–T28 current update, 2026-11-04:** independent generic engineering is verified
 in three host profiles: metadata/lifetime, selected self-module variable, lookup,
 exact RO subranges and production-generated synthetic integration. The private
