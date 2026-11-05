@@ -1,5 +1,15 @@
 # Feasibility — Phase 21
 
+**T86–T105 update, 2026-11-05:** T85 is user-confirmed hardware verified
+for graphics, input, audio and normal exit; exact screen counters remain
+uninspected. V2 implements original indexed 3D rendering, camera/animation,
+multi-voice PCM, budgeted resource delivery/verification, fixed-step timing and
+production-generated PPC integration. Host tests and reproducible AArch64 builds
+verify the software scope. New V2 hardware execution is UNKNOWN; T105 acceptance
+remains PARTIAL and no deployment occurs. Original title execution NO-GO;
+historical G4/G5/G8 and native N-G4/N-G5/N-G8 retain their previous statuses.
+[Implementation, tests and boundaries](research/horizon-platform-v2.md).
+
 **T66–T85 update, 2026-11-05:** original platform services now integrate
 production-generated synthetic PPC, checked graphics/texture commands, input,
 staged PCM and manifest-bound RomFS resources. Debug, Release and ASan/UBSan pass;

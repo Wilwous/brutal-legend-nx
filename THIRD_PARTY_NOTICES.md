@@ -50,3 +50,14 @@ integrated probe. The 2013/2022 Ben Vanik and 2026 Tom Clay notices are retained
 [the integrated package notice](tests/horizon-expansion/NOTICE.txt). Full desktop
 runtime, proprietary XEX/code and assets remain excluded. The source recipe and
 original PPC fixtures are public; build outputs remain local, with no Release.
+
+
+T86–T105 adds an original synthetic OpenGL3D adapter and shaders, with static
+linkage in local NROs to the existing pinned Switch Mesa/EGL/glapi, GLAD and
+libdrm_nouveau packages. No dependency library/source binary is vendored in Git.
+The new graphics identity lock and archive-hash checked attribution inventory
+recipe accompany the original source. Local packages include the project license,
+existing SDK/SIMDe/libnx runtime notices and an intentionally broad upstream
+attribution inventory; listing a notice does not imply that every Mesa component
+was linked. Package metadata is not a replacement for retained per-file terms.
+[Actual versions, build boundary and notice reproduction](docs/research/horizon-platform-v2.md).

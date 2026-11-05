@@ -6,7 +6,10 @@ Scope: independently authored PPC, services and assets. **Original game executio
 The new Synthetic Platform Demo integrates production-generated PPC with checked
 memory, a CPU renderer, controller snapshots, owned PCM queues and manifest-bound
 resources. Host behavior and AArch64 builds are verified as described below.
-**Hardware execution of this candidate is UNKNOWN.** Earlier Stage 15 and Native
+**T86 hardware addendum: USER-CONFIRMED HARDWARE VERIFIED** for T85 graphics,
+controller interaction, audio, lifecycle and normal exit. Exact photographs/
+screen counters were not independently inspected. The stage table below records
+the original build-time evidence. Earlier Stage 15 and Native
 Image Probe observations do not verify these new platform adapters.
 
 ## Implementation and dependency graph

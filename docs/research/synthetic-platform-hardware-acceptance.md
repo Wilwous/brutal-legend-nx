@@ -1,6 +1,11 @@
 # Synthetic Platform Demo — hardware acceptance
 
-Candidate 0.85.0, T66–T85. **BUILD VERIFIED / HARDWARE EXECUTION UNKNOWN.**
+Candidate 0.85.0, T66–T85. **BUILD VERIFIED / USER-CONFIRMED HARDWARE VERIFIED.**
+
+2026-11-05 addendum: the user confirms graphics, controller interaction, audio,
+lifecycle and normal exit. Photos were not available for independent inspection;
+exact counters and FPS remain UNKNOWN. The checklist below is the preserved
+acceptance protocol, not an invented numerical hardware result.
 Original synthetic PPC and original demo assets only. This is not Brütal Legend.
 
 No automatic deployment is part of this cycle. After separately choosing a safe
