@@ -1,5 +1,15 @@
 # Proposed architecture — Phase 21
 
+**T66–T85 update, 2026-11-05:** original platform services now integrate
+production-generated synthetic PPC, checked graphics/texture commands, input,
+staged PCM and manifest-bound RomFS resources. Debug, Release and ASan/UBSan pass;
+the isolated AArch64/NRO candidate is build-verified. New hardware execution and
+T85 device acceptance remain UNKNOWN/PARTIAL; no deployment occurred. Historical
+G4 BLOCKED/G5 UNKNOWN/G8 BLOCKED and native N-G4 BLOCKED/N-G5 PARTIAL/N-G8 BLOCKED
+remain unchanged. Original game execution NO-GO. Next practical platform action:
+observe the new candidate on hardware, not a new title research stage.
+[Contracts, stage decisions, tests and build](research/horizon-platform-services.md).
+
 **T65 update, 2026-11-04:** current external-tracing feasibility audit found no
 locally operational qualified Xbox observation channel. Xenia has selected disabled
 CPU trace hooks; a separate early Xenon LLE has point watchpoints, not a verified
