@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "baseline": "c242881a5312df30503f2a134763e756a396d1dd",
+  "baseline": "ec2d4616211e47896391df79d6e9363c605b61e2",
   "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
   "sources": [
     {
@@ -56,7 +56,9 @@
       "partial": 184,
       "stub": 61,
       "unknown": 9
-    }
+    },
+    "sdk_table_identity_matches": 274,
+    "retained_selected_static_import_observations": 2
   },
   "gates": {
     "G4": "BLOCKED",
@@ -91,6 +93,10 @@
         "src/kernel/xboxkrnl/xboxkrnl_rtl.cpp",
         "src/system/kernel_state.cpp",
         "src/system/xthread.cpp"
+      ],
+      "profile_ids": [
+        "legacy.rtl.fill-ulong.v1",
+        "native.rtl.fill-ulong.v1"
       ]
     },
     {
@@ -116,6 +122,9 @@
         "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
         "src/system/kernel_state.cpp",
         "src/system/xthread.cpp"
+      ],
+      "profile_ids": [
+        "native.tls.allocate.v1"
       ]
     },
     {
@@ -141,6 +150,9 @@
         "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
         "src/system/kernel_state.cpp",
         "src/system/xthread.cpp"
+      ],
+      "profile_ids": [
+        "native.tls.free.v1"
       ]
     },
     {
@@ -166,6 +178,9 @@
         "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
         "src/system/kernel_state.cpp",
         "src/system/xthread.cpp"
+      ],
+      "profile_ids": [
+        "native.tls.get.v1"
       ]
     },
     {
@@ -191,6 +206,9 @@
         "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
         "src/system/kernel_state.cpp",
         "src/system/xthread.cpp"
+      ],
+      "profile_ids": [
+        "native.tls.set.v1"
       ]
     },
     {
@@ -656,7 +674,10 @@
         "docs/research/sdk-contract-evidence.json",
         "Pinned SDK source fingerprint; existing export/ABI locks unchanged"
       ],
-      "readiness": "VERIFIED SYNTHETIC; exact Xbox behavior UNKNOWN"
+      "readiness": "VERIFIED SYNTHETIC; exact Xbox behavior UNKNOWN",
+      "profile_ids": [
+        "legacy.rtl.compare-ulong.v1"
+      ]
     },
     {
       "input_state": "Matching live Scope/GuestThread/module; initial admission revalidated; admitted observer cannot corrupt PCR/stack context",
@@ -681,7 +702,10 @@
         "docs/research/sdk-contract-evidence.json",
         "Pinned SDK source fingerprint; existing export/ABI locks unchanged"
       ],
-      "readiness": "VERIFIED SYNTHETIC; full Xbox locking BLOCKED"
+      "readiness": "VERIFIED SYNTHETIC; full Xbox locking BLOCKED",
+      "profile_ids": [
+        "legacy.rtl.initialize-cs28.v1"
+      ]
     },
     {
       "input_state": "Matching live Scope/GuestThread/module; initial admission revalidated; admitted observer cannot corrupt PCR/stack context",
@@ -706,9 +730,84 @@
         "docs/research/sdk-contract-evidence.json",
         "Pinned SDK source fingerprint; existing export/ABI locks unchanged"
       ],
-      "readiness": "VERIFIED SYNTHETIC; general query domains BLOCKED"
+      "readiness": "VERIFIED SYNTHETIC; general query domains BLOCKED",
+      "profile_ids": [
+        "legacy.ntquery.basic28.v1"
+      ]
+    },
+    {
+      "identity": "native.header.inline-word.v2",
+      "implementation": "runtime/horizon/variable_imports.h",
+      "input_state": "Selected 0x20401 synthetic native inline-word lookup; malformed/duplicate/foreign refuse; absent is zero",
+      "output_state": "Checked lookup alone constructs a Field; retained reader keeps the exact header alive through graceful close",
+      "errors": "Fail closed; no guessed bytes, codecs, permissions or pointer",
+      "evidence": [
+        "docs/research/title-compatibility-critical-path.md"
+      ],
+      "pointers": "No host pointer escape or original title admission",
+      "endianness": "BE32 for guest field; explicit little-endian BIKi wire fields; byte-preserving stream",
+      "ownership": "Existing exact owner/lease or caller-owned immutable metadata source",
+      "lifetime": "Scoped retained owner; metadata output contains values only",
+      "thread": "Native serialized owner; no Xbox scheduling claim",
+      "tests": [
+        "tests/variable-imports/contract.cpp",
+        "tests/module-startup/run.py"
+      ],
+      "title_relevance": "TITLE STATICALLY OBSERVED related executable-module/header consumer; original provider BLOCKED",
+      "classification": "NATIVE ADAPTER",
+      "status": "VERIFIED GENERIC"
+    },
+    {
+      "identity": "resource.leased-write-freeze.v1",
+      "implementation": "runtime/horizon/resource_stream.h",
+      "input_state": "Exact RW owned allocation and lease; competing pins cannot publish; revocation and permanent seals remain authoritative",
+      "output_state": "Same checked bytes throughout incremental verification and atomic publication; RW transfer remains explicit",
+      "errors": "Fail closed; no guessed bytes, codecs, permissions or pointer",
+      "evidence": [
+        "docs/research/title-compatibility-critical-path.md"
+      ],
+      "pointers": "No host pointer escape or original title admission",
+      "endianness": "BE32 for guest field; explicit little-endian BIKi wire fields; byte-preserving stream",
+      "ownership": "Existing exact owner/lease or caller-owned immutable metadata source",
+      "lifetime": "Scoped retained owner; metadata output contains values only",
+      "thread": "Native serialized owner; no Xbox scheduling claim",
+      "tests": [
+        "tests/platform-v2/resources.cpp",
+        "tests/platform-v2/run.py"
+      ],
+      "title_relevance": "GENERIC VERIFIED; no original archive decoder or admission",
+      "classification": "NATIVE ADAPTER",
+      "status": "VERIFIED GENERIC"
+    },
+    {
+      "identity": "resource.biki.metadata.v1",
+      "implementation": "runtime/horizon/bink_metadata.h",
+      "input_state": "Exact source extent, complete bounded little-endian prefix, monotone in-range frame offsets and sentinel; unknown suffix refuses",
+      "output_state": "Standalone BIKi header/audio descriptors/frame index; no payload reads/decoding",
+      "errors": "Fail closed; no guessed bytes, codecs, permissions or pointer",
+      "evidence": [
+        "docs/research/title-compatibility-critical-path.md"
+      ],
+      "pointers": "No host pointer escape or original title admission",
+      "endianness": "BE32 for guest field; explicit little-endian BIKi wire fields; byte-preserving stream",
+      "ownership": "Existing exact owner/lease or caller-owned immutable metadata source",
+      "lifetime": "Scoped retained owner; metadata output contains values only",
+      "thread": "Native serialized owner; no Xbox scheduling claim",
+      "tests": [
+        "tests/bink-metadata/run.py"
+      ],
+      "title_relevance": "TITLE APPLICABILITY PARTIAL: 67 exact base envelopes verified; 7 unexplained suffixes refused",
+      "classification": "NATIVE ADAPTER",
+      "status": "VERIFIED GENERIC"
     }
   ],
-  "audit": "T126-T145; legacy registrations distinguished from new hardening",
-  "additional_evidence": "docs/research/sdk-contract-evidence.json"
+  "audit": "T146-T165; verified native ownership fixes and standalone BIKi metadata; title execution gates unchanged",
+  "additional_evidence": "docs/research/sdk-contract-evidence.json",
+  "horizon_profile_inventory": {
+    "implementation_profiles": 9,
+    "distinct_registered_export_identities_in_selected_synthetic_profiles": 8,
+    "shared_ordinal": 294,
+    "historical_SDK_only_probes_are_separate": true,
+    "verified_original_title_bindings": 0
+  }
 }

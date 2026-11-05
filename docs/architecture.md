@@ -1,5 +1,14 @@
 # Proposed architecture — Phase 21
 
+**T146–T165 update, 2026-11-06.** Checked lookup now controls native header
+field construction. Resource staging keeps a write freeze through incremental
+hash verification and transfers ownership under the existing checked Space.
+The original BIKi metadata reader validates 67 exact base envelopes and refuses
+seven unexplained suffixes. This is structural evidence. Original code execution
+remains NO-GO pending independent startup, ownership and observer evidence.
+[Compatibility evidence and critical path](research/title-compatibility-critical-path.md).
+
+
 **T126–T145 update, 2026-11-05:** the legacy real SDK compare service already
 existed in Stage15; its matching-word behavior is preserved because exact Xbox
 prefix/units remain unproven. Corrected a missing structured ABI refusal event

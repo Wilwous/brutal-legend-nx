@@ -18,6 +18,14 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    'runtime/horizon/bink_metadata.h',
+    'tests/bink-metadata/Makefile',
+    'tests/bink-metadata/build.py',
+    'tests/bink-metadata/contract.cpp',
+    'tests/bink-metadata/fixture.h',
+    'tests/bink-metadata/inspect.cpp',
+    'tests/bink-metadata/run.py',
+
     'docs/research/sdk-contract-evidence.json',
     'tests/sdk-contract-audit/Makefile',
     'tests/sdk-contract-audit/build.py',

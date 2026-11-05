@@ -177,6 +177,8 @@ jobs:
         run: python3 tests/platform-v2/test_sanitize.py
       - name: Check scene admission, multi-voice mixing, streaming and pacing
         run: python3 tests/platform-v2/components.py --workdir "${{ runner.temp }}/platform-v2"
+      - name: Check bounded BIKi metadata with original fixtures
+        run: python3 tests/bink-metadata/run.py --workdir "${{ runner.temp }}/bink-metadata"
 
   xbox-compatibility:
     runs-on: ubuntu-latest
