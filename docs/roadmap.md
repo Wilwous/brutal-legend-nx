@@ -1,5 +1,16 @@
 # Research roadmap — title readiness evidence
 
+**T126–T145 update, 2026-11-05:** the legacy real SDK compare service already
+existed in Stage15; its matching-word behavior is preserved because exact Xbox
+prefix/units remain unproven. Corrected a missing structured ABI refusal event
+and revalidated legacy SDK context boundaries, preserving accepted-call lease and
+stop ordering. Independent compare/transaction/TLS/format edges and production
+PPC observer-corruption tests pass Debug, Release and ASan/UBSan. AArch64 ELF links;
+no new NRO/deployment. Original title execution NO-GO; G4 BLOCKED/G5 UNKNOWN/G8
+BLOCKED; N-G4 BLOCKED/N-G5 PARTIAL/N-G8 BLOCKED. T146 not started.
+[Evidence, fixes, counts and readiness](research/sdk-contract-hardening.md).
+
+
 **T106–T125 update, 2026-11-05:** T85 and T105 are user-confirmed hardware
 verified for their synthetic scope; exact new device counters/FPS remain UNKNOWN.
 Five imported scalar SDK service subsets, bounded all-thread TLS clearing,
