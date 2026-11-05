@@ -97,7 +97,7 @@ class Stream {
         uint32_t requested=std::min(budget,j.expected.size-j.loaded);
         auto n=service_.read(j.source,space_,j.output,j.output.address+j.loaded,requested);
         require(n&&n<=requested,Fault::unsupported,"stream premature EOF");j.loaded+=n;
-        if(j.loaded==j.expected.size){space_.protect(j.output,Permission::read);close_source(j);}
+        if(j.loaded==j.expected.size){space_.freeze_writes(j.output,*j.pin);close_source(j);}
       }else{
         auto count=std::min(budget,j.expected.size-j.verified);auto address=j.output.address+j.verified;
         space_.validate_owned_window(j.output,address,count,Access::read);
@@ -112,8 +112,7 @@ class Stream {
   Space::Handle take(Token token,Permission permission=Permission::read){
     auto&s=owned(token);auto&j=*s.job;require(j.ready,Fault::uncommitted,"stream resource is incomplete");
     require(permission==Permission::read||permission==Permission::read_write,Fault::argument,"stream publication permission");
-    space_.validate_owned_window(j.output,j.output.address,j.expected.size,Access::read);
-    space_.protect(j.output,permission);auto output=j.output;j.pin.reset();retire(s);return output;
+    space_.publish_frozen(*j.pin,permission);auto output=j.output;j.pin.reset();retire(s);return output;
   }
   void cancel(Token token){rollback(owned(token));}
   // Transactional with respect to active host leases: an external pin refuses

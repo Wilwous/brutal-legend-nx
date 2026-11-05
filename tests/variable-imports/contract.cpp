@@ -4,7 +4,9 @@
 #include <iostream>
 #include <latch>
 #include <thread>
+#include <type_traits>
 using namespace brutal::horizon;namespace nm=brutal::horizon::native_module;namespace hb=brutal::horizon::header_buffer;
+static_assert(!std::is_constructible_v<nm::Field,std::shared_ptr<nm::Metadata::Reader>,uint32_t,uint32_t>);
 unsigned pos{},neg{},bytes{};void check(bool v){if(!v)throw std::runtime_error("variable assertion");++pos;}template<class F>void no(F f){try{f();}catch(const Error&){++neg;return;}throw std::runtime_error("missing variable refusal");}
 std::vector<uint8_t> data(bool present=true,bool duplicate=false){std::vector<uint8_t>b{0x58,0x45,0x58,0x32,0,0,0,1,0,0,0,32,0,0,0,0,0,0,0,0,0,0,0,1,0,2,4,uint8_t(present?1:0),0,0,0,21};if(duplicate){b[11]=40;b[23]=2;b.insert(b.end(),{0,2,4,1,0,0,0,22});}return b;}
 hb::Source plan(ModuleLife&m,std::span<const uint8_t>b){return {m.identity,m.instance,0,b.size(),0x40000000,hb::digest(b),hb::digest(b)};}
@@ -31,6 +33,12 @@ int main(){try{nm::VariableKey key{"xboxkrnl.exe",0x193,nm::ImportKind::variable
  }
  // Registry replacement requires a fresh provider/capability. Old Ref cannot unbind it.
  {Space s(65536);ModuleLife m(8);auto b=data();auto p=plan(m,b);hb::Buffer h(s,m,p,b,hb::identity(p));nm::Metadata meta(s,m,h,h.reference(),0x41000000);nm::Registry registry;nm::Provider a(s,m,meta,meta.reference(),key,0x42000000);auto old=a.reference();registry.publish(a);nm::Binding binding(registry,s,m,key,old,0x43000000);auto oldbinding=binding.reference();registry.withdraw(key,old);check(binding.close());nm::Provider fresh(s,m,meta,meta.reference(),key,0x42000000);auto now=fresh.reference();registry.publish(fresh);no([&]{registry.withdraw(key,old);});no([&]{binding.acquire(m,oldbinding);});nm::Binding newer(registry,s,m,key,now,0x43000000);no([&]{newer.acquire(m,oldbinding);});check(newer.close());registry.withdraw(key,now);check(meta.close());check(h.close());check(s.live()==0);check(m.close());}
+ // The checked lookup is the sole minting path for a field address. The
+ // retained field keeps that exact header and module generation through close.
+ {Space s(65536);ModuleLife m(41);auto b=data();auto p=plan(m,b);hb::Buffer h(s,m,p,b,hb::identity(p));nm::Metadata meta(s,m,h,h.reference(),0x41000000);
+  {auto owner=std::make_shared<nm::Metadata::Reader>(meta.acquire(m,meta.reference()));auto field=nm::lookup(owner,0x40000000,0x20401);owner.reset();check(!meta.close()&&!h.close()&&!m.close());check(field.address()==0x4000001c&&field.value()==21);auto retained=std::move(field);no([&]{field.address();});no([&]{field.value();});check(retained.address()==0x4000001c&&retained.value()==21);}
+  check(meta.closed()&&h.closed()&&m.close()&&s.live()==0&&s.leases()==0);
+ }
  check(Space::totals()==std::pair<size_t,size_t>{0,0});check(hb::Buffer::registrations()==0&&nm::Object::registrations()==0);
  std::cout<<"{\"positive\":"<<pos<<",\"refusals\":"<<neg<<",\"byte_comparisons\":"<<bytes<<",\"allocations\":0,\"leases\":0}\n";
  }catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}

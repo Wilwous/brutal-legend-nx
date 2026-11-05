@@ -7,8 +7,9 @@ namespace brutal::horizon::native_module {
 // Selected native inline-word lookup. Absence is not invalid pointer/owner data.
 class Field {
  std::shared_ptr<Metadata::Reader> owner_;uint32_t offset_{},address_{};
- public:
+ friend Field lookup(std::shared_ptr<Metadata::Reader>,uint32_t,uint32_t);
  Field(std::shared_ptr<Metadata::Reader> owner,uint32_t offset,uint32_t address):owner_(std::move(owner)),offset_(offset),address_(address){}
+ public:
  uint32_t address()const{require(bool(owner_),Fault::stale,"moved field borrow");owner_->header_address();return address_;}
  uint32_t value()const{require(bool(owner_),Fault::stale,"moved field borrow");require(address_!=0,Fault::bounds,"absent header field has no word");return be32(owner_->header_bytes(offset_,4));}
 };

@@ -16,7 +16,10 @@ struct Source {
 inline Digest identity(const Source& p){
  std::vector<uint8_t>b;for(auto v:{uint64_t(0x4845414445523031),p.module,p.generation,p.offset,p.length,p.guest})
   for(int i=7;i>=0;--i)b.push_back(uint8_t(v>>(8*i)));
- for(auto d:{p.source,p.header})b.insert(b.end(),d.begin(),d.end());return digest(b);
+ for (const auto& d : {p.source, p.header}) {
+  b.insert(b.end(), d.begin(), d.end());
+ }
+ return digest(b);
 }
 inline void require(bool ok,Fault f,const char* message){if(!ok)throw Error(f,message);}
 inline void validate(const Source&p,std::span<const uint8_t>source,const Digest&trusted,const ModuleLife&m){

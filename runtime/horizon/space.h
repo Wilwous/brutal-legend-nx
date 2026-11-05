@@ -13,7 +13,7 @@ class Space {
  public:
   struct Handle {uint64_t owner{},id{};uint32_t address{},size{};};
  private:
-  struct Region {Handle h;foundation::Allocation backing;size_t leases{};Permission initial{Permission::none};bool initialized{};};
+  struct Region {Handle h;foundation::Allocation backing;size_t leases{};Permission initial{Permission::none};bool initialized{},write_frozen{};};
   inline static std::atomic<size_t> live_total_{},lease_total_{};
   foundation::Memory memory_;std::mutex mutex_;std::map<uint64_t,Region> regions_;
   inline static std::atomic<uint64_t> serial_{1};
@@ -29,7 +29,8 @@ class Space {
     for(auto& [id,r]:regions_){(void)id;if(address>=r.h.address&&uint64_t(address)+size<=uint64_t(r.h.address)+r.h.size)return r;}
     throw Error(Fault::bounds,"guest span is not resident in one owned region");
   }
-  void unlease(Handle h)noexcept{try{std::lock_guard lock(mutex_);auto& r=owned(h);if(!r.leases)std::terminate();--r.leases;--lease_total_;}catch(...){std::terminate();}}
+  void unlease(Handle h,bool frozen)noexcept{try{std::lock_guard lock(mutex_);auto& r=owned(h);if(!r.leases||(frozen&&!r.write_frozen))std::terminate();if(frozen)r.write_frozen=false;--r.leases;--lease_total_;}catch(...){std::terminate();}}
+  static void check_frozen(const Region&r,Permission p){if(r.write_frozen&&p!=Permission::read&&p!=Permission::none)throw Error(Fault::protection,"leased verification forbids writable permission");}
  public:
   explicit Space(uint32_t capacity=4*1024*1024):memory_(capacity){}
   Space(const Space&)=delete;
@@ -52,8 +53,8 @@ class Space {
   // No enclosing guest page is granted access or returned by page query.
   Handle reserve_slice(uint32_t size,uint32_t guest){return reserve_impl(size,guest,true);}
   Handle allocate(uint32_t size,uint32_t guest=0){auto h=reserve(size,guest);try{commit(h);return h;}catch(...){release(h);throw;}}
-  void commit(Handle h,Permission p=Permission::read_write){std::lock_guard lock(mutex_);auto&r=owned(h);memory_.commit(r.backing,p);if(!r.initialized){r.initial=p;r.initialized=true;}}
-  void protect(Handle h,Permission p){std::lock_guard lock(mutex_);memory_.protect(owned(h).backing,p);}
+  void commit(Handle h,Permission p=Permission::read_write){std::lock_guard lock(mutex_);auto&r=owned(h);check_frozen(r,p);memory_.commit(r.backing,p);if(!r.initialized){r.initial=p;r.initialized=true;}}
+  void protect(Handle h,Permission p){std::lock_guard lock(mutex_);auto&r=owned(h);check_frozen(r,p);memory_.protect(r.backing,p);}
   void seal_read_only(Handle h){std::lock_guard lock(mutex_);memory_.seal_read_only(owned(h).backing);}
   foundation::Memory::Info info(Handle h){std::lock_guard lock(mutex_);return memory_.info(owned(h).backing);}
   void decommit(Handle h){std::lock_guard lock(mutex_);auto&r=owned(h);if(r.leases)throw Error(Fault::ownership,"active memory lease");memory_.decommit(r.backing);}
@@ -81,13 +82,32 @@ class Space {
   }
   class Lease {
     friend class Space;
-    Space* space_{};Handle handle_{};
+    Space* space_{};Handle handle_{};bool owns_freeze_{};
    public:
     Lease(Space& space,Handle h):space_(&space),handle_(h){std::lock_guard lock(space.mutex_);++space.owned(h).leases;++lease_total_;}
     Lease(const Lease&)=delete;Lease&operator=(const Lease&)=delete;
-    Lease(Lease&& other)noexcept:space_(std::exchange(other.space_,nullptr)),handle_(other.handle_){}
-    ~Lease(){if(space_)space_->unlease(handle_);}
+    Lease(Lease&& other)noexcept:space_(std::exchange(other.space_,nullptr)),handle_(other.handle_),owns_freeze_(std::exchange(other.owns_freeze_,false)){}
+    ~Lease(){if(space_)space_->unlease(handle_,owns_freeze_);}
   };
+  // An exact RW allocation owner can temporarily freeze writes for a multi-step
+  // verification. This lease moves with the freeze; other pins cannot publish it.
+  // Revocation to none remains allowed. Permanent seals are never bypassed.
+  void freeze_writes(Handle h,Lease& pin){
+    std::lock_guard lock(mutex_);auto&r=owned(h);
+    if(pin.space_!=this||pin.handle_.id!=h.id||pin.owns_freeze_||r.write_frozen)
+      throw Error(Fault::ownership,"invalid verification freeze owner");
+    memory_.translate(r.backing.guest,h.size,Access::read);
+    memory_.translate(r.backing.guest,h.size,Access::write);
+    memory_.protect(r.backing,Permission::read);r.write_frozen=true;pin.owns_freeze_=true;
+  }
+  void publish_frozen(Lease& pin,Permission p){
+    std::lock_guard lock(mutex_);
+    if(pin.space_!=this||!pin.owns_freeze_)throw Error(Fault::ownership,"missing verification freeze");
+    if(p!=Permission::read&&p!=Permission::read_write)throw Error(Fault::argument,"invalid frozen publication permission");
+    auto&r=owned(pin.handle_);if(!r.write_frozen)throw Error(Fault::ownership,"verification freeze lost");
+    memory_.translate(r.backing.guest,r.h.size,Access::read);
+    memory_.protect(r.backing,p);r.write_frozen=false;pin.owns_freeze_=false;
+  }
   // Consume this allocation's final pin and release atomically. A competing
   // pin refuses without changing either token; lookup/pin races cannot bind ABA.
   bool release_exclusive(Lease& pin){

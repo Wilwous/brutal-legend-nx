@@ -82,6 +82,23 @@ int main(){try{
  {Space space(65536);r::Stream stream(source,space);auto job=stream.begin(tiny);stream.step(job,2);
   space.write(0x10000000,std::array<std::byte,1>{std::byte{99}});stream.step(job);no([&]{stream.step(job);},Fault::argument);zero(stream,space,source);
  }
+ // Reproduce the prior hash-prefix mutation with the exact staging identity
+ // in a fresh deterministic arena. The native owner still cannot restore write
+ // rights during verification through protect, commit or a competing pin.
+ {Space space(65536);r::Stream stream(source,space);auto marker=space.allocate(4);auto job=stream.begin(tiny);
+  Space::Handle staged{marker.owner,marker.id+1,marker.address+4096,tiny.size};check(space.info(staged).committed);stream.step(job);check(stream.step(job,2).verified==2);
+  no([&]{space.protect(staged,Permission::read_write);},Fault::protection);no([&]{space.commit(staged);},Fault::protection);
+  {Space::Lease other(space,staged);no([&]{space.publish_frozen(other,Permission::read_write);},Fault::ownership);no([&]{stream.cancel(job);},Fault::ownership);}
+  no([&]{space.store<uint8_t>(staged.address,99);},Fault::protection);check(stream.step(job).ready);
+  space.protect(staged,Permission::none);no([&]{stream.take(job,Permission::read_write);},Fault::protection);check(stream.progress(job).ready);space.protect(staged,Permission::read);
+  auto result=stream.take(job,Permission::read_write);check(result.id==staged.id);auto copy=space.read(result.address,result.size);check(std::equal(copy.begin(),copy.end(),std::as_bytes(std::span(small)).begin()));compared+=small.size();
+  space.store<uint8_t>(result.address,99);check(space.load<uint8_t>(result.address)==99);space.release(result);space.release(marker);zero(stream,space,source);
+ }
+ {Space space(65536);auto h=space.allocate(16),other=space.allocate(16);
+  {Space::Lease lease(space,h),foreign(space,other);no([&]{space.freeze_writes(h,foreign);},Fault::ownership);space.freeze_writes(h,lease);auto moved=std::move(lease);no([&]{space.publish_frozen(lease,Permission::read);},Fault::ownership);
+   space.seal_read_only(h);no([&]{space.publish_frozen(moved,Permission::read_write);},Fault::protection);space.publish_frozen(moved,Permission::read);}
+  no([&]{space.protect(h,Permission::read_write);},Fault::protection);space.release(h);space.release(other);check(space.live()==0&&space.leases()==0);
+ }
  {Space space(65536);{r::Stream stream(source,space);auto job=stream.begin(tiny);stream.step(job,1);}check(space.live()==0&&space.leases()==0&&source.live()==0);}
  {Space space(65536);r::Stream stream(source,space);auto job=stream.begin(tiny);stream.step(job,1);source.shutdown();no([&]{stream.step(job);},Fault::stale);zero(stream,space,source);}
  check(r::Service::totals()==std::pair<size_t,size_t>{0,0});check(Space::totals()==std::pair<size_t,size_t>{0,0});
