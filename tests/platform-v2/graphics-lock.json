@@ -1,0 +1,20 @@
+{
+  "packages": {
+    "switch-mesa": "20.1.0-5",
+    "switch-glad": "0.1.27-1",
+    "switch-libdrm_nouveau": "1.0.1-2"
+  },
+  "headers": {
+    "EGL/egl.h": "70207b48ccd7257473ae7517c2a9cab3f8268e073df303e58df66a2ac171f75c",
+    "EGL/eglext.h": "5045357621c4c0729e6f3c425788a5837dcfdcb09d256cb7e9f96918fb2836a0",
+    "glad/glad.h": "ef4140f5a5b2c6b1267233b7459cf7cc7dc74c2ed7d7f96f6ac0181226f6fa84"
+  },
+  "libraries": {
+    "libEGL.a": "4222bb9b61791d948864322c1da9f4f21c084a3726a8002b8abcc682b3ecd820",
+    "libglapi.a": "b353b7ed59f4097ee23e3d18a7fd92b073fa3620719be6899400bc48c0d84777",
+    "libglad.a": "47709f4a56829b383761c24c5c0005054283eb6c9e26530d7dc23458972a5f9f",
+    "libdrm_nouveau.a": "2ee6a72d62c9ef28510572c897afd55f71f505309b58adeb2a94fd67176195e6"
+  },
+  "switch_examples_revision": "669786898205b7beb25ff1731e72982e6d0397d3",
+  "attribution_sha256": "988671793105429c99afaa0568a20f06a40430c55dde62850f88d6116909909e"
+}
