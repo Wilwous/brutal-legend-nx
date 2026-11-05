@@ -1,5 +1,12 @@
 # Synthetic 3D Demo V2 — hardware acceptance
 
+**2026-11-05 evidence update:** the T106–T125 request explicitly confirms T105
+execution on the user's real Switch. Status is USER-CONFIRMED HARDWARE VERIFIED
+for that synthetic scope. No new screenshot counters, FPS or resource measurements
+were independently supplied/inspected in this cycle. The protocol below is retained
+as the original acceptance checklist, not a newly observed numeric result.
+
+
 T105 / version0.105.0. BUILD VERIFIED; new hardware execution UNKNOWN.
 Preserved T85 remains USER-CONFIRMED HARDWARE VERIFIED. No fixed device PASS count
 or FPS is predicted for V2. No proprietary title code/assets are included.

@@ -1,5 +1,11 @@
 # Synthetic 3D platform runtime — T86–T105
 
+**Later hardware evidence, 2026-11-05:** T105 is now USER-CONFIRMED HARDWARE
+VERIFIED in the T106–T125 request. Exact newly observed counters/FPS remain UNKNOWN.
+The original dated build report below preserves the evidence available then.
+See [compatibility foundation](xbox-compatibility-foundation.md) for the next cycle.
+
+
 2026-11-05. Baseline `dca241ed9dc6bc3b9c1277ffc040f2f4b4020f91`.
 **Original game execution NO-GO. New V2 hardware execution UNKNOWN.**
 

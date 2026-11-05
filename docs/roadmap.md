@@ -1,5 +1,20 @@
 # Research roadmap — title readiness evidence
 
+**T106–T125 update, 2026-11-05:** T85 and T105 are user-confirmed hardware
+verified for their synthetic scope; exact new device counters/FPS remain UNKNOWN.
+Five imported scalar SDK service subsets, bounded all-thread TLS clearing,
+explicit vertex/index endian conversion and front-only BEfloat PCM conversion
+are tested with an original production-generated compatibility workload. Three
+host profiles pass; original title bindings remain zero. All13 variable providers,
+original image/observer/startup evidence and Xbox exceptional continuation remain
+unresolved. Historical G4 BLOCKED/G5 UNKNOWN/G8 BLOCKED; native N-G4 BLOCKED/
+N-G5 PARTIAL/N-G8 BLOCKED. Original execution NO-GO. No new NRO/deployment or T126.
+[Contracts, before/after matrix, tests and limits](research/xbox-compatibility-foundation.md).
+[Machine-readable matrix](research/compatibility-matrix.json).
+
+The dated entries below retain their evidence status at the time of each cycle;
+this update supersedes their earlier T105 hardware UNKNOWN status.
+
 **T86–T105 update, 2026-11-05:** T85 is user-confirmed hardware verified
 for graphics, input, audio and normal exit; exact screen counters remain
 uninspected. V2 implements original indexed 3D rendering, camera/animation,
