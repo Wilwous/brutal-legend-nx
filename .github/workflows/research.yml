@@ -177,3 +177,17 @@ jobs:
         run: python3 tests/platform-v2/test_sanitize.py
       - name: Check scene admission, multi-voice mixing, streaming and pacing
         run: python3 tests/platform-v2/components.py --workdir "${{ runner.temp }}/platform-v2"
+
+  xbox-compatibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Check original SDK-call fixture and evidence-scoped contract matrix
+        run: python3 tests/xbox-compatibility/test_fixture.py
+      - name: Check atomic word publication and bounded format translation
+        run: python3 tests/xbox-compatibility/components.py --workdir "${{ runner.temp }}/xbox-compatibility"
+      # SDK context, production codegen and AArch64 linking are separately verified
+      # locally. No proprietary SDK/title input or fabricated CI stand-in is used.

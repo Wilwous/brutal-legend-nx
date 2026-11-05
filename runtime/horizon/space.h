@@ -154,6 +154,24 @@ class Space {
       throw Error(Fault::ownership,"view backing mismatch");
     memory_.write(v.backing,bytes);
   }
+  struct WordWrite {Handle owner;uint32_t address,value;};
+  // Bounded atomic publication of disjoint BEu32 cells in this Space. Used by
+  // process TLS retirement: validate every owner/permission before changing any
+  // thread. The Space lock excludes protect/free between validation and writes;
+  // Memory::write does no allocation. No pointer or callback escapes this lock.
+  void write_words(std::span<const WordWrite> words){
+    if(words.empty()||words.size()>64)throw Error(Fault::bounds,"word transaction budget");
+    std::array<foundation::View,64> views{};std::array<std::array<std::byte,4>,64> bytes{};
+    std::lock_guard lock(mutex_);
+    for(size_t i=0;i<words.size();++i){const auto w=words[i];auto&r=owned(w.owner);
+      if((w.address&3)||w.address<r.h.address||uint64_t(w.address)+4>uint64_t(r.h.address)+r.h.size||uint64_t(w.address)+4>0x100000000ull)
+        throw Error(Fault::bounds,"word transaction extent/alignment");
+      for(size_t j=0;j<i;++j)if(words[j].address==w.address)throw Error(Fault::ownership,"overlapping word transaction");
+      views[i]=memory_.translate(r.backing.guest+(w.address-r.h.address),4,Access::write);memory_.validate(views[i],Access::write);
+      for(unsigned b=0;b<4;++b)bytes[i][b]=std::byte(w.value>>(24-8*b));
+    }
+    for(size_t i=0;i<words.size();++i)memory_.write(views[i],bytes[i]);
+  }
   // Trusted bounded leaf transaction only: callback must not retain scratch or
   // reenter Space. No guest pointer is exposed; callback failure publishes nothing.
   template<class F> void update(const View& input,const View& output,F transform){

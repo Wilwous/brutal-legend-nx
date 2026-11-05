@@ -1,0 +1,637 @@
+{
+  "schema": 1,
+  "baseline": "44249bdffbc2284e9bcbc6b571bbcad2ac6c4e9c",
+  "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+  "sources": [
+    {
+      "path": "src/kernel/xboxkrnl/xboxkrnl_rtl.cpp",
+      "sha256": "344c48eba0f1439bf002e7e80d6e9d6e92fa2434737e14f308efc33f96d1f392",
+      "authority": "pinned implementation; not independent Xbox hardware evidence"
+    },
+    {
+      "path": "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
+      "sha256": "7fe6ccad16608bc3cb08200ee15882f2f96ad47de26a64c849757e709accf28d",
+      "authority": "pinned implementation; not independent Xbox hardware evidence"
+    },
+    {
+      "path": "src/system/kernel_state.cpp",
+      "sha256": "cfdef1672f8d33c7f135c359ad6f08a6f7ef9947e6e757f9b0b04242b819711c",
+      "authority": "pinned implementation; not independent Xbox hardware evidence"
+    },
+    {
+      "path": "src/system/xthread.cpp",
+      "sha256": "d7f4792d13942e3b837001fbb87bbf689218e94a5ef207cad8edd106c396beb5",
+      "authority": "pinned implementation; not independent Xbox hardware evidence"
+    },
+    {
+      "path": "include/rex/graphics/xenos.h",
+      "sha256": "f7dcbf856feaeb0350c9c9aaf5c16a768b4147fc487819cd513e0cc68fc16fd5",
+      "authority": "pinned implementation; not independent Xbox hardware evidence"
+    },
+    {
+      "path": "include/rex/audio/sdl/sdl_audio_driver.h",
+      "sha256": "3ce6d6d9465f74c18576a93d000bfe92347a656e2ff0b65ad91a8fb69206741d",
+      "authority": "pinned implementation; not independent Xbox hardware evidence"
+    },
+    {
+      "path": "src/audio/sdl/sdl_audio_driver.cpp",
+      "sha256": "faeb952d710974faa60a86739ed709ccd42beb540343aa1d71e5fec03ce2b561",
+      "authority": "pinned implementation; not independent Xbox hardware evidence"
+    },
+    {
+      "path": "include/rex/audio/conversion.h",
+      "sha256": "1e8d32dcbb5cd2cffe7f1cc5cd4ce868672d84051c6e747a880829e2b5fbd08c",
+      "authority": "pinned implementation; not independent Xbox hardware evidence"
+    }
+  ],
+  "scope": "Original synthetic native contracts; pinned SDK source is implementation evidence, not original Xbox hardware authority",
+  "title_inventory": {
+    "total_imports": 274,
+    "function_imports": 261,
+    "variable_imports": 13,
+    "runtime_title_invocations": 0,
+    "original_title_bindings_admitted": 0,
+    "old_source_audit": {
+      "implemented": 7,
+      "partial": 184,
+      "stub": 61,
+      "unknown": 9
+    }
+  },
+  "gates": {
+    "G4": "BLOCKED",
+    "G5": "UNKNOWN",
+    "G8": "BLOCKED",
+    "N_G4": "BLOCKED",
+    "N_G5": "PARTIAL",
+    "N_G8": "BLOCKED"
+  },
+  "game_execution": "NO-GO",
+  "contracts": [
+    {
+      "input_state": "Active admitted Scope; matching live module, Space and registered GuestThread; r3=destination,r4=nonzero aligned byte length<=65536,r5=pattern",
+      "output_state": "Void; r3 unchanged; BE32 pattern fill",
+      "errors": "Unaligned, remainder, zero, oversized, foreign, RO or unowned OUT refused",
+      "pointers": "32-bit guest addresses; exact owner, commitment, current permissions and scoped leases",
+      "endianness": "Big-endian guest words",
+      "ownership": "Explicit native module and guest allocation identity",
+      "lifetime": "Registered thread pin and module lease; withdraw before teardown",
+      "thread": "One serialized service owner; at most 16 registered threads",
+      "implementation": "runtime/horizon/sdk_services.h",
+      "tests": [
+        "tests/xbox-compatibility/services.cpp",
+        "tests/xbox-compatibility/host.cpp"
+      ],
+      "status": "VERIFIED SYNTHETIC",
+      "classification": "SUPPORTED SUBSET",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN; no title invocation",
+      "identity": "xboxkrnl.exe:294:RtlFillMemoryUlong",
+      "ordinal": 294,
+      "evidence": [
+        "src/kernel/xboxkrnl/xboxkrnl_rtl.cpp",
+        "src/system/kernel_state.cpp",
+        "src/system/xthread.cpp"
+      ]
+    },
+    {
+      "input_state": "Active admitted Scope; matching live module, Space and registered GuestThread; No arguments; startup slot0 reserved",
+      "output_state": "First available native slot1..63; current thread cell zero; exhaustion UINT32_MAX",
+      "errors": "No remaining slot: UINT32_MAX; unsupported slot0 profile refused",
+      "pointers": "32-bit guest addresses; exact owner, commitment, current permissions and scoped leases",
+      "endianness": "Big-endian guest words",
+      "ownership": "Explicit native module and guest allocation identity",
+      "lifetime": "Registered thread pin and module lease; withdraw before teardown",
+      "thread": "One serialized service owner; at most 16 registered threads",
+      "implementation": "runtime/horizon/sdk_services.h",
+      "tests": [
+        "tests/xbox-compatibility/services.cpp",
+        "tests/xbox-compatibility/host.cpp"
+      ],
+      "status": "VERIFIED SYNTHETIC",
+      "classification": "SUPPORTED SUBSET",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN; no title invocation",
+      "identity": "xboxkrnl.exe:338:KeTlsAlloc",
+      "ordinal": 338,
+      "evidence": [
+        "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
+        "src/system/kernel_state.cpp",
+        "src/system/xthread.cpp"
+      ]
+    },
+    {
+      "input_state": "Active admitted Scope; matching live module, Space and registered GuestThread; r3=slot; only slots allocated by this service owner",
+      "output_state": "All registered thread cells atomically zeroed then slot released; r3=1; invalid/unallocated r3=0",
+      "errors": "Any current TLS write refusal leaves all cells and slot registration unchanged",
+      "pointers": "32-bit guest addresses; exact owner, commitment, current permissions and scoped leases",
+      "endianness": "Big-endian guest words",
+      "ownership": "Explicit native module and guest allocation identity",
+      "lifetime": "Registered thread pin and module lease; withdraw before teardown",
+      "thread": "One serialized service owner; at most 16 registered threads",
+      "implementation": "runtime/horizon/sdk_services.h",
+      "tests": [
+        "tests/xbox-compatibility/services.cpp",
+        "tests/xbox-compatibility/host.cpp"
+      ],
+      "status": "VERIFIED SYNTHETIC",
+      "classification": "SUPPORTED SUBSET",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN; no title invocation",
+      "identity": "xboxkrnl.exe:339:KeTlsFree",
+      "ordinal": 339,
+      "evidence": [
+        "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
+        "src/system/kernel_state.cpp",
+        "src/system/xthread.cpp"
+      ]
+    },
+    {
+      "input_state": "Active admitted Scope; matching live module, Space and registered GuestThread; r3=slot1..63, including unallocated in-capacity cells",
+      "output_state": "r3=current thread BE32 cell; out of capacity r3=0",
+      "errors": "Slot0 explicitly unsupported; wrong thread/PCR/owner refused",
+      "pointers": "32-bit guest addresses; exact owner, commitment, current permissions and scoped leases",
+      "endianness": "Big-endian guest words",
+      "ownership": "Explicit native module and guest allocation identity",
+      "lifetime": "Registered thread pin and module lease; withdraw before teardown",
+      "thread": "One serialized service owner; at most 16 registered threads",
+      "implementation": "runtime/horizon/sdk_services.h",
+      "tests": [
+        "tests/xbox-compatibility/services.cpp",
+        "tests/xbox-compatibility/host.cpp"
+      ],
+      "status": "VERIFIED SYNTHETIC",
+      "classification": "SUPPORTED SUBSET",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN; no title invocation",
+      "identity": "xboxkrnl.exe:340:KeTlsGetValue",
+      "ordinal": 340,
+      "evidence": [
+        "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
+        "src/system/kernel_state.cpp",
+        "src/system/xthread.cpp"
+      ]
+    },
+    {
+      "input_state": "Active admitted Scope; matching live module, Space and registered GuestThread; r3=slot1..63,r4=u32 value; includes unallocated in-capacity cells",
+      "output_state": "Current thread BE32 cell=value,r3=1; out of capacity r3=0",
+      "errors": "Slot0 explicitly unsupported; wrong thread/PCR/owner or RO refused",
+      "pointers": "32-bit guest addresses; exact owner, commitment, current permissions and scoped leases",
+      "endianness": "Big-endian guest words",
+      "ownership": "Explicit native module and guest allocation identity",
+      "lifetime": "Registered thread pin and module lease; withdraw before teardown",
+      "thread": "One serialized service owner; at most 16 registered threads",
+      "implementation": "runtime/horizon/sdk_services.h",
+      "tests": [
+        "tests/xbox-compatibility/services.cpp",
+        "tests/xbox-compatibility/host.cpp"
+      ],
+      "status": "VERIFIED SYNTHETIC",
+      "classification": "SUPPORTED SUBSET",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN; no title invocation",
+      "identity": "xboxkrnl.exe:341:KeTlsSetValue",
+      "ordinal": 341,
+      "evidence": [
+        "src/kernel/xboxkrnl/xboxkrnl_threading.cpp",
+        "src/system/kernel_state.cpp",
+        "src/system/xthread.cpp"
+      ]
+    },
+    {
+      "input_state": "Declared float5/stride20 finite vertices<=4096; u16/u32 triangle indices<=12288; explicit endian mode",
+      "output_state": "Checked copies to existing Scene3D BEfloat5/BEu16 resources; actual nonvisual draw snapshot",
+      "errors": "Invalid extent, format, ownership, range or permissions refuse; unsupported modes never fallback",
+      "pointers": "32-bit guest addresses; exact owner, commitment, current permissions and scoped leases",
+      "endianness": "Big-endian guest words",
+      "ownership": "Explicit native module and guest allocation identity",
+      "lifetime": "Registered thread pin and module lease; withdraw before teardown",
+      "thread": "Bounded synchronous capture; native consumer owns copied resource",
+      "implementation": "runtime/horizon/format_translation.h",
+      "tests": [
+        "tests/xbox-compatibility/formats.cpp",
+        "tests/xbox-compatibility/host.cpp"
+      ],
+      "status": "VERIFIED SYNTHETIC",
+      "classification": "NATIVE ADAPTER",
+      "title_relevance": "Related imported graphics/audio service families; exact title format use UNKNOWN; no Xbox device/client ABI admitted",
+      "identity": "xenos.buffer-endian.float5-u16",
+      "evidence": [
+        "include/rex/graphics/xenos.h"
+      ]
+    },
+    {
+      "input_state": "48kHz; six BEfloat32 planes x256; finite [-1,1]; channels2..5 zero",
+      "output_state": "Interleaved stereo s16LE1024 bytes; explicit truncate*32768/clamp; existing Mixer consumer",
+      "errors": "Invalid extent, format, ownership, range or permissions refuse; unsupported modes never fallback",
+      "pointers": "32-bit guest addresses; exact owner, commitment, current permissions and scoped leases",
+      "endianness": "Big-endian guest words",
+      "ownership": "Explicit native module and guest allocation identity",
+      "lifetime": "Registered thread pin and module lease; withdraw before teardown",
+      "thread": "Bounded synchronous capture; native consumer owns copied resource",
+      "implementation": "runtime/horizon/format_translation.h",
+      "tests": [
+        "tests/xbox-compatibility/formats.cpp",
+        "tests/xbox-compatibility/host.cpp"
+      ],
+      "status": "VERIFIED SYNTHETIC",
+      "classification": "NATIVE ADAPTER",
+      "title_relevance": "Related imported graphics/audio service families; exact title format use UNKNOWN; no Xbox device/client ABI admitted",
+      "identity": "audio.front-only-six-plane-frame",
+      "evidence": [
+        "include/rex/audio/sdl/sdl_audio_driver.h",
+        "src/audio/sdl/sdl_audio_driver.cpp",
+        "include/rex/audio/conversion.h"
+      ]
+    },
+    {
+      "input_state": "Original provider representation, startup initialization and observers not fully proven",
+      "output_state": "No original title binding published",
+      "errors": "Unadmitted provider refuses",
+      "pointers": "Snapshot pointers never reused",
+      "endianness": "Big-endian guest words",
+      "ownership": "Original title owner UNKNOWN; generic synthetic owners supported",
+      "lifetime": "Original image lifetime UNKNOWN",
+      "thread": "Original startup thread/PCR/APC UNKNOWN",
+      "implementation": "Existing generic native-module/header-buffer/variable-import infrastructure only",
+      "tests": [
+        "tests/variable-imports/run.py",
+        "tests/header-buffer/run.py"
+      ],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN",
+      "identity": "xboxkrnl.exe:14:ExEventObjectType",
+      "ordinal": 14,
+      "evidence": [
+        "preserved private static inventory; no title bytes included"
+      ]
+    },
+    {
+      "input_state": "Original provider representation, startup initialization and observers not fully proven",
+      "output_state": "No original title binding published",
+      "errors": "Unadmitted provider refuses",
+      "pointers": "Snapshot pointers never reused",
+      "endianness": "Big-endian guest words",
+      "ownership": "Original title owner UNKNOWN; generic synthetic owners supported",
+      "lifetime": "Original image lifetime UNKNOWN",
+      "thread": "Original startup thread/PCR/APC UNKNOWN",
+      "implementation": "Existing generic native-module/header-buffer/variable-import infrastructure only",
+      "tests": [
+        "tests/variable-imports/run.py",
+        "tests/header-buffer/run.py"
+      ],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN",
+      "identity": "xboxkrnl.exe:27:ExThreadObjectType",
+      "ordinal": 27,
+      "evidence": [
+        "preserved private static inventory; no title bytes included"
+      ]
+    },
+    {
+      "input_state": "Original provider representation, startup initialization and observers not fully proven",
+      "output_state": "No original title binding published",
+      "errors": "Unadmitted provider refuses",
+      "pointers": "Snapshot pointers never reused",
+      "endianness": "Big-endian guest words",
+      "ownership": "Original title owner UNKNOWN; generic synthetic owners supported",
+      "lifetime": "Original image lifetime UNKNOWN",
+      "thread": "Original startup thread/PCR/APC UNKNOWN",
+      "implementation": "Existing generic native-module/header-buffer/variable-import infrastructure only",
+      "tests": [
+        "tests/variable-imports/run.py",
+        "tests/header-buffer/run.py"
+      ],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN",
+      "identity": "xboxkrnl.exe:89:KeDebugMonitorData",
+      "ordinal": 89,
+      "evidence": [
+        "preserved private static inventory; no title bytes included"
+      ]
+    },
+    {
+      "input_state": "Original provider representation, startup initialization and observers not fully proven",
+      "output_state": "No original title binding published",
+      "errors": "Unadmitted provider refuses",
+      "pointers": "Snapshot pointers never reused",
+      "endianness": "Big-endian guest words",
+      "ownership": "Original title owner UNKNOWN; generic synthetic owners supported",
+      "lifetime": "Original image lifetime UNKNOWN",
+      "thread": "Original startup thread/PCR/APC UNKNOWN",
+      "implementation": "Existing generic native-module/header-buffer/variable-import infrastructure only",
+      "tests": [
+        "tests/variable-imports/run.py",
+        "tests/header-buffer/run.py"
+      ],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN",
+      "identity": "xboxkrnl.exe:173:KeTimeStampBundle",
+      "ordinal": 173,
+      "evidence": [
+        "preserved private static inventory; no title bytes included"
+      ]
+    },
+    {
+      "input_state": "Original provider representation, startup initialization and observers not fully proven",
+      "output_state": "No original title binding published",
+      "errors": "Unadmitted provider refuses",
+      "pointers": "Snapshot pointers never reused",
+      "endianness": "Big-endian guest words",
+      "ownership": "Original title owner UNKNOWN; generic synthetic owners supported",
+      "lifetime": "Original image lifetime UNKNOWN",
+      "thread": "Original startup thread/PCR/APC UNKNOWN",
+      "implementation": "Existing generic native-module/header-buffer/variable-import infrastructure only",
+      "tests": [
+        "tests/variable-imports/run.py",
+        "tests/header-buffer/run.py"
+      ],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN",
+      "identity": "xboxkrnl.exe:342:XboxHardwareInfo",
+      "ordinal": 342,
+      "evidence": [
+        "preserved private static inventory; no title bytes included"
+      ]
+    },
+    {
+      "input_state": "Original provider representation, startup initialization and observers not fully proven",
+      "output_state": "No original title binding published",
+      "errors": "Unadmitted provider refuses",
+      "pointers": "Snapshot pointers never reused",
+      "endianness": "Big-endian guest words",
+      "ownership": "Original title owner UNKNOWN; generic synthetic owners supported",
+      "lifetime": "Original image lifetime UNKNOWN",
+      "thread": "Original startup thread/PCR/APC UNKNOWN",
+      "implementation": "Existing generic native-module/header-buffer/variable-import infrastructure only",
+      "tests": [
+        "tests/variable-imports/run.py",
+        "tests/header-buffer/run.py"
+      ],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN",
+      "identity": "xboxkrnl.exe:344:XboxKrnlVersion",
+      "ordinal": 344,
+      "evidence": [
+        "preserved private static inventory; no title bytes included"
+      ]
+    },
+    {
+      "input_state": "Original provider representation, startup initialization and observers not fully proven",
+      "output_state": "No original title binding published",
+      "errors": "Unadmitted provider refuses",
+      "pointers": "Snapshot pointers never reused",
+      "endianness": "Big-endian guest words",
+      "ownership": "Original title owner UNKNOWN; generic synthetic owners supported",
+      "lifetime": "Original image lifetime UNKNOWN",
+      "thread": "Original startup thread/PCR/APC UNKNOWN",
+      "implementation": "Existing generic native-module/header-buffer/variable-import infrastructure only",
+      "tests": [
+        "tests/variable-imports/run.py",
+        "tests/header-buffer/run.py"
+      ],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "TITLE STATICALLY OBSERVED",
+      "identity": "xboxkrnl.exe:403:XexExecutableModuleHandle",
+      "ordinal": 403,
+      "evidence": [
+        "preserved private static inventory; no title bytes included"
+      ]
+    },
+    {
+      "input_state": "Original provider representation, startup initialization and observers not fully proven",
+      "output_state": "No original title binding published",
+      "errors": "Unadmitted provider refuses",
+      "pointers": "Snapshot pointers never reused",
+      "endianness": "Big-endian guest words",
+      "ownership": "Original title owner UNKNOWN; generic synthetic owners supported",
+      "lifetime": "Original image lifetime UNKNOWN",
+      "thread": "Original startup thread/PCR/APC UNKNOWN",
+      "implementation": "Existing generic native-module/header-buffer/variable-import infrastructure only",
+      "tests": [
+        "tests/variable-imports/run.py",
+        "tests/header-buffer/run.py"
+      ],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN",
+      "identity": "xboxkrnl.exe:430:ExLoadedCommandLine",
+      "ordinal": 430,
+      "evidence": [
+        "preserved private static inventory; no title bytes included"
+      ]
+    },
+    {
+      "input_state": "Original provider representation, startup initialization and observers not fully proven",
+      "output_state": "No original title binding published",
+      "errors": "Unadmitted provider refuses",
+      "pointers": "Snapshot pointers never reused",
+      "endianness": "Big-endian guest words",
+      "ownership": "Original title owner UNKNOWN; generic synthetic owners supported",
+      "lifetime": "Original image lifetime UNKNOWN",
+      "thread": "Original startup thread/PCR/APC UNKNOWN",
+      "implementation": "Existing generic native-module/header-buffer/variable-import infrastructure only",
+      "tests": [
+        "tests/variable-imports/run.py",
+        "tests/header-buffer/run.py"
+      ],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN",
+      "identity": "xboxkrnl.exe:446:VdGlobalDevice",
+      "ordinal": 446,
+      "evidence": [
+        "preserved private static inventory; no title bytes included"
+      ]
+    },
+    {
+      "input_state": "Original provider representation, startup initialization and observers not fully proven",
+      "output_state": "No original title binding published",
+      "errors": "Unadmitted provider refuses",
+      "pointers": "Snapshot pointers never reused",
+      "endianness": "Big-endian guest words",
+      "ownership": "Original title owner UNKNOWN; generic synthetic owners supported",
+      "lifetime": "Original image lifetime UNKNOWN",
+      "thread": "Original startup thread/PCR/APC UNKNOWN",
+      "implementation": "Existing generic native-module/header-buffer/variable-import infrastructure only",
+      "tests": [
+        "tests/variable-imports/run.py",
+        "tests/header-buffer/run.py"
+      ],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN",
+      "identity": "xboxkrnl.exe:447:VdGlobalXamDevice",
+      "ordinal": 447,
+      "evidence": [
+        "preserved private static inventory; no title bytes included"
+      ]
+    },
+    {
+      "input_state": "Original provider representation, startup initialization and observers not fully proven",
+      "output_state": "No original title binding published",
+      "errors": "Unadmitted provider refuses",
+      "pointers": "Snapshot pointers never reused",
+      "endianness": "Big-endian guest words",
+      "ownership": "Original title owner UNKNOWN; generic synthetic owners supported",
+      "lifetime": "Original image lifetime UNKNOWN",
+      "thread": "Original startup thread/PCR/APC UNKNOWN",
+      "implementation": "Existing generic native-module/header-buffer/variable-import infrastructure only",
+      "tests": [
+        "tests/variable-imports/run.py",
+        "tests/header-buffer/run.py"
+      ],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN",
+      "identity": "xboxkrnl.exe:448:VdGpuClockInMHz",
+      "ordinal": 448,
+      "evidence": [
+        "preserved private static inventory; no title bytes included"
+      ]
+    },
+    {
+      "input_state": "Original provider representation, startup initialization and observers not fully proven",
+      "output_state": "No original title binding published",
+      "errors": "Unadmitted provider refuses",
+      "pointers": "Snapshot pointers never reused",
+      "endianness": "Big-endian guest words",
+      "ownership": "Original title owner UNKNOWN; generic synthetic owners supported",
+      "lifetime": "Original image lifetime UNKNOWN",
+      "thread": "Original startup thread/PCR/APC UNKNOWN",
+      "implementation": "Existing generic native-module/header-buffer/variable-import infrastructure only",
+      "tests": [
+        "tests/variable-imports/run.py",
+        "tests/header-buffer/run.py"
+      ],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN",
+      "identity": "xboxkrnl.exe:449:VdHSIOCalibrationLock",
+      "ordinal": 449,
+      "evidence": [
+        "preserved private static inventory; no title bytes included"
+      ]
+    },
+    {
+      "input_state": "Original provider representation, startup initialization and observers not fully proven",
+      "output_state": "No original title binding published",
+      "errors": "Unadmitted provider refuses",
+      "pointers": "Snapshot pointers never reused",
+      "endianness": "Big-endian guest words",
+      "ownership": "Original title owner UNKNOWN; generic synthetic owners supported",
+      "lifetime": "Original image lifetime UNKNOWN",
+      "thread": "Original startup thread/PCR/APC UNKNOWN",
+      "implementation": "Existing generic native-module/header-buffer/variable-import infrastructure only",
+      "tests": [
+        "tests/variable-imports/run.py",
+        "tests/header-buffer/run.py"
+      ],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "IMPORTED; startup consumer UNKNOWN",
+      "identity": "xboxkrnl.exe:614:KeCertMonitorData",
+      "ordinal": 614,
+      "evidence": [
+        "preserved private static inventory; no title bytes included"
+      ]
+    },
+    {
+      "input_state": "Typed vector marshalling remains explicitly denied",
+      "output_state": "No admitted fallback",
+      "errors": "Explicit refusal",
+      "pointers": "32-bit guest addresses; exact owner, commitment, current permissions and scoped leases",
+      "endianness": "Big-endian guest words",
+      "ownership": "Explicit native module and guest allocation identity",
+      "lifetime": "Registered thread pin and module lease; withdraw before teardown",
+      "thread": "One serialized service owner; at most 16 registered threads",
+      "implementation": "None admitted",
+      "tests": [],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "PARTIAL or UNKNOWN",
+      "identity": "abi.typed-vector",
+      "evidence": [
+        "Existing bounded research; no new external observation"
+      ]
+    },
+    {
+      "input_state": "Reservation semantics and Xbox exception continuation remain unsupported",
+      "output_state": "No admitted fallback",
+      "errors": "Explicit refusal",
+      "pointers": "32-bit guest addresses; exact owner, commitment, current permissions and scoped leases",
+      "endianness": "Big-endian guest words",
+      "ownership": "Explicit native module and guest allocation identity",
+      "lifetime": "Registered thread pin and module lease; withdraw before teardown",
+      "thread": "One serialized service owner; at most 16 registered threads",
+      "implementation": "None admitted",
+      "tests": [],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "PARTIAL or UNKNOWN",
+      "identity": "abi.atomics-exceptions",
+      "evidence": [
+        "Existing bounded research; no new external observation"
+      ]
+    },
+    {
+      "input_state": "No Xbox shader translator, tiling or GPU synchronization contract",
+      "output_state": "No admitted fallback",
+      "errors": "Explicit refusal",
+      "pointers": "32-bit guest addresses; exact owner, commitment, current permissions and scoped leases",
+      "endianness": "Big-endian guest words",
+      "ownership": "Explicit native module and guest allocation identity",
+      "lifetime": "Registered thread pin and module lease; withdraw before teardown",
+      "thread": "One serialized service owner; at most 16 registered threads",
+      "implementation": "None admitted",
+      "tests": [],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "PARTIAL or UNKNOWN",
+      "identity": "graphics.shader-tiling",
+      "evidence": [
+        "Existing bounded research; no new external observation"
+      ]
+    },
+    {
+      "input_state": "No complete Xbox client/callback/voice/semaphore contract or XMA decoder",
+      "output_state": "No admitted fallback",
+      "errors": "Explicit refusal",
+      "pointers": "32-bit guest addresses; exact owner, commitment, current permissions and scoped leases",
+      "endianness": "Big-endian guest words",
+      "ownership": "Explicit native module and guest allocation identity",
+      "lifetime": "Registered thread pin and module lease; withdraw before teardown",
+      "thread": "One serialized service owner; at most 16 registered threads",
+      "implementation": "None admitted",
+      "tests": [],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "PARTIAL or UNKNOWN",
+      "identity": "audio.xaudio-xma",
+      "evidence": [
+        "Existing bounded research; no new external observation"
+      ]
+    },
+    {
+      "input_state": "Extensions do not establish format; dfpf and FSB-like payload transforms unresolved",
+      "output_state": "No admitted fallback",
+      "errors": "Explicit refusal",
+      "pointers": "32-bit guest addresses; exact owner, commitment, current permissions and scoped leases",
+      "endianness": "Big-endian guest words",
+      "ownership": "Explicit native module and guest allocation identity",
+      "lifetime": "Registered thread pin and module lease; withdraw before teardown",
+      "thread": "One serialized service owner; at most 16 registered threads",
+      "implementation": "None admitted",
+      "tests": [],
+      "status": "BLOCKED",
+      "classification": "UNKNOWN",
+      "title_relevance": "PARTIAL or UNKNOWN",
+      "identity": "resource.title-archives",
+      "evidence": [
+        "Existing bounded research; no new external observation"
+      ]
+    }
+  ]
+}

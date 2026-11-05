@@ -18,6 +18,23 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    'docs/research/compatibility-matrix.json',
+    'runtime/horizon/format_translation.h',
+    'runtime/horizon/sdk_services.h',
+    'tests/xbox-compatibility/Makefile',
+    'tests/xbox-compatibility/build.py',
+    'tests/xbox-compatibility/components.py',
+    'tests/xbox-compatibility/fixture.py',
+    'tests/xbox-compatibility/formats.cpp',
+    'tests/xbox-compatibility/generate.py',
+    'tests/xbox-compatibility/host.cpp',
+    'tests/xbox-compatibility/run.py',
+    'tests/xbox-compatibility/services.cpp',
+    'tests/xbox-compatibility/templates/codegen/init_cpp.inja',
+    'tests/xbox-compatibility/templates/codegen/pch_h.inja',
+    'tests/xbox-compatibility/test_fixture.py',
+    'tests/xbox-compatibility/words.cpp',
+
     'runtime/horizon/audio_mixer.h',
     'runtime/horizon/frame_timing.h',
     'runtime/horizon/resource_stream.h',
