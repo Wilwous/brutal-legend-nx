@@ -151,3 +151,15 @@ jobs:
           if [[ "${{ matrix.profile }}" == "O2" ]]; then flags+=(--optimization 2); fi
           if [[ "${{ matrix.profile }}" == "sanitized" ]]; then flags+=(--sanitize); fi
           python3 tests/runtime/run.py --workdir "${{ runner.temp }}/brutal-foundation-${{ matrix.profile }}" "${flags[@]}"
+
+  platform-services:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Check original platform PPC encoding and independent masks
+        run: python3 tests/platform-demo/test_fixture.py
+      - name: Check lifecycle, graphics, input, PCM and resource boundaries
+        run: python3 tests/platform-services/run.py --workdir "${{ runner.temp }}/platform-services"
