@@ -191,3 +191,17 @@ jobs:
         run: python3 tests/xbox-compatibility/components.py --workdir "${{ runner.temp }}/xbox-compatibility"
       # SDK context, production codegen and AArch64 linking are separately verified
       # locally. No proprietary SDK/title input or fabricated CI stand-in is used.
+
+  sdk-contract-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Keep Windows, SDK and original Xbox evidence distinct
+        run: python3 tests/sdk-contract-audit/test_evidence.py
+      - name: Check transactions and format edge oracles in three profiles
+        run: python3 tests/sdk-contract-audit/run.py --workdir "${{ runner.temp }}/sdk-contract-audit"
+      # Exact SDK leaves and production-generated PPC cases are verified locally;
+      # no substitute SDK or title material is downloaded into this CI job.

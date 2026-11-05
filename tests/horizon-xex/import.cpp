@@ -8,6 +8,7 @@ namespace rex::kernel::xboxkrnl {
 }
 namespace brutal::horizon {
 uint32_t ImportFrame::compare(uint32_t source,uint32_t size,uint32_t pattern){
+ Scope::current(guest_.context).validate_context();
  image_.admit_import(0x11b,XexImage::Signature::compare_u32_read_words);
  auto input=image_.compare_input(source,size); // one atomic checked span snapshot
  std::array<rex::be<uint32_t>,16> scratch{};

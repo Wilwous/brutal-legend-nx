@@ -18,6 +18,16 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT = {
+    'docs/research/sdk-contract-evidence.json',
+    'tests/sdk-contract-audit/Makefile',
+    'tests/sdk-contract-audit/build.py',
+    'tests/sdk-contract-audit/compare.cpp',
+    'tests/sdk-contract-audit/edges.cpp',
+    'tests/sdk-contract-audit/lifetime.cpp',
+    'tests/sdk-contract-audit/run.py',
+    'tests/sdk-contract-audit/test_evidence.py',
+    'tests/sdk-contract-audit/transactions.cpp',
+
     'docs/research/compatibility-matrix.json',
     'runtime/horizon/format_translation.h',
     'runtime/horizon/sdk_services.h',

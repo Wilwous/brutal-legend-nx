@@ -145,7 +145,7 @@ class ImportFrame {
   current_=this;
  }
  ~ImportFrame(){if(current_!=this)std::terminate();current_=nullptr;}
- static ImportFrame& current(PPCContext& context){if(!current_||&current_->guest_.context!=&context)throw Error(Fault::no_thread,"unbound import frame");Scope::current(context);return *current_;}
+ static ImportFrame& current(PPCContext& context){if(!current_||&current_->guest_.context!=&context)throw Error(Fault::no_thread,"unbound import frame");Scope::current(context).validate_context();return *current_;}
  static void trace(uint32_t address){if(!current_||address!=current_->guest_.context.r3.u32)throw Error(Fault::no_thread,"SDK trace context");++current_->trace_events;}
  uint32_t compare(uint32_t source,uint32_t size,uint32_t pattern);
  void initialize(uint32_t address);

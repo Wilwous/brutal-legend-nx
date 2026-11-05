@@ -7,11 +7,13 @@ namespace rex::kernel::xboxkrnl {
 }
 namespace brutal::horizon {
 void FillFrame::fill(uint32_t destination,uint32_t length,uint32_t pattern){
+ Scope::current(guest_.context).validate_context();
  static_assert(std::endian::native==std::endian::little);
  Scope::current(guest_.context).import_target(0x8203001c);image_.admit_import(0x126,XexImage::Signature::fill_u32_out);
  if(!destination||(destination&3)||!length||length>64||(length&3)||uint64_t(destination)+length>0x100000000ull)throw Error(Fault::bounds,"fill bounded aligned OUT contract");
  Scope::current(guest_.context).admit_range(destination,length);auto pin=guest_.space().pin(destination,length);auto output=guest_.space().view(destination,length,Access::write);
  if(admitted)admitted();
+ Scope::current(guest_.context).validate_inflight_context();
  alignas(8) std::array<uint32_t,16> scratch{};
  ++entered;++ImportFrame::sdk_entered;diagnostic::emit(diagnostic::Kind::import_enter,0x126);
  rex::kernel::xboxkrnl::RtlFillMemoryUlong_entry(mapped_void(scratch.data(),destination),length,pattern);

@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "date": "2026-11-05",
+  "sources": [
+    {
+      "repository": "xenia-project/xenia",
+      "commit": "95a5c3ee250f80c3b9d139658649d9ffb6db3eec",
+      "file": "src/xenia/kernel/xboxkrnl/xboxkrnl_rtl.cc",
+      "url": "https://raw.githubusercontent.com/xenia-project/xenia/95a5c3ee250f80c3b9d139658649d9ffb6db3eec/src/xenia/kernel/xboxkrnl/xboxkrnl_rtl.cc",
+      "sha256": "42f1cc29c9da611dda3c31d3d9c4629761ad041780a987c42f20f1dea137be9d",
+      "qualification": "Xbox360 emulator; SDK source lineage, not independent hardware"
+    },
+    {
+      "repository": "reactos/reactos",
+      "commit": "c76421c2308c33df6d6e90346102a5a4a0bcb00e",
+      "file": "sdk/lib/rtl/mem.c",
+      "url": "https://raw.githubusercontent.com/reactos/reactos/c76421c2308c33df6d6e90346102a5a4a0bcb00e/sdk/lib/rtl/mem.c",
+      "sha256": "f9ba9e46a932b6db742cab6ba9d54c3df50d12a5b5c0e257a9696160af17de13",
+      "qualification": "Windows reimplementation; not Xbox360"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlcomparememoryulong",
+      "qualification": "Authoritative Windows documentation, not Xbox360 semantics; byte units and alignment/invalid-size zero documented"
+    }
+  ],
+  "sdk_mapped_array": {
+    "path": "include/rex/types.h",
+    "sha256": "37e3f7ba20a4e7668d2253232f6e6cc7edd5f48846c7d5c80f498152c5bb7af2",
+    "observation": "MappedPtr<void>::as_array<U> returns rex::be<U>*; pinned SDK endian FIXME is not an actual plain-host-u32 access"
+  },
+  "compare": {
+    "identity": "xboxkrnl.exe:283:RtlCompareMemoryUlong",
+    "legacy_registration": "runtime/horizon/xex.h and tests/horizon-xex/import.cpp; Stage15 already exercised it",
+    "signature": "u32(mapped_void,u32 byte_length,u32 pattern)",
+    "sdk_result": "Count of ALL matching BE32 words; continues after mismatch; u32 r3 result",
+    "sdk_raw_invalid": "misaligned pointer or length ->0; zero length ->0 without reading",
+    "native_subset": "Retained original synthetic RO image capability; nonempty aligned IN span<=64; invalid/zero/outside capability refuses before SDK",
+    "hypothetical_prefix_oracle": "Count bytes in complete leading matching ULONGs; used to distinguish algorithms, not prove Xbox behavior",
+    "counterexample": {
+      "input_words": [
+        "pattern",
+        "different",
+        "pattern",
+        "pattern"
+      ],
+      "sdk_result_words": 3,
+      "prefix_oracle_bytes": 4,
+      "full_match_16_bytes_sdk_result": 4
+    },
+    "exact_Xbox360_prefix_units_invalid_memory": "UNKNOWN / BLOCKED for title admission",
+    "numerical_correction_applied": false,
+    "duplicate_registration_added": false
+  },
+  "independence": "SDK and Xenia share implementation lineage; agreement is not independent Xbox evidence. ReactOS is a Windows implementation. No real Xbox test or proprietary kernel execution performed."
+}

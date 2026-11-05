@@ -32,6 +32,7 @@ namespace rex::kernel::xboxkrnl {
 #undef REX_KERNEL_MEMORY
 namespace brutal::horizon {
 uint32_t QueryFrame::query(uint32_t address,uint32_t output,uint32_t kind){
+ Scope::current(guest_.context).validate_context();
  Scope::current(guest_.context).import_target(0x82030014);image_.admit_import(0xee,XexImage::Signature::query_basic28);
  if(kind!=0&&kind!=UINT32_MAX)throw Error(Fault::unsupported,"only basic selector zero and explicit invalid-selector refusal tested");
  if((address&4095)||(output&3)||!output)throw Error(Fault::bounds,"query address/output alignment");
@@ -43,6 +44,7 @@ uint32_t QueryFrame::query(uint32_t address,uint32_t output,uint32_t kind){
  if(snapshot_){throw Error(Fault::unsupported,"recursive query binding");}snapshot_=info;
  struct Clear {std::optional<Space::Query>&info;~Clear(){info.reset();}} clear{snapshot_};
  if(admitted)admitted();
+ Scope::current(guest_.context).validate_inflight_context();
  alignas(8) rex::kernel::xboxkrnl::X_MEMORY_BASIC_INFORMATION scratch{};static_assert(sizeof(scratch)==28);
  ++entered;++ImportFrame::sdk_entered;diagnostic::emit(diagnostic::Kind::import_enter,0xee);
  using rex::X_STATUS;

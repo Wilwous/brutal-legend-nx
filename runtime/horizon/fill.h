@@ -16,7 +16,7 @@ class FillFrame {
  }
  ~FillFrame(){if(current_!=this)std::terminate();current_=nullptr;}
  FillFrame(const FillFrame&)=delete;
- static FillFrame& current(PPCContext&ctx){if(!current_||&current_->guest_.context!=&ctx)throw Error(Fault::no_thread,"fill context missing");Scope::current(ctx).import_target(0x8203001c);return *current_;}
+ static FillFrame& current(PPCContext&ctx){if(!current_||&current_->guest_.context!=&ctx)throw Error(Fault::no_thread,"fill context missing");Scope::current(ctx).validate_context();Scope::current(ctx).import_target(0x8203001c);return *current_;}
  void fill(uint32_t destination,uint32_t length,uint32_t pattern);
 };
 }

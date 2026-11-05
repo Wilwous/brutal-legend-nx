@@ -12,11 +12,13 @@ namespace rex::kernel::xboxkrnl {
 #undef REXKRNL_IMPORT_TRACE
 namespace brutal::horizon {
 void ImportFrame::initialize(uint32_t address){
+ Scope::current(guest_.context).validate_context();
  Scope::current(guest_.context).import_target(0x8203000c);
  image_.admit_import(0x12e,XexImage::Signature::initialize_cs_inout);
  auto handle=image_.initialize_capability(address);Space::Lease pin(guest_.space(),handle);
  auto input=guest_.space().view(address,28,Access::read),output=guest_.space().view(address,28,Access::write);
- if(admitted)admitted(); // Outside the Space lock; module/range leases remain live.
+ if(admitted)admitted();
+ Scope::current(guest_.context).validate_inflight_context(); // Outside the Space lock; module/range leases remain live.
  guest_.space().update(input,output,[&](std::span<std::byte> bytes){
   alignas(8) rex::kernel::xboxkrnl::X_RTL_CRITICAL_SECTION scratch;
   static_assert(sizeof(scratch)==28);std::memcpy(&scratch,bytes.data(),sizeof(scratch));

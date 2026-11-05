@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "baseline": "44249bdffbc2284e9bcbc6b571bbcad2ac6c4e9c",
+  "baseline": "c242881a5312df30503f2a134763e756a396d1dd",
   "sdk_revision": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
   "sources": [
     {
@@ -632,6 +632,83 @@
       "evidence": [
         "Existing bounded research; no new external observation"
       ]
+    },
+    {
+      "input_state": "Matching live Scope/GuestThread/module; initial admission revalidated; admitted observer cannot corrupt PCR/stack context",
+      "output_state": "Count all matching BE32 words, not prefix bytes; unchanged exact pinned SDK leaf",
+      "errors": "Strict native subset refuses before unsupported access; accepted operation retains existing lease across stop/closure; context corruption after observer refuses before SDK entry",
+      "pointers": "Retained original synthetic .rdata; aligned nonzero IN<=64; zero/misalignment/foreign/unknown source refuse",
+      "endianness": "Big-endian guest words",
+      "ownership": "Explicit native module and guest allocation identity",
+      "lifetime": "Initial admission acquires fresh module lease; in-flight recheck uses retained Execution lease; no new admission after close",
+      "thread": "Same admitted GuestThread; no full Xbox APC/exception contract",
+      "implementation": "tests/horizon-xex/import.cpp",
+      "tests": [
+        "tests/sdk-contract-audit/compare.cpp",
+        "tests/horizon-acceptance/run.py"
+      ],
+      "status": "VERIFIED SYNTHETIC",
+      "classification": "SUPPORTED SUBSET",
+      "title_relevance": "IMPORTED; original call site/runtime use UNKNOWN",
+      "identity": "xboxkrnl.exe:283:RtlCompareMemoryUlong",
+      "ordinal": 283,
+      "evidence": [
+        "docs/research/sdk-contract-evidence.json",
+        "Pinned SDK source fingerprint; existing export/ABI locks unchanged"
+      ],
+      "readiness": "VERIFIED SYNTHETIC; exact Xbox behavior UNKNOWN"
+    },
+    {
+      "input_state": "Matching live Scope/GuestThread/module; initial admission revalidated; admitted observer cannot corrupt PCR/stack context",
+      "output_state": "Void; exact pinned28-byte INOUT initialization; no invented r3 status",
+      "errors": "Strict native subset refuses before unsupported access; accepted operation retains existing lease across stop/closure; context corruption after observer refuses before SDK entry",
+      "pointers": "Aligned retained initialized data INOUT28; validate read+write; no Enter/Leave semantics",
+      "endianness": "Big-endian guest words",
+      "ownership": "Explicit native module and guest allocation identity",
+      "lifetime": "Initial admission acquires fresh module lease; in-flight recheck uses retained Execution lease; no new admission after close",
+      "thread": "Same admitted GuestThread; no full Xbox APC/exception contract",
+      "implementation": "tests/horizon-expansion/import.cpp",
+      "tests": [
+        "tests/sdk-contract-audit/compare.cpp",
+        "tests/horizon-acceptance/run.py"
+      ],
+      "status": "VERIFIED SYNTHETIC",
+      "classification": "SUPPORTED SUBSET",
+      "title_relevance": "IMPORTED; original call site/runtime use UNKNOWN",
+      "identity": "xboxkrnl.exe:302:RtlInitializeCriticalSection",
+      "ordinal": 302,
+      "evidence": [
+        "docs/research/sdk-contract-evidence.json",
+        "Pinned SDK source fingerprint; existing export/ABI locks unchanged"
+      ],
+      "readiness": "VERIFIED SYNTHETIC; full Xbox locking BLOCKED"
+    },
+    {
+      "input_state": "Matching live Scope/GuestThread/module; initial admission revalidated; admitted observer cannot corrupt PCR/stack context",
+      "output_state": "Pinned basic selector0 query, OUT28 snapshot; publish only on success; invalid selector returns supported failure",
+      "errors": "Strict native subset refuses before unsupported access; accepted operation retains existing lease across stop/closure; context corruption after observer refuses before SDK entry",
+      "pointers": "Uniform page-aligned retained logical mappings; aligned OUT28, permissions rechecked; no image-tail proof",
+      "endianness": "Big-endian guest words",
+      "ownership": "Explicit native module and guest allocation identity",
+      "lifetime": "Initial admission acquires fresh module lease; in-flight recheck uses retained Execution lease; no new admission after close",
+      "thread": "Same admitted GuestThread; no full Xbox APC/exception contract",
+      "implementation": "tests/horizon-runtime-ii/query.cpp",
+      "tests": [
+        "tests/sdk-contract-audit/compare.cpp",
+        "tests/horizon-acceptance/run.py"
+      ],
+      "status": "VERIFIED SYNTHETIC",
+      "classification": "SUPPORTED SUBSET",
+      "title_relevance": "IMPORTED; original call site/runtime use UNKNOWN",
+      "identity": "xboxkrnl.exe:238:NtQueryVirtualMemory",
+      "ordinal": 238,
+      "evidence": [
+        "docs/research/sdk-contract-evidence.json",
+        "Pinned SDK source fingerprint; existing export/ABI locks unchanged"
+      ],
+      "readiness": "VERIFIED SYNTHETIC; general query domains BLOCKED"
     }
-  ]
+  ],
+  "audit": "T126-T145; legacy registrations distinguished from new hardening",
+  "additional_evidence": "docs/research/sdk-contract-evidence.json"
 }

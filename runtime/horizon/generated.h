@@ -58,6 +58,7 @@ class Scope {
   uint64_t reads{},writes{},calls{},polls{};
   bool belongs_to(const ModuleLife& module,const Space& space)const{return guest_.belongs_to(module)&&&guest_.space()==&space;}
   void validate_context(){execution_.validate_entry();}
+  void validate_inflight_context(){execution_.validate_inflight();}
   Scope(GuestThread& guest,std::span<const Function> functions,uint64_t module_identity,
         synthetic::CooperativeStop* stop=nullptr,std::function<void(uint32_t)> observer={},const ControlPlan* plan=nullptr,const GuestThread::StackContract* stack=nullptr)
     :guest_(guest),trace_binding_(guest.trace(),guest.module_instance(),guest.identity),execution_(guest,stack),functions_(functions),stop_(stop),observer_(std::move(observer)),plan_(plan){

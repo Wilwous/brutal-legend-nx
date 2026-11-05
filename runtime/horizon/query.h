@@ -19,7 +19,7 @@ class QueryFrame {
  }
  ~QueryFrame(){if(current_!=this)std::terminate();current_=nullptr;}
  QueryFrame(const QueryFrame&)=delete;
- static QueryFrame& current(PPCContext& ctx){if(!current_||&current_->guest_.context!=&ctx)throw Error(Fault::no_thread,"query has no matching guest context");Scope::current(ctx).import_target(0x82030014);return *current_;}
+ static QueryFrame& current(PPCContext& ctx){if(!current_||&current_->guest_.context!=&ctx)throw Error(Fault::no_thread,"query has no matching guest context");Scope::current(ctx).validate_context();Scope::current(ctx).import_target(0x82030014);return *current_;}
  static const Space::Query* snapshot(uint32_t address){if(!current_||!current_->snapshot_||current_->snapshot_->base!=address)return nullptr;return &*current_->snapshot_;}
  uint32_t query(uint32_t address,uint32_t output,uint32_t kind);
 };

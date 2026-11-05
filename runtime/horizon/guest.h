@@ -98,7 +98,8 @@ class GuestThread {
       if(!h.owner||!h.id||h.size<192||high>0x100000000ull||sp>UINT32_MAX||sp<uint64_t(h.address)+64||sp>high-128||(sp&15)||
          t.context.r13.u64!=t.pcr.address||t.context.r2.u64!=0x82020000||t.context.msr!=PPCContext{}.msr||
          t.space_.load<uint64_t>(t.pcr.address+0x30)!=t.pcr.address||t.space_.load<uint32_t>(t.pcr.address)!=t.tls.address)
-        throw Error(Fault::argument,"guest startup/context admission");
+        {diagnostic::emit(diagnostic::Kind::abi_rejected,uint32_t(Fault::argument));
+         throw Error(Fault::argument,"guest startup/context admission");}
       uint64_t lo=h.address,hi=high;
       if(contract_.relative){if(contract_.begin>=contract_.end)throw Error(Fault::argument,"empty/reversed stack contract");lo=offset(sp,contract_.begin);hi=offset(sp,contract_.end);}
       else if(contract_.begin||contract_.end)throw Error(Fault::argument,"inconsistent whole-stack contract");
@@ -116,6 +117,9 @@ class GuestThread {
       t.active_=true;
     }
     void validate_entry(){ModuleLife::Lease entry(thread_.module_);std::lock_guard lock(thread_.mutex_);validate_locked();}
+    // An already admitted operation retains this Execution's module lease.
+    // Closing blocks new admission, but cannot invalidate the accepted operation.
+    void validate_inflight(){std::lock_guard lock(thread_.mutex_);validate_locked();}
     std::pair<uint32_t,uint32_t> required_window()const{return window_;}
     Execution(const Execution&)=delete;
     ~Execution(){std::lock_guard lock(thread_.mutex_);pins_.clear();thread_.active_=false;}
